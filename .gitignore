@@ -7,3 +7,9 @@
 
 # data
 data/*
+
+# Python files
+*/__pycache__/*.pyc
+
+# zip files
+*.zip
