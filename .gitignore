@@ -1,5 +1,6 @@
 # macOs specific 
 .DS_Store
+**/.DS_Store
 *.icloud
 
 # zip files
