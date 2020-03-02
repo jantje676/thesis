@@ -28,6 +28,8 @@ class BetaVAE_H(nn.Module):
     def __init__(self, z_dim=10, nc=3):
         super(BetaVAE_H, self).__init__()
         self.z_dim = z_dim
+
+        # number of channels
         self.nc = nc
         self.encoder = nn.Sequential(
             nn.Conv2d(nc, 32, 4, 2, 1),          # B,  32, 32, 32

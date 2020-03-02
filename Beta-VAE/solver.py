@@ -18,6 +18,7 @@ from model import BetaVAE_H, BetaVAE_B
 from dataset import return_data
 
 
+# Compute reconstruction loss
 def reconstruction_loss(x, x_recon, distribution):
     batch_size = x.size(0)
     assert batch_size != 0
@@ -33,6 +34,7 @@ def reconstruction_loss(x, x_recon, distribution):
     return recon_loss
 
 
+# Compute KL divergence
 def kl_divergence(mu, logvar):
     batch_size = mu.size(0)
     assert batch_size != 0
@@ -88,6 +90,7 @@ class Solver(object):
         self.beta1 = args.beta1
         self.beta2 = args.beta2
 
+        # nc = number of channels
         if args.dataset.lower() == 'dsprites':
             self.nc = 1
             self.decoder_dist = 'bernoulli'
@@ -97,9 +100,13 @@ class Solver(object):
         elif args.dataset.lower() == 'celeba':
             self.nc = 3
             self.decoder_dist = 'gaussian'
+        elif args.dataset.lower() == 'dresses':
+            self.nc = 3
+            self.decoder_dist = 'gaussian'
         else:
             raise NotImplementedError
 
+        # H-model is orginal beta-vae, B model is improved beta-vae
         if args.model == 'H':
             net = BetaVAE_H
         elif args.model == 'B':
@@ -142,34 +149,53 @@ class Solver(object):
         self.batch_size = args.batch_size
         self.data_loader = return_data(args)
 
+        # cretae an array to store data? KL,recon loss, iteration etc.
         self.gather = DataGather()
 
     def train(self):
+
+        # put network to train mode
         self.net_mode(train=True)
+
+        # capacity parameter(C) of bottleneck channel
         self.C_max = Variable(cuda(torch.FloatTensor([self.C_max]), self.use_cuda))
+
+        # boolean to stop training
         out = False
 
+        # create progress bar
         pbar = tqdm(total=self.max_iter)
         pbar.update(self.global_iter)
+
         while not out:
             for x in self.data_loader:
                 self.global_iter += 1
                 pbar.update(1)
 
+                # wrap variable with tensor and cuda if possible
                 x = Variable(cuda(x, self.use_cuda))
+
+                # forward pass
                 x_recon, mu, logvar = self.net(x)
+
+                # define reconstruction loss
                 recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
+
+                # measure kl divergence
                 total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
 
+                # different total loss depending on version
                 if self.objective == 'H':
                     beta_vae_loss = recon_loss + self.beta*total_kld
                 elif self.objective == 'B':
                     C = torch.clamp(self.C_max/self.C_stop_iter*self.global_iter, 0, self.C_max.data[0])
                     beta_vae_loss = recon_loss + self.gamma*(total_kld-C).abs()
 
+                # backward pass
                 self.optim.zero_grad()
                 beta_vae_loss.backward()
                 self.optim.step()
+
 
                 if self.viz_on and self.global_iter%self.gather_step == 0:
                     self.gather.insert(iter=self.global_iter,
@@ -343,6 +369,7 @@ class Solver(object):
                                             title='posterior variance',))
         self.net_mode(train=True)
 
+    # creates interpolated image between two images?
     def viz_traverse(self, limit=3, inter=2/3, loc=-1):
         self.net_mode(train=False)
         import random
