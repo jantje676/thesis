@@ -1,5 +1,5 @@
 # -----------------------------------------------------------
-# Stacked Cross Attention Network implementation based on 
+# Stacked Cross Attention Network implementation based on
 # https://arxiv.org/abs/1803.08024.
 # "Stacked Cross Attention for Image-Text Matching"
 # Kuang-Huei Lee, Xi Chen, Gang Hua, Houdong Hu, Xiaodong He
@@ -94,7 +94,7 @@ def main():
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     tb_logger.configure(opt.logger_name, flush_secs=5)
 
-    # Load Vocabulary Wrapper
+    # Load Vocabulary Wrapper, create dictionary that can switch between ids and words
     vocab = deserialize_vocab(os.path.join(opt.vocab_path, '%s_vocab.json' % opt.data_name))
     opt.vocab_size = len(vocab)
 
@@ -159,6 +159,7 @@ def train(opt, train_loader, model, epoch, val_loader):
 
     end = time.time()
     for i, train_data in enumerate(train_loader):
+
         # switch to train mode
         model.train_start()
 

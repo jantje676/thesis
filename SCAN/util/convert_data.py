@@ -1,5 +1,5 @@
 # -----------------------------------------------------------
-# Stacked Cross Attention Network implementation based on 
+# Stacked Cross Attention Network implementation based on
 # https://arxiv.org/abs/1803.08024.
 # "Stacked Cross Attention for Image-Text Matching"
 # Kuang-Huei Lee, Xi Chen, Gang Hua, Houdong Hu, Xiaodong He
@@ -34,6 +34,8 @@ print(opt)
 
 meta = []
 feature = {}
+
+# append image id
 for line in open(opt.imgid_list):
     sid = int(line.strip())
     meta.append(sid)

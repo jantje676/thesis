@@ -1,5 +1,5 @@
 # -----------------------------------------------------------
-# Stacked Cross Attention Network implementation based on 
+# Stacked Cross Attention Network implementation based on
 # https://arxiv.org/abs/1803.08024.
 # "Stacked Cross Attention for Image-Text Matching"
 # Kuang-Huei Lee, Xi Chen, Gang Hua, Houdong Hu, Xiaodong He
@@ -37,7 +37,7 @@ def l2norm(X, dim, eps=1e-8):
     return X
 
 
-def EncoderImage(data_name, img_dim, embed_size, precomp_enc_type='basic', 
+def EncoderImage(data_name, img_dim, embed_size, precomp_enc_type='basic',
                  no_imgnorm=False):
     """A wrapper to image encoders. Chooses between an different encoders
     that uses precomputed image features.
@@ -284,7 +284,7 @@ def xattn_score_t2i(images, captions, cap_lens, opt):
 
     # (n_image, n_caption)
     similarities = torch.cat(similarities, 1)
-    
+
     return similarities
 
 
@@ -387,8 +387,8 @@ class SCAN(object):
                                     precomp_enc_type=opt.precomp_enc_type,
                                     no_imgnorm=opt.no_imgnorm)
         self.txt_enc = EncoderText(opt.vocab_size, opt.word_dim,
-                                   opt.embed_size, opt.num_layers, 
-                                   use_bi_gru=opt.bi_gru,  
+                                   opt.embed_size, opt.num_layers,
+                                   use_bi_gru=opt.bi_gru,
                                    no_txtnorm=opt.no_txtnorm)
         if torch.cuda.is_available():
             self.img_enc.cuda()
