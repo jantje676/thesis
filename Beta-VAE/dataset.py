@@ -71,6 +71,7 @@ def return_data(args):
 
     elif name.lower() == 'dsprites':
         root = os.path.join(dset_dir, 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
+        print(root)
         if not os.path.exists(root):
             import subprocess
             print('Now download dsprites-dataset')
