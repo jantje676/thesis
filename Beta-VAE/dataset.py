@@ -77,6 +77,10 @@ def return_data(args):
         #     print('Now download dsprites-dataset')
         #     subprocess.call(['./download_dsprites.sh'])
         #     print('Finished')
+        print(">>>")
+        print(os.getcwd())
+        print("hoi")
+        print(root)
         data = np.load(root, encoding='bytes')
         data = torch.from_numpy(data['imgs']).unsqueeze(1).float()
         train_kwargs = {'data_tensor':data}
