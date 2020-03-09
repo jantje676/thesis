@@ -71,12 +71,12 @@ def return_data(args):
 
     elif name.lower() == 'dsprites':
         root = os.path.join(dset_dir, 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
-        print(root)
-        if not os.path.exists(root):
-            import subprocess
-            print('Now download dsprites-dataset')
-            subprocess.call(['./download_dsprites.sh'])
-            print('Finished')
+        # print(root)
+        # if not os.path.exists(root):
+        #     import subprocess
+        #     print('Now download dsprites-dataset')
+        #     subprocess.call(['./download_dsprites.sh'])
+        #     print('Finished')
         data = np.load(root, encoding='bytes')
         data = torch.from_numpy(data['imgs']).unsqueeze(1).float()
         train_kwargs = {'data_tensor':data}
