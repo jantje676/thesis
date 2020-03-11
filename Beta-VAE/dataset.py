@@ -63,7 +63,9 @@ def return_data(args):
 
     # need to have all the images in one folder!
     elif name.lower() == 'dresses':
-        root ="../data/Fashion200K/pictures_only"
+        root = os.path.join(dset_dir, 'Fashion200K/pictures_only')
+        print(root)
+
         transform = transforms.Compose([
             transforms.Resize((image_size, image_size)),
             transforms.ToTensor(),])
