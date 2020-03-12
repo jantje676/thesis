@@ -303,8 +303,9 @@ def find_run_name(opt):
     path = "runs/run*"
     runs = glob.glob(path)
     runs.sort()
-
-    if len(runs) > 1:
+    if len(runs) == 0:
+        return opt
+    elif len(runs) > 1:
         last_run = runs[-2].split("/")[1]
     else:
         last_run = runs[0].split("/")[1]
