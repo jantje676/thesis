@@ -35,17 +35,17 @@ print(opt)
 meta = []
 feature = {}
 
-# append image id
-for line in open(opt.imgid_list):
-    sid = int(line.strip())
-    meta.append(sid)
-    feature[sid] = None
-
+# # append image id
+# for line in open(opt.imgid_list):
+#     sid = int(line.strip())
+#     meta.append(sid)
+#     feature[sid] = None
+#
 csv.field_size_limit(sys.maxsize)
 FIELDNAMES = ['image_id', 'image_w', 'image_h', 'num_boxes', 'boxes', 'features']
 
 if __name__ == '__main__':
-    with open(opt.input_file, "r+b") as tsv_in_file:
+    with open("tsv_output_segmentations.tsv", "r") as tsv_in_file:
         reader = csv.DictReader(tsv_in_file, delimiter='\t', fieldnames = FIELDNAMES)
         for item in reader:
             item['image_id'] = int(item['image_id'])
@@ -61,4 +61,6 @@ if __name__ == '__main__':
                 feature[item['image_id']] = item['features']
     data_out = np.stack([feature[sid] for sid in meta], axis=0)
     print("Final numpy array shape:", data_out.shape)
+
+
     np.save(os.path.join(opt.output_dir, '{}_ims.npy'.format(opt.split)), data_out)

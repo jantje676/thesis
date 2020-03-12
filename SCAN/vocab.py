@@ -1,5 +1,5 @@
 # -----------------------------------------------------------
-# Stacked Cross Attention Network implementation based on 
+# Stacked Cross Attention Network implementation based on
 # https://arxiv.org/abs/1803.08024.
 # "Stacked Cross Attention for Image-Text Matching"
 # Kuang-Huei Lee, Xi Chen, Gang Hua, Houdong Hu, Xiaodong He
@@ -13,10 +13,10 @@ from collections import Counter
 import argparse
 import os
 import json
+import csv
 
 annotations = {
-    'coco_precomp': ['train_caps.txt', 'dev_caps.txt'],
-    'f30k_precomp': ['train_caps.txt', 'dev_caps.txt'],
+    'Fashion200K': ['train', 'dev']
 }
 
 
@@ -64,21 +64,30 @@ def deserialize_vocab(src):
 
 def from_txt(txt):
     captions = []
-    with open(txt, 'rb') as f:
-        for line in f:
-            captions.append(line.strip())
+    with open(txt, 'r', newline="") as f:
+        reader = csv.reader(f, delimiter="\t")
+        for line in reader:
+            captions.append(line[1].strip())
     return captions
+
+
+
+
+
+
 
 
 def build_vocab(data_path, data_name, caption_file, threshold):
     """Build a simple vocabulary wrapper."""
     counter = Counter()
     for path in caption_file[data_name]:
-        full_path = os.path.join(os.path.join(data_path, data_name), path)
+        full_path = "{}/data_captions_{}.txt".format(data_path, path)
         captions = from_txt(full_path)
         for i, caption in enumerate(captions):
+            print(">>>>>")
+            print(caption)
             tokens = nltk.tokenize.word_tokenize(
-                caption.lower().decode('utf-8'))
+                caption.lower())
             counter.update(tokens)
 
             if i % 1000 == 0:
@@ -101,9 +110,11 @@ def build_vocab(data_path, data_name, caption_file, threshold):
 
 
 def main(data_path, data_name):
-    vocab = build_vocab(data_path, data_name, caption_file=annotations, threshold=4)
-    serialize_vocab(vocab, './vocab/%s_vocab.json' % data_name)
-    print("Saved vocabulary file to ", './vocab/%s_vocab.json' % data_name)
+    data_path = "../data/Fashion200K/"
+    data_name = "Fashion200K"
+    vocab = build_vocab(data_path, data_name, caption_file=annotations, threshold=1)
+    serialize_vocab(vocab, '../vocab/%s_vocab.json' % data_name)
+    print("Saved vocabulary file to ", '../vocab/%s_vocab.json' % data_name)
 
 
 

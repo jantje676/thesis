@@ -373,6 +373,7 @@ class ContrastiveLoss(nn.Module):
         if self.max_violation:
             cost_s = cost_s.max(1)[0]
             cost_im = cost_im.max(0)[0]
+
         return cost_s.sum() + cost_im.sum()
 
 
@@ -449,7 +450,7 @@ class SCAN(object):
         """Compute the loss given pairs of image and caption embeddings
         """
         loss = self.criterion(img_emb, cap_emb, cap_len)
-        self.logger.update('Le', loss.data[0], img_emb.size(0))
+        self.logger.update('Le', loss.item(), img_emb.size(0))
         return loss
 
     def train_emb(self, images, captions, lengths, ids=None, *args):
@@ -464,6 +465,7 @@ class SCAN(object):
 
         # measure accuracy and record loss
         self.optimizer.zero_grad()
+
         loss = self.forward_loss(img_emb, cap_emb, cap_lens)
 
         # compute gradient and do SGD step

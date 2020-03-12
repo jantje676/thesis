@@ -1,5 +1,5 @@
 # -----------------------------------------------------------
-# Stacked Cross Attention Network implementation based on 
+# Stacked Cross Attention Network implementation based on
 # https://arxiv.org/abs/1803.08024.
 # "Stacked Cross Attention for Image-Text Matching"
 # Kuang-Huei Lee, Xi Chen, Gang Hua, Houdong Hu, Xiaodong He
@@ -12,7 +12,7 @@ from __future__ import print_function
 import os
 
 import sys
-from data import get_test_loader
+from data_ken import get_test_loader
 import time
 import numpy as np
 from vocab import Vocabulary, deserialize_vocab  # NOQA
@@ -67,7 +67,7 @@ class LogCollector(object):
         """Concatenate the meters in one log line
         """
         s = ''
-        for i, (k, v) in enumerate(self.meters.iteritems()):
+        for i, (k, v) in enumerate(self.meters.items()):
             if i > 0:
                 s += '  '
             s += k + ' ' + str(v)
@@ -76,7 +76,8 @@ class LogCollector(object):
     def tb_log(self, tb_logger, prefix='', step=None):
         """Log using tensorboard
         """
-        for k, v in self.meters.iteritems():
+
+        for k, v in self.meters.items():
             tb_logger.log_value(prefix + k, v.val, step=step)
 
 
@@ -115,6 +116,10 @@ def encode_data(model, data_loader, log_step=10, logging=print):
             cap_embs = np.zeros((len(data_loader.dataset), max_n_word, cap_emb.size(2)))
             cap_lens = [0] * len(data_loader.dataset)
         # cache embeddings
+
+        # changes ids tuple to list
+        ids = list(ids)
+
         img_embs[ids] = img_emb.data.cpu().numpy().copy()
         cap_embs[ids,:max(lengths),:] = cap_emb.data.cpu().numpy().copy()
         for j, nid in enumerate(ids):
@@ -152,7 +157,7 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False):
         opt.data_path = data_path
 
     # load vocabulary used by the model
-    vocab = deserialize_vocab(os.path.join(opt.vocab_path, '%s_vocab.json' % opt.data_name))
+    vocab = deserialize_vocab("../vocab/{}_vocab.json".format(opt.data_name))
     opt.vocab_size = len(vocab)
 
     # construct model
@@ -173,7 +178,8 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False):
 
     if not fold5:
         # no cross-validation, full evaluation
-        img_embs = np.array([img_embs[i] for i in range(0, len(img_embs), 5)])
+        # img_embs = np.array([img_embs[i] for i in range(0, len(img_embs), 5)])
+
         start = time.time()
         if opt.cross_attn == 't2i':
             sims = shard_xattn_t2i(img_embs, cap_embs, cap_lens, opt, shard_size=128)
@@ -184,6 +190,7 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False):
         end = time.time()
         print("calculate similarity time:", end-start)
 
+        # r = (r1, r2, r5, medr, meanr), rt= (ranks, top1)
         r, rt = i2t(img_embs, cap_embs, cap_lens, sims, return_ranks=True)
         ri, rti = t2i(img_embs, cap_embs, cap_lens, sims, return_ranks=True)
         ar = (r[0] + r[1] + r[2]) / 3
@@ -236,6 +243,7 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False):
               mean_metrics[5:10])
 
     torch.save({'rt': rt, 'rti': rti}, 'ranks.pth.tar')
+    return rt, rti
 
 
 def softmax(X, axis):
@@ -258,17 +266,27 @@ def shard_xattn_t2i(images, captions, caplens, opt, shard_size=128):
     """
     Computer pairwise t2i image-caption distance with locality sharding
     """
+    # takes a block and calculated the similarity, instead of entire d-matrix in one time
     n_im_shard = (len(images)-1)/shard_size + 1
     n_cap_shard = (len(captions)-1)/shard_size + 1
-    
+
     d = np.zeros((len(images), len(captions)))
-    for i in range(n_im_shard):
+    # print("d-shape: ", d.shape)
+    # print("images shape: ", images.shape)
+    # print("captions shape: ", captions.shape)
+    for i in range(int(n_im_shard)):
         im_start, im_end = shard_size*i, min(shard_size*(i+1), len(images))
-        for j in range(n_cap_shard):
+        # print("im_start:" , im_start)
+        # print("im end: ", im_end )
+        for j in range(int(n_cap_shard)):
             sys.stdout.write('\r>> shard_xattn_t2i batch (%d,%d)' % (i,j))
             cap_start, cap_end = shard_size*j, min(shard_size*(j+1), len(captions))
-            im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True).cuda()
-            s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True).cuda()
+            if torch.cuda.is_available():
+                im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True).cuda()
+                s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True).cuda()
+            else:
+                im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True)
+                s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True)
             l = caplens[cap_start:cap_end]
             sim = xattn_score_t2i(im, s, l, opt)
             d[im_start:im_end, cap_start:cap_end] = sim.data.cpu().numpy()
@@ -282,7 +300,7 @@ def shard_xattn_i2t(images, captions, caplens, opt, shard_size=128):
     """
     n_im_shard = (len(images)-1)/shard_size + 1
     n_cap_shard = (len(captions)-1)/shard_size + 1
-    
+
     d = np.zeros((len(images), len(captions)))
     for i in range(n_im_shard):
         im_start, im_end = shard_size*i, min(shard_size*(i+1), len(images))
@@ -309,14 +327,25 @@ def i2t(images, captions, caplens, sims, npts=None, return_ranks=False):
     npts = images.shape[0]
     ranks = np.zeros(npts)
     top1 = np.zeros(npts)
+
+    print("sims: ", sims.shape)
     for index in range(npts):
+
+        # sort the array and reverse the order
         inds = np.argsort(sims[index])[::-1]
         # Score
         rank = 1e20
-        for i in range(5 * index, 5 * index + 5, 1):
-            tmp = np.where(inds == i)[0][0]
-            if tmp < rank:
-                rank = tmp
+
+
+
+        tmp = np.where(inds == index)
+            # print("index: " , index)
+            # print("i: ", i)
+            # print("tmp: ", tmp)
+        tmp = tmp[0][0]
+
+        if tmp < rank:
+            rank = tmp
         ranks[index] = rank
         top1[index] = inds[0]
 
@@ -341,17 +370,17 @@ def t2i(images, captions, caplens, sims, npts=None, return_ranks=False):
     sims: (N, 5N) matrix of similarity im-cap
     """
     npts = images.shape[0]
-    ranks = np.zeros(5 * npts)
-    top1 = np.zeros(5 * npts)
+    ranks = np.zeros(npts)
+    top1 = np.zeros(npts)
 
     # --> (5N(caption), N(image))
     sims = sims.T
 
     for index in range(npts):
-        for i in range(5):
-            inds = np.argsort(sims[5 * index + i])[::-1]
-            ranks[5 * index + i] = np.where(inds == index)[0][0]
-            top1[5 * index + i] = inds[0]
+
+        inds = np.argsort(sims[index])[::-1]
+        ranks[index] = np.where(inds == index)[0][0]
+        top1[index] = inds[0]
 
     # Compute metrics
     r1 = 100.0 * len(np.where(ranks < 1)[0]) / len(ranks)

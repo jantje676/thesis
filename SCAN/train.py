@@ -7,15 +7,19 @@
 # Writen by Kuang-Huei Lee, 2018
 # ---------------------------------------------------------------
 """Training script"""
-
+"BEFORE RUNNINH"
+"generate_tsv_ken.py"
+"split_data.py"
+"vocab.py"
 import os
 import time
 import shutil
+import glob
 
 import torch
 import numpy
 
-import data
+import data_ken
 from vocab import Vocabulary, deserialize_vocab
 from model import SCAN
 from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data, shard_xattn_t2i, shard_xattn_i2t
@@ -26,15 +30,14 @@ import tensorboard_logger as tb_logger
 
 import argparse
 
-
 def main():
     # Hyper Parameters
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_path', default='./data/',
+    parser.add_argument('--data_path', default='../data',
                         help='path to datasets')
-    parser.add_argument('--data_name', default='precomp',
+    parser.add_argument('--data_name', default='Fashion200K',
                         help='{coco,f30k}_precomp')
-    parser.add_argument('--vocab_path', default='./vocab/',
+    parser.add_argument('--vocab_path', default='../vocab/',
                         help='Path to saved vocabulary json files.')
     parser.add_argument('--margin', default=0.2, type=float,
                         help='Rank loss margin.')
@@ -60,15 +63,15 @@ def main():
                         help='Number of steps to print and record the log.')
     parser.add_argument('--val_step', default=500, type=int,
                         help='Number of steps to run validation.')
-    parser.add_argument('--logger_name', default='./runs/runX/log',
+    parser.add_argument('--logger_name', default='./runs/run0/log',
                         help='Path to save Tensorboard log.')
-    parser.add_argument('--model_name', default='./runs/runX/checkpoint',
+    parser.add_argument('--model_name', default='./runs/run0/checkpoint',
                         help='Path to save the model.')
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
                         help='path to latest checkpoint (default: none)')
     parser.add_argument('--max_violation', action='store_true',
                         help='Use max instead of sum in the rank loss.')
-    parser.add_argument('--img_dim', default=2048, type=int,
+    parser.add_argument('--img_dim', default=4096, type=int,
                         help='Dimensionality of the image embedding.')
     parser.add_argument('--no_imgnorm', action='store_true',
                         help='Do not normalize the image embeddings.')
@@ -91,15 +94,20 @@ def main():
     opt = parser.parse_args()
     print(opt)
 
+    opt = find_run_name(opt)
+
+
+
+
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     tb_logger.configure(opt.logger_name, flush_secs=5)
 
     # Load Vocabulary Wrapper, create dictionary that can switch between ids and words
-    vocab = deserialize_vocab(os.path.join(opt.vocab_path, '%s_vocab.json' % opt.data_name))
+    vocab = deserialize_vocab("{}{}_vocab.json".format(opt.vocab_path, opt.data_name))
     opt.vocab_size = len(vocab)
 
     # Load data loaders
-    train_loader, val_loader = data.get_loaders(
+    train_loader, val_loader = data_ken.get_loaders(
         opt.data_name, vocab, opt.batch_size, opt.workers, opt)
 
     # Construct the model
@@ -198,15 +206,18 @@ def train(opt, train_loader, model, epoch, val_loader):
         if model.Eiters % opt.val_step == 0:
             validate(opt, val_loader, model)
 
-
+# see how well the model makes captions
 def validate(opt, val_loader, model):
+
     # compute the encoding for all the validation images and captions
     img_embs, cap_embs, cap_lens = encode_data(
         model, val_loader, opt.log_step, logging.info)
 
-    img_embs = numpy.array([img_embs[i] for i in range(0, len(img_embs), 5)])
-
+    # 1 caption per image, so changed the step size to 1 instead of 5
+    img_embs = numpy.array([img_embs[i] for i in range(0, len(img_embs), 1)])
     start = time.time()
+
+    # find the similarity between every caption and image in the validation set?
     if opt.cross_attn == 't2i':
         sims = shard_xattn_t2i(img_embs, cap_embs, cap_lens, opt, shard_size=128)
     elif opt.cross_attn == 'i2t':
@@ -216,11 +227,11 @@ def validate(opt, val_loader, model):
     end = time.time()
     print("calculate similarity time:", end-start)
 
-    # caption retrieval
+    # caption retrieval (find the right text with every image)
     (r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, cap_lens, sims)
     logging.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
                  (r1, r5, r10, medr, meanr))
-    # image retrieval
+    # image retrieval (find the right image for every text)
     (r1i, r5i, r10i, medri, meanr) = t2i(
         img_embs, cap_embs, cap_lens, sims)
     logging.info("Text to image: %.1f, %.1f, %.1f, %.1f, %.1f" %
@@ -286,6 +297,30 @@ def accuracy(output, target, topk=(1,)):
         correct_k = correct[:k].view(-1).float().sum(0)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
+
+
+def find_run_name(opt):
+    path = "runs/run*"
+    runs = glob.glob(path)
+    runs.sort()
+
+    if len(runs) > 1:
+        last_run = runs[-2].split("/")[1]
+    else:
+        last_run = runs[0].split("/")[1]
+
+    nr_last_run = last_run[-1]
+
+    if nr_last_run.isdigit():
+        nr_last_run = int(nr_last_run)
+        nr_next_run = nr_last_run + 1
+    else:
+        nr_next_run = 0
+
+    opt.model_name = './runs/run{}/checkpoint'.format(nr_next_run)
+    opt.logger_name = './runs/run{}/log'.format(nr_next_run)
+
+    return opt
 
 
 if __name__ == '__main__':

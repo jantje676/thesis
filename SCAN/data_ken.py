@@ -16,6 +16,8 @@ import nltk
 from PIL import Image
 import numpy as np
 import json as jsonmod
+import csv
+
 
 
 class PrecompDataset(data.Dataset):
@@ -30,34 +32,40 @@ class PrecompDataset(data.Dataset):
 
         # Captions
         self.captions = []
-        with open(loc+'%s_caps.txt' % data_split, 'rb') as f:
-            for line in f:
-                self.captions.append(line.strip())
+
+
+        with open('{}/data_captions_{}.txt'.format(data_path, data_split), 'r', newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter='\t')
+
+            for line in reader:
+                self.captions.append(line[1].strip())
+
 
         # Image features
-        self.images = np.load(loc+'%s_ims.npy' % data_split)
-
-
+        self.images = np.load("{}/data_ims_{}.npy".format(data_path, data_split))
         self.length = len(self.captions)
+        print(self.images.shape)
+        print(self.length)
+
         # rkiros data has redundancy in images, we divide by 5, 10crop doesn't
         if self.images.shape[0] != self.length:
             self.im_div = 5
         else:
             self.im_div = 1
-        # the development set for coco is large and so validation would be slow
-        if data_split == 'dev':
-            self.length = 5000
+
 
     def __getitem__(self, index):
         # handle the image redundancy
-        img_id = index/self.im_div
+        img_id = int(index/self.im_div)
+
+
         image = torch.Tensor(self.images[img_id])
         caption = self.captions[index]
         vocab = self.vocab
 
         # Convert caption (string) to word ids.
         tokens = nltk.tokenize.word_tokenize(
-            str(caption).lower().decode('utf-8'))
+            str(caption).lower())
         caption = []
         caption.append(vocab('<start>'))
         caption.extend([vocab(token) for token in tokens])
@@ -115,6 +123,7 @@ def get_loaders(data_name, vocab, batch_size, workers, opt):
     dpath = os.path.join(opt.data_path, data_name)
     train_loader = get_precomp_loader(dpath, 'train', vocab, opt,
                                       batch_size, True, workers)
+
     val_loader = get_precomp_loader(dpath, 'dev', vocab, opt,
                                     batch_size, False, workers)
     return train_loader, val_loader
