@@ -306,7 +306,7 @@ def find_run_name(opt):
     if len(runs) == 0:
         return opt
     elif len(runs) > 1:
-        last_run = runs[-2].split("/")[1]
+        last_run = runs[-1].split("/")[1]
     else:
         last_run = runs[0].split("/")[1]
 
