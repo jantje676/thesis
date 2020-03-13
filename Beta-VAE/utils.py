@@ -6,6 +6,8 @@ import subprocess
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+import os
+import glob
 
 
 def cuda(tensor, uses_cuda):
@@ -41,3 +43,28 @@ def grid2gif(image_str, output_gif, delay=100):
     """
     str1 = 'convert -delay '+str(delay)+' -loop 0 ' + image_str  + ' ' + output_gif
     subprocess.call(str1, shell=True)
+
+def find_run_number(args):
+
+    ckpt_dir = os.path.join(args.ckpt_dir, args.viz_name + "_0")
+    if not os.path.exists(ckpt_dir):
+        return "_0"
+    else:
+
+        path = "checkpoints/{}*".format(args.dataset)
+        runs = glob.glob(path)
+        runs.sort()
+        print(runs)
+
+
+        nr_last_run = runs[-1].split("_")[-1]
+
+
+        if nr_last_run.isdigit():
+            nr_last_run = int(nr_last_run)
+            nr_next_run = nr_last_run + 1
+        else:
+            nr_next_run = 0
+
+
+    return '_' + str(nr_next_run)

@@ -65,6 +65,13 @@ if __name__ == "__main__":
     parser.add_argument('--ckpt_dir', default='checkpoints', type=str, help='checkpoint directory')
     parser.add_argument('--ckpt_name', default='last', type=str, help='load previous checkpoint. insert checkpoint filename')
 
+    parser.add_argument('--resize', default='padding', type=str, help='Use padding or ratio')
+    parser.add_argument('--ratio', default=2, type=int, help='Ratio between width and height')
+    parser.add_argument('--ratio_width', default=64 , type=int, help='if ratio is used, desired width of image')
+
+
+
+
     args = parser.parse_args()
 
     main(args)

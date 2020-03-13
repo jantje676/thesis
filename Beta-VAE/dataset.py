@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
-
+from PIL import Image
 
 def is_power_of_2(num):
     return ((num & (num - 1)) == 0) and num != 0
@@ -22,8 +22,24 @@ class CustomImageFolder(ImageFolder):
         img = self.loader(path)
         if self.transform is not None:
             img = self.transform(img)
-
+            print(img.shape)
         return img
+
+class padd(object):
+    def __call__(self,img):
+        W, H = img.size
+        # check if image is rectangle shaped
+        if H > W:
+            diff = H - W
+            desired_size = H
+            new_im = Image.new("RGB", (desired_size, desired_size))
+            new_im.paste(img, (diff//2, 0))
+        elif W > H:
+            diff = W - H
+            desired_size = W
+            new_im = Image.new("RGB", (desired_size, desired_size))
+            new_im.paste(img, (0, diff//2))
+        return  new_im
 
 
 class CustomTensorDataset(Dataset):
@@ -45,47 +61,36 @@ def return_data(args):
     image_size = args.image_size
     assert image_size == 64, 'currently only image size of 64 is supported'
 
-    if name.lower() == '3dchairs':
-        root = os.path.join(dset_dir, '3DChairs')
-        transform = transforms.Compose([
-            transforms.Resize((image_size, image_size)),
-            transforms.ToTensor(),])
-        train_kwargs = {'root':root, 'transform':transform}
-        dset = CustomImageFolder
-
-    elif name.lower() == 'celeba':
-        root = os.path.join(dset_dir, 'CelebA')
-        transform = transforms.Compose([
-            transforms.Resize((image_size, image_size)),
-            transforms.ToTensor(),])
-        train_kwargs = {'root':root, 'transform':transform}
-        dset = CustomImageFolder
 
     # need to have all the images in one folder!
-    elif name.lower() == 'dresses':
+    if name.lower() == 'fashion200k':
         root = os.path.join(dset_dir, 'Fashion200K/pictures_only')
-        print(root)
+        if args.resize ==  "padding":
+            transform = transforms.Compose([
+                            padd(),
+                            transforms.Resize((image_size, image_size)),
+                            transforms.ToTensor(),])
+        elif args.resize == "ratio":
+            transform = transforms.Compose([
+                            transforms.Resize((args.ratio_width * args.ratio, args.ratio_width)),
+                            transforms.ToTensor(),])
 
-        transform = transforms.Compose([
-            transforms.Resize((image_size, image_size)),
-            transforms.ToTensor(),])
         train_kwargs = {'root':root, 'transform':transform}
         dset = CustomImageFolder
+    elif name.lower() == 'fashion200k_test':
+        root = os.path.join(dset_dir, 'Fashion200K/pictures_only')
+        if args.resize ==  "padding":
+            transform = transforms.Compose([
+                            padd(),
+                            transforms.Resize((image_size, image_size)),
+                            transforms.ToTensor(),])
+        elif args.resize == "ratio":
+            transform = transforms.Compose([
+                            transforms.Resize((args.ratio_width * args.ratio, args.ratio_width)),
+                            transforms.ToTensor(),])
 
-    elif name.lower() == 'dsprites':
-        root = os.path.join(dset_dir, 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
-
-        if not os.path.exists(root):
-            import subprocess
-            print('Now download dsprites-dataset')
-            subprocess.call(['./download_dsprites.sh'])
-            print('Finished')
-
-        data = np.load(root, encoding='bytes')
-        data = torch.from_numpy(data['imgs']).unsqueeze(1).float()
-        train_kwargs = {'data_tensor':data}
-        dset = CustomTensorDataset
-
+        train_kwargs = {'root':root, 'transform':transform}
+        dset = CustomImageFolder
     else:
         raise NotImplementedError
 

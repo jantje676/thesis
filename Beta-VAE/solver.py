@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torchvision.utils import make_grid, save_image
 
-from utils import cuda, grid2gif
+from utils import cuda, grid2gif, find_run_number
 from model import BetaVAE_H, BetaVAE_B
 from dataset import return_data
 
@@ -100,7 +100,10 @@ class Solver(object):
         elif args.dataset.lower() == 'celeba':
             self.nc = 3
             self.decoder_dist = 'gaussian'
-        elif args.dataset.lower() == 'dresses':
+        elif args.dataset.lower() == 'fashion200k_test':
+            self.nc = 3
+            self.decoder_dist = 'gaussian'
+        elif args.dataset.lower() == 'fashion200k':
             self.nc = 3
             self.decoder_dist = 'gaussian'
         else:
@@ -128,7 +131,9 @@ class Solver(object):
         if self.viz_on:
             self.viz = visdom.Visdom(port=self.viz_port)
 
-        self.ckpt_dir = os.path.join(args.ckpt_dir, args.viz_name)
+        run_number = find_run_number(args)
+
+        self.ckpt_dir = os.path.join(args.ckpt_dir, args.viz_name + run_number)
         if not os.path.exists(self.ckpt_dir):
             os.makedirs(self.ckpt_dir, exist_ok=True)
         self.ckpt_name = args.ckpt_name
@@ -136,7 +141,7 @@ class Solver(object):
             self.load_checkpoint(self.ckpt_name)
 
         self.save_output = args.save_output
-        self.output_dir = os.path.join(args.output_dir, args.viz_name)
+        self.output_dir = os.path.join(args.output_dir, args.viz_name + run_number)
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir, exist_ok=True)
 
