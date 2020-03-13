@@ -22,7 +22,6 @@ class CustomImageFolder(ImageFolder):
         img = self.loader(path)
         if self.transform is not None:
             img = self.transform(img)
-            print(img.shape)
         return img
 
 class padd(object):
