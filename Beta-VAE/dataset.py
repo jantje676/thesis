@@ -77,7 +77,7 @@ def return_data(args):
         train_kwargs = {'root':root, 'transform':transform}
         dset = CustomImageFolder
     elif name.lower() == 'fashion200k_test':
-        root = os.path.join(dset_dir, 'Fashion200K/pictures_only')
+        root = os.path.join(dset_dir, 'Fashion200K_test/pictures_only')
         if args.resize ==  "padding":
             transform = transforms.Compose([
                             padd(),
