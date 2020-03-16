@@ -17,7 +17,8 @@ def main(args):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     np.random.seed(seed)
-
+    print(">>>>>>>>>>")
+    print(args.z_dim)
     net = Solver(args)
 
     if args.train:

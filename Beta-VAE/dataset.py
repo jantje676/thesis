@@ -58,7 +58,7 @@ def return_data(args):
     batch_size = args.batch_size
     num_workers = args.num_workers
     image_size = args.image_size
-    assert image_size == 64, 'currently only image size of 64 is supported'
+    # assert image_size == 64, 'currently only image size of 64 is supported'
 
 
     # need to have all the images in one folder!
@@ -107,6 +107,7 @@ def return_data(args):
     return data_loader
 
 if __name__ == '__main__':
+    print("Celeb")
     transform = transforms.Compose([
         transforms.Resize((64, 64)),
         transforms.ToTensor(),])

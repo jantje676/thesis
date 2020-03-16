@@ -86,10 +86,12 @@ class BetaVAE_H(nn.Module):
 class BetaVAE_B(BetaVAE_H):
     """Model proposed in understanding beta-VAE paper(Burgess et al, arxiv:1804.03599, 2018)."""
 
-    def __init__(self, z_dim=10, nc=1):
+    def __init__(self, z_dim=10, nc=1, image_width=64, image_height=64):
         super(BetaVAE_B, self).__init__()
         self.nc = nc
         self.z_dim = z_dim
+        self.factor_width = int(image_width / 64)
+        self.factor_height = int(image_height /64)
 
         self.encoder = nn.Sequential(
             nn.Conv2d(nc, 32, 4, 2, 1),          # B,  32, 32, 32
@@ -100,8 +102,8 @@ class BetaVAE_B(BetaVAE_H):
             nn.ReLU(True),
             nn.Conv2d(32, 32, 4, 2, 1),          # B,  32,  4,  4
             nn.ReLU(True),
-            View((-1, 32*4*4)),                  # B, 512
-            nn.Linear(32*4*4, 256),              # B, 256
+            View((-1, 32*4*4 * self.factor_width * self.factor_height)),                  # B, 512
+            nn.Linear(32*4*4 * self.factor_width * self.factor_height, 256),              # B, 256
             nn.ReLU(True),
             nn.Linear(256, 256),                 # B, 256
             nn.ReLU(True),
@@ -113,9 +115,9 @@ class BetaVAE_B(BetaVAE_H):
             nn.ReLU(True),
             nn.Linear(256, 256),                 # B, 256
             nn.ReLU(True),
-            nn.Linear(256, 32*4*4),              # B, 512
+            nn.Linear(256, 32*4*4 * self.factor_width * self.factor_height),              # B, 512
             nn.ReLU(True),
-            View((-1, 32, 4, 4)),                # B,  32,  4,  4
+            View((-1, 32, 4 * self.factor_height, 4 * self.factor_width)),                # B,  32,  4,  4
             nn.ConvTranspose2d(32, 32, 4, 2, 1), # B,  32,  8,  8
             nn.ReLU(True),
             nn.ConvTranspose2d(32, 32, 4, 2, 1), # B,  32, 16, 16
@@ -136,8 +138,9 @@ class BetaVAE_B(BetaVAE_H):
         mu = distributions[:, :self.z_dim]
         logvar = distributions[:, self.z_dim:]
         z = reparametrize(mu, logvar)
-        x_recon = self._decode(z).view(x.size())
 
+        x_recon = self._decode(z)
+        x_recon = x_recon.view(x.size())
         return x_recon, mu, logvar
 
     def _encode(self, x):

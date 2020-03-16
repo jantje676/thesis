@@ -90,6 +90,21 @@ class Solver(object):
         self.beta1 = args.beta1
         self.beta2 = args.beta2
 
+
+
+        if args.resize == "padding":
+            self.padding = True
+            self.image_size = args.image_size
+            self.image_width = args.image_size
+            self.image_height = args.image_size
+        else:
+            self.padding = False
+            self.image_size = args.ratio_width
+            self.image_width = args.ratio_width
+            self.image_height = args.ratio_width * args.ratio
+
+        self.ratio = args.ratio
+
         # nc = number of channels
         if args.dataset.lower() == 'dsprites':
             self.nc = 1
@@ -117,7 +132,7 @@ class Solver(object):
         else:
             raise NotImplementedError('only support model H or B')
 
-        self.net = cuda(net(self.z_dim, self.nc), self.use_cuda)
+        self.net = cuda(net(self.z_dim, self.nc, self.image_width, self.image_height), self.use_cuda)
         self.optim = optim.Adam(self.net.parameters(), lr=self.lr,
                                     betas=(self.beta1, self.beta2))
 
@@ -154,9 +169,9 @@ class Solver(object):
         self.batch_size = args.batch_size
         self.data_loader = return_data(args)
 
+
         # cretae an array to store data? KL,recon loss, iteration etc.
         self.gather = DataGather()
-
     def train(self):
 
         # put network to train mode
@@ -171,6 +186,7 @@ class Solver(object):
         # create progress bar
         pbar = tqdm(total=self.max_iter)
         pbar.update(self.global_iter)
+
 
         while not out:
             for x in self.data_loader:
@@ -392,32 +408,13 @@ class Solver(object):
 
         random_z = Variable(cuda(torch.rand(1, self.z_dim), self.use_cuda), volatile=True)
 
-        if self.dataset == 'dsprites':
-            fixed_idx1 = 87040 # square
-            fixed_idx2 = 332800 # ellipse
-            fixed_idx3 = 578560 # heart
+        fixed_idx = 0
+        fixed_img = self.data_loader.dataset.__getitem__(fixed_idx)
+        fixed_img = Variable(cuda(fixed_img, self.use_cuda), volatile=True).unsqueeze(0)
+        fixed_img_z = encoder(fixed_img)[:, :self.z_dim]
 
-            fixed_img1 = self.data_loader.dataset.__getitem__(fixed_idx1)
-            fixed_img1 = Variable(cuda(fixed_img1, self.use_cuda), volatile=True).unsqueeze(0)
-            fixed_img_z1 = encoder(fixed_img1)[:, :self.z_dim]
 
-            fixed_img2 = self.data_loader.dataset.__getitem__(fixed_idx2)
-            fixed_img2 = Variable(cuda(fixed_img2, self.use_cuda), volatile=True).unsqueeze(0)
-            fixed_img_z2 = encoder(fixed_img2)[:, :self.z_dim]
-
-            fixed_img3 = self.data_loader.dataset.__getitem__(fixed_idx3)
-            fixed_img3 = Variable(cuda(fixed_img3, self.use_cuda), volatile=True).unsqueeze(0)
-            fixed_img_z3 = encoder(fixed_img3)[:, :self.z_dim]
-
-            Z = {'fixed_square':fixed_img_z1, 'fixed_ellipse':fixed_img_z2,
-                 'fixed_heart':fixed_img_z3, 'random_img':random_img_z}
-        else:
-            fixed_idx = 0
-            fixed_img = self.data_loader.dataset.__getitem__(fixed_idx)
-            fixed_img = Variable(cuda(fixed_img, self.use_cuda), volatile=True).unsqueeze(0)
-            fixed_img_z = encoder(fixed_img)[:, :self.z_dim]
-
-            Z = {'fixed_img':fixed_img_z, 'random_img':random_img_z, 'random_z':random_z}
+        Z = {'fixed_img':fixed_img_z, 'random_img':random_img_z, 'random_z':random_z}
 
         gifs = []
         for key in Z.keys():
@@ -443,7 +440,13 @@ class Solver(object):
             output_dir = os.path.join(self.output_dir, str(self.global_iter))
             os.makedirs(output_dir, exist_ok=True)
             gifs = torch.cat(gifs)
-            gifs = gifs.view(len(Z), self.z_dim, len(interpolation), self.nc, 64, 64).transpose(1, 2)
+
+            if self.padding == True:
+                gifs = gifs.view(len(Z), self.z_dim, len(interpolation), self.nc, self.image_size, self.image_size).transpose(1, 2)
+            else:
+                gifs = gifs.view(len(Z), self.z_dim, len(interpolation), self.nc, self.image_height , self.image_width).transpose(1, 2)
+
+
             for i, key in enumerate(Z.keys()):
                 for j, val in enumerate(interpolation):
                     save_image(tensor=gifs[i][j].cpu(),

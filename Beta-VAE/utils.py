@@ -53,18 +53,12 @@ def find_run_number(args):
 
         path = "checkpoints/{}*".format(args.dataset)
         runs = glob.glob(path)
-        runs.sort()
-        print(runs)
 
-
-        nr_last_run = runs[-1].split("_")[-1]
-
-
-        if nr_last_run.isdigit():
-            nr_last_run = int(nr_last_run)
-            nr_next_run = nr_last_run + 1
+        if len(runs) == 0:
+            nr_next_run = 1
         else:
-            nr_next_run = 0
+            nr_next_run = len(runs) + 1
+
 
 
     return '_' + str(nr_next_run)
