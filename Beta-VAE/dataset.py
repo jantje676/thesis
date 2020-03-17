@@ -38,6 +38,8 @@ class padd(object):
             desired_size = W
             new_im = Image.new("RGB", (desired_size, desired_size))
             new_im.paste(img, (0, diff//2))
+        else:
+            new_im = img
         return  new_im
 
 
