@@ -143,7 +143,7 @@ def encode_data(model, data_loader, log_step=10, logging=print):
     return img_embs, cap_embs, cap_lens
 
 
-def evalrank(model_path, data_path=None, split='dev', fold5=False):
+def evalrank(model_path, data_path=None, split='dev', fold5=False, vocab_path):
     """
     Evaluate a trained model on either dev or test. If `fold5=True`, 5 fold
     cross-validation is done (only for MSCOCO). Otherwise, the full data is
@@ -157,7 +157,7 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False):
         opt.data_path = data_path
 
     # load vocabulary used by the model
-    vocab = deserialize_vocab("../vocab/{}_vocab.json".format(opt.data_name))
+    vocab = deserialize_vocab("{}{}_vocab.json".format(vocab_path, opt.data_name))
     opt.vocab_size = len(vocab)
 
     # construct model

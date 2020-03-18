@@ -17,7 +17,7 @@ def main(args):
     nr_examples = args.nr_examples
 
     model_path = "{}{}/checkpoint/{}".format(args.model_path, run,checkpoint )
-    rt, rti = evaluation.evalrank(model_path, data_path=args.data_path, split="test")
+    rt, rti = evaluation.evalrank(model_path, data_path=args.data_path, split="test", vocab_path=args.vocab_path)
 
     # rt = (ranks, top1)
     # tuple (image_id, caption)
@@ -109,6 +109,7 @@ if __name__ == "__main__":
     parser.add_argument('--model_path', default="/$TMPDIR/runs/", type=str, help='which checkpoint to use')
     parser.add_argument('--nr_examples', default=5, type=int, help="nr of examples to be plot")
     parser.add_argument('--data_path', default="/$TMPDIR/thesis/data/", type=str, help='which checkpoint to use')
+    parser.add_argument('--vocab_path', default="/$TMPDIR/thesis/vocab/", type=str, help='which checkpoint to use')
 
 
 
