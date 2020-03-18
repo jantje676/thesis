@@ -5,16 +5,19 @@ from matplotlib import pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 import glob
+import argparse
 
-def main():
 
-    caption_test_path = "../data/Fashion200K/data_captions_test.txt"
-    run = "runX"
-    checkpoint = "model_best.pth.tar"
-    nr_examples = 2
+def main(args):
 
-    rt, rti = evaluation.evalrank("runs/{}/checkpoint/{}".format(run, checkpoint), data_path="../data/", split="test")
-    # rt, rti =  evaluation.evalrank("runs/runX/checkpoint/checkpoint_3.pth.tar", data_path="../data/", split="test")
+    caption_test_path = args.caption_test_path
+    run = args.run
+    checkpoint = args.checkpoint
+    data_path = args.data_path
+    nr_examples = args.nr_examples
+
+    model_path = "{}{}/checkpoint/{}".format(args.model_path, run,checkpoint )
+    rt, rti = evaluation.evalrank(model_path, data_path=args.data_path, split="test")
 
     # rt = (ranks, top1)
     # tuple (image_id, caption)
@@ -83,7 +86,7 @@ def show_plots(matches, n_example, title):
     j=0
 
     for i in range(len(matches)):
-        img_adress = glob.glob("../data/Fashion200K/women/dresses/**/{}/*_0.jpeg".format(matches[i][0]))
+        img_adress = glob.glob("{}Fashion200K/women/dresses/**/{}/*_0.jpeg".format(args.data_path ,matches[i][0]))
         img = mpimg.imread(img_adress[0])
 
         # create subplot and append to ax
@@ -92,9 +95,23 @@ def show_plots(matches, n_example, title):
         ax[-1].set_title(title + ":" + matches[i][1])  # set title
         plt.imshow(img)
 
-    plt.show()  # finally, render the plot
+    plt.savefig('{}save_plots.png'.format(model_path))
+
 
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Evaluate trained SCAN model')
+
+    parser.add_argument('--caption_test_path', default="../data/Fashion200K/data_captions_test.txt", type=str, help='path to captions')
+    parser.add_argument('--run', default="RunX", type=str, help='Which run to evaluate')
+    parser.add_argument('--checkpoint', default="model_best.pth.tar", type=str, help='which checkpoint to use')
+    parser.add_argument('--model_path', default="$TMPDIR/runs/", type=str, help='which checkpoint to use')
+    parser.add_argument('--nr_examples', default=5, type=int, help="nr of examples to be plot")
+    parser.add_argument('--data_path', default="$TMPDIR/thesis/data/", type=str, help='which checkpoint to use')
+
+
+
+
+    args = parser.parse_args()
+    main(args)

@@ -20,6 +20,27 @@ import torch.nn as nn
 
 FIELDNAMES = ['image_id', 'image_w','image_h','num_boxes', 'boxes', 'features']
 
+
+
+class padd(object):
+    def __call__(self,img):
+        W, H = img.size
+        # check if image is rectangle shaped
+        if H > W:
+            diff = H - W
+            desired_size = H
+            new_im = Image.new("RGB", (desired_size, desired_size))
+            new_im.paste(img, (diff//2, 0))
+        elif W > H:
+            diff = W - H
+            desired_size = W
+            new_im = Image.new("RGB", (desired_size, desired_size))
+            new_im.paste(img, (0, diff//2))
+        elif W == H:
+            new_im = img
+        return  new_im
+
+
 # get the captions and ids from the caption text file
 def get_captions():
     data_captions = {}
@@ -104,6 +125,7 @@ def load_image_ids():
 
     return split
 
+
 def generate_tsv(image_ids, args):
     data = {}
 
@@ -117,6 +139,7 @@ def generate_tsv(image_ids, args):
 
     # transformations for the net
     transform = transforms.Compose([
+        padd(),
         transforms.Resize((256, 256)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -126,7 +149,7 @@ def generate_tsv(image_ids, args):
     # open file to write data to TSV
     with open("../../data/Fashion200K/tsv_output_segmentations.tsv", 'a') as tsvfile:
         writer = csv.DictWriter(tsvfile, delimiter = '\t', fieldnames = FIELDNAMES)
-
+        print("Started reading images")
         # for every image create seven segmentations and push them through pretrained net
         for img_id in image_ids:
             img_path = img_id[0]
@@ -146,6 +169,9 @@ def generate_tsv(image_ids, args):
             count_stop +=1
             if count_stop == args.early_stop:
                 break
+
+            if count_stop % 10 == 0:
+                print(count_stop)
     tsvfile.close()
     return data
 
@@ -188,6 +214,8 @@ def parse_args():
 
     args = parser.parse_args()
     return args
+
+
 
 
 
