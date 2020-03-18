@@ -103,12 +103,12 @@ def show_plots(matches, n_example, title):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Evaluate trained SCAN model')
 
-    parser.add_argument('--caption_test_path', default="../data/Fashion200K/data_captions_test.txt", type=str, help='path to captions')
-    parser.add_argument('--run', default="RunX", type=str, help='Which run to evaluate')
+    parser.add_argument('--caption_test_path', default="/$TMPDIR/thesis/data/Fashion200K/data_captions_test.txt", type=str, help='path to captions')
+    parser.add_argument('--run', default="Run0", type=str, help='Which run to evaluate')
     parser.add_argument('--checkpoint', default="model_best.pth.tar", type=str, help='which checkpoint to use')
-    parser.add_argument('--model_path', default="$TMPDIR/runs/", type=str, help='which checkpoint to use')
+    parser.add_argument('--model_path', default="/$TMPDIR/runs/", type=str, help='which checkpoint to use')
     parser.add_argument('--nr_examples', default=5, type=int, help="nr of examples to be plot")
-    parser.add_argument('--data_path', default="$TMPDIR/thesis/data/", type=str, help='which checkpoint to use')
+    parser.add_argument('--data_path', default="/$TMPDIR/thesis/data/", type=str, help='which checkpoint to use')
 
 
 
