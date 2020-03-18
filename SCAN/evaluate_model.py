@@ -69,7 +69,7 @@ def get_matches_t2i(top1, test_id2data, nr_examples):
 
 
 # show the matches of images and captions
-def show_plots(matches, n_example, title):
+def show_plots(matches, n_example, title, model_path):
     w = 10
     h = 10
     fig = plt.figure(figsize=(10, 5))
