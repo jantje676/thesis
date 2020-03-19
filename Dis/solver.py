@@ -261,8 +261,6 @@ class Solver(object):
                     self.save_checkpoint('last')
                     pbar.write('Saved checkpoint(iter:{})'.format(self.global_iter))
 
-                if self.global_iter%50000 == 0:
-                    self.save_checkpoint(str(self.global_iter))
 
                 if self.global_iter >= self.max_iter:
                     out = True
