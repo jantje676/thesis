@@ -25,9 +25,11 @@ class View(nn.Module):
 class BetaVAE_H(nn.Module):
     """Model proposed in original beta-VAE paper(Higgins et al, ICLR, 2017)."""
 
-    def __init__(self, z_dim=10, nc=3):
+    def __init__(self, z_dim=10, nc=3, image_width=64, image_height=64):
         super(BetaVAE_H, self).__init__()
         self.z_dim = z_dim
+        self.factor_width = int(image_width / 64)
+        self.factor_height = int(image_height /64)
 
         # number of channels
         self.nc = nc
@@ -47,7 +49,7 @@ class BetaVAE_H(nn.Module):
         )
         self.decoder = nn.Sequential(
             nn.Linear(z_dim, 256),               # B, 256
-            View((-1, 256, 1, 1)),               # B, 256,  1,  1
+            View((-1, 256, 1 , 1 )),               # B, 256,  1,  1
             nn.ReLU(True),
             nn.ConvTranspose2d(256, 64, 4),      # B,  64,  4,  4
             nn.ReLU(True),

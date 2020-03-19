@@ -17,8 +17,6 @@ def main(args):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     np.random.seed(seed)
-    print(">>>>>>>>>>")
-    print(args.z_dim)
     net = Solver(args)
 
     if args.train:
@@ -57,7 +55,7 @@ if __name__ == "__main__":
     parser.add_argument('--viz_name', default='main', type=str, help='visdom env name')
     parser.add_argument('--viz_port', default=8097, type=str, help='visdom port number')
     parser.add_argument('--save_output', default=True, type=str2bool, help='save traverse images and gif')
-    parser.add_argument('--output_dir', default='outputs', type=str, help='output directory')
+    parser.add_argument('--output_dir', default='checkpoints', type=str, help='output directory')
 
     parser.add_argument('--gather_step', default=1000, type=int, help='numer of iterations after which data is gathered for visdom')
     parser.add_argument('--display_step', default=10000, type=int, help='number of iterations after which loss data is printed and visdom is updated')

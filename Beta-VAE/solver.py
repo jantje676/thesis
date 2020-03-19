@@ -192,13 +192,13 @@ class Solver(object):
             for x in self.data_loader:
                 self.global_iter += 1
                 pbar.update(1)
-
+                print("beginning shape: ", x.shape)
                 # wrap variable with tensor and cuda if possible
                 x = Variable(cuda(x, self.use_cuda))
 
                 # forward pass
                 x_recon, mu, logvar = self.net(x)
-
+                print(x_recon.shape)
                 # define reconstruction loss
                 recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
 
