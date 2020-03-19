@@ -35,8 +35,8 @@ def main(args):
     matches_t2i = get_matches_t2i(rti[1], test_id2data, nr_examples)
 
     # plot image and caption together
-    show_plots(matches_i2t, len(matches_i2t), "i2t", model_path)
-    show_plots(matches_t2i, len(matches_t2i), "t2i", model_path)
+    show_plots(matches_i2t, len(matches_i2t), "i2t", plot_path)
+    show_plots(matches_t2i, len(matches_t2i), "t2i", plot_path)
 
 
 
@@ -70,7 +70,7 @@ def get_matches_t2i(top1, test_id2data, nr_examples):
 
 
 # show the matches of images and captions
-def show_plots(matches, n_example, title, model_path):
+def show_plots(matches, n_example, title, plot_path):
     w = 10
     h = 10
     fig = plt.figure(figsize=(10, 5))
@@ -96,8 +96,8 @@ def show_plots(matches, n_example, title, model_path):
         ax[-1].set_title(title + ":" + matches[i][1])  # set title
         plt.imshow(img)
 
-    plt.savefig('{}save_plots_{}.png'.format(model_path, title))
-    print("plot saved at: {}save_plots_{}.png".format(model_path, title))
+    plt.savefig('{}save_plots_{}.png'.format(plot_path, title))
+    print("plot saved at: {}save_plots_{}.png".format(plot_path, title))
 
 
 
