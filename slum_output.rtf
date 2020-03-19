@@ -1,0 +1,31 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf600
+{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\csgray\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs22 \cf2 \CocoaLigature0 CommandNotFoundError: Your shell has not been properly configured to use 'conda activate'.\
+If your shell is Bash or a Bourne variant, enable conda for the current user with\
+\
+    $ echo ". /sw/arch/Debian9/EB_production/2019/software/Miniconda2/4.5.12/etc/profile.d/conda.sh" >> ~/.bashrc\
+\
+or, for all users, enable conda with\
+\
+    $ sudo ln -s /sw/arch/Debian9/EB_production/2019/software/Miniconda2/4.5.12/etc/profile.d/conda.sh /etc/profile.d/conda.sh\
+\
+The options above will permanently enable the 'conda' command, but they do NOT\
+put conda's base (root) environment on PATH.  To do so, run\
+\
+    $ conda activate\
+\
+in your terminal, or to put the base environment on PATH permanently, run\
+\
+    $ echo "conda activate" >> ~/.bashrc\
+\
+Previous to conda 4.4, the recommended way to activate conda was to modify PATH in\
+your ~/.bashrc file.  You should manually remove the line that looks like\
+\
+    export PATH="/sw/arch/Debian9/EB_production/2019/software/Miniconda2/4.5.12/bin:$PATH"\
+\
+^^^ The above line should NO LONGER be in your ~/.bashrc file! ^^^}
