@@ -20,7 +20,7 @@ class CustomImageFolder(ImageFolder):
 
     def __getitem__(self, index1):
 
-        index2 = random.randint(0, len(self.imgs))
+        index2 = random.randint(0, len(self.imgs) - 1)
         path1 = self.imgs[index1][0]
         path2 = self.imgs[index2][0]
         img1 = self.loader(path1)
