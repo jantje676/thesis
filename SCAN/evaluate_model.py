@@ -17,6 +17,7 @@ def main(args):
     nr_examples = args.nr_examples
 
     model_path = "{}{}/checkpoint/{}".format(args.model_path, run,checkpoint )
+    plot_path = "{}{}/checkpoint/".format(args.model_path, run)
     rt, rti = evaluation.evalrank(model_path, data_path=args.data_path, split="test", vocab_path=args.vocab_path)
 
     # rt = (ranks, top1)
