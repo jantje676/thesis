@@ -102,9 +102,9 @@ def show_plots(matches, n_example, title, plot_path, run):
     # plt.close(fig)
     # print("plot saved at: {}save_plots_{}.png".format(plot_path, title))
 
-    plt.savefig('plots_scan/save_plots_{}_.png'.format(title, run))
+    plt.savefig('plots_scan/save_plots_{}_{}.png'.format(title, run))
     plt.close(fig)
-    
+
 
 
 
