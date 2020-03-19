@@ -20,7 +20,7 @@ def main(args):
 
     model_path = "{}{}/checkpoint/{}".format(args.model_path, run,checkpoint )
     plot_path = "{}{}/checkpoint/".format(args.model_path, run)
-    rt, rti = evaluation.evalrank(model_path, data_path=args.data_path, split="test", vocab_path=args.vocab_path)
+    rt, rti = evaluation.evalrank(model_path, plot_path, data_path=args.data_path, split="test", vocab_path=args.vocab_path)
 
     # rt = (ranks, top1)
     # tuple (image_id, caption)
@@ -98,9 +98,13 @@ def show_plots(matches, n_example, title, plot_path):
         ax[-1].set_title(title + ":" + matches[i][1])  # set title
         plt.imshow(img)
 
-    plt.savefig('{}save_plots_{}.png'.format(plot_path, title))
+    # plt.savefig('{}save_plots_{}.png'.format(plot_path, title))
+    # plt.close(fig)
+    # print("plot saved at: {}save_plots_{}.png".format(plot_path, title))
+
+    plt.savefig('save_plots_{}.png'.format(title))
     plt.close(fig)
-    print("plot saved at: {}save_plots_{}.png".format(plot_path, title))
+    print("plot saved at: save_plots_{}.png".format(title))
 
 
 
