@@ -118,7 +118,7 @@ if __name__ == "__main__":
     parser.add_argument('--nr_examples', default=5, type=int, help="nr of examples to be plot")
     parser.add_argument('--data_path', default="/$TMPDIR/thesis/data/", type=str, help='which checkpoint to use')
     parser.add_argument('--vocab_path', default="/$TMPDIR/thesis/vocab/", type=str, help='which checkpoint to use')
-    parser.add_argument('--plot_path', default="/$HOME/runs/"", type=str, help='which checkpoint to use')
+    parser.add_argument('--plot_path', default="/$HOME/runs/", type=str, help='which checkpoint to use')
 
 
 
