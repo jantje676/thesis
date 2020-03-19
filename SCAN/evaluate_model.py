@@ -20,7 +20,7 @@ def main(args):
 
     model_path = "{}{}/checkpoint/{}".format(args.model_path, run,checkpoint )
     plot_path = "{}{}/checkpoint/".format(args.plot_path,  run)
-    rt, rti = evaluation.evalrank(model_path, plot_path, data_path=args.data_path, split="test", vocab_path=args.vocab_path)
+    rt, rti = evaluation.evalrank(model_path, plot_path, run, data_path=args.data_path, split="test", vocab_path=args.vocab_path)
 
     # rt = (ranks, top1)
     # tuple (image_id, caption)
@@ -37,8 +37,8 @@ def main(args):
     matches_t2i = get_matches_t2i(rti[1], test_id2data, nr_examples)
 
     # plot image and caption together
-    show_plots(matches_i2t, len(matches_i2t), "i2t", plot_path)
-    show_plots(matches_t2i, len(matches_t2i), "t2i", plot_path)
+    show_plots(matches_i2t, len(matches_i2t), "i2t", plot_path, run)
+    show_plots(matches_t2i, len(matches_t2i), "t2i", plot_path, run)
 
 
 
@@ -72,7 +72,7 @@ def get_matches_t2i(top1, test_id2data, nr_examples):
 
 
 # show the matches of images and captions
-def show_plots(matches, n_example, title, plot_path):
+def show_plots(matches, n_example, title, plot_path, run):
     w = 10
     h = 10
     fig = plt.figure(figsize=(10, 5))
@@ -102,9 +102,9 @@ def show_plots(matches, n_example, title, plot_path):
     # plt.close(fig)
     # print("plot saved at: {}save_plots_{}.png".format(plot_path, title))
 
-    plt.savefig('save_plots_{}.png'.format(title))
+    plt.savefig('plots_scan/save_plots_{}_.png'.format(title, run))
     plt.close(fig)
-    print("plot saved at: save_plots_{}.png".format(title))
+    
 
 
 
