@@ -1,6 +1,8 @@
 from vocab import Vocabulary
 import evaluation
 import csv
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
@@ -97,6 +99,7 @@ def show_plots(matches, n_example, title, plot_path):
         plt.imshow(img)
 
     plt.savefig('{}save_plots_{}.png'.format(plot_path, title))
+    plt.close(fig)
     print("plot saved at: {}save_plots_{}.png".format(plot_path, title))
 
 
