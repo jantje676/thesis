@@ -96,7 +96,7 @@ def show_plots(matches, n_example, title, model_path):
         plt.imshow(img)
 
     plt.savefig('{}save_plots_{}.png'.format(model_path, title))
-
+    print("plot saved at: {}save_plots_{}.png".format(model_path, title))
 
 
 
