@@ -47,19 +47,14 @@ class BetaVAE_H(nn.Module):
         self.nc = nc
         self.encoder = nn.Sequential(
             nn.Conv2d(nc, 32, 4, 2, 1),          # B,  32, 32, 32
-            PrintLayer(),
             nn.ReLU(True),
             nn.Conv2d(32, 32, 4, 2, 1),          # B,  32, 16, 16
-            PrintLayer(),
             nn.ReLU(True),
             nn.Conv2d(32, 64, 4, 2, 1),          # B,  64,  8,  8
-            PrintLayer(),
             nn.ReLU(True),
             nn.Conv2d(64, 64, 4, 2, 1),          # B,  64,  4,  4
-            PrintLayer(),
             nn.ReLU(True),
             nn.Conv2d(64, 256, 4, 1),            # B, 256,  1,  1
-            PrintLayer(),
             nn.ReLU(True),
             View((-1, 256*1*1 * ((4 * self.factor_height) - 3) * ((4 * self.factor_width) - 3 ))),                 # B, 256
             nn.Linear(256 * ((4 * self.factor_width) - 3 ) * ((4 * self.factor_height) - 3) , z_dim*2),             # B, z_dim*2
