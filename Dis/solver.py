@@ -198,6 +198,8 @@ class Solver(object):
 
                 # forward pass
                 x_recon, mu, logvar = self.net(x1, x2)
+                print("X_reconnnn", x_recon[0].shape)
+                print("X_reconnnn", x_recon[1].shape)
 
                 # define reconstruction loss
                 recon_loss1 = reconstruction_loss(x1, x_recon[0], self.decoder_dist)
