@@ -15,4 +15,6 @@ Beta-VAE/data/*
 SCAN/data/*
 SCAN/vocab/*
 Dis/checkpoints_dis/*
+Beta-VAE/outputs/*
+SCAN/runs/*
 
