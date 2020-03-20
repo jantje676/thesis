@@ -24,6 +24,14 @@ class View(nn.Module):
     def forward(self, tensor):
         return tensor.view(self.size)
 
+class PrintLayer(nn.Module):
+    def __init__(self):
+        super(PrintLayer, self).__init__()
+
+    def forward(self, x):
+        # Do your print / debug stuff here
+        print(x.shape)
+        return x
 
 class BetaVAE_H(nn.Module):
     """Model proposed in original beta-VAE paper(Higgins et al, ICLR, 2017)."""
@@ -34,25 +42,31 @@ class BetaVAE_H(nn.Module):
         self.factor_width = int(image_width / 64)
         self.factor_height = int(image_height /64)
 
+
         # number of channels
         self.nc = nc
         self.encoder = nn.Sequential(
             nn.Conv2d(nc, 32, 4, 2, 1),          # B,  32, 32, 32
+            PrintLayer(),
             nn.ReLU(True),
             nn.Conv2d(32, 32, 4, 2, 1),          # B,  32, 16, 16
+            PrintLayer(),
             nn.ReLU(True),
             nn.Conv2d(32, 64, 4, 2, 1),          # B,  64,  8,  8
+            PrintLayer(),
             nn.ReLU(True),
             nn.Conv2d(64, 64, 4, 2, 1),          # B,  64,  4,  4
+            PrintLayer(),
             nn.ReLU(True),
             nn.Conv2d(64, 256, 4, 1),            # B, 256,  1,  1
+            PrintLayer(),
             nn.ReLU(True),
-            View((-1, 256*1*1 * self.factor_width * self.factor_height)),                 # B, 256
-            nn.Linear(256 * self.factor_width * self.factor_height, z_dim*2),             # B, z_dim*2
+            View((-1, 256*1*1 * ((4 * self.factor_height) - 3) * ((4 * self.factor_width) - 3 ))),                 # B, 256
+            nn.Linear(256 * ((4 * self.factor_width) - 3 ) * ((4 * self.factor_height) - 3) , z_dim*2),             # B, z_dim*2
         )
         self.decoder = nn.Sequential(
-            nn.Linear(z_dim, 256* self.factor_width * self.factor_height),               # B, 256
-            View((-1, 256, 1 * self.factor_height, 1 * self.factor_width)),               # B, 256,  1,  1
+            nn.Linear(z_dim, 256 * ((4 * self.factor_width) - 3 ) * ((4 * self.factor_height) - 3)),               # B, 256
+            View((-1, 256, 1* ((4 * self.factor_height) - 3), 1 * ((4 * self.factor_width) - 3))),               # B, 256,  1,  1
             nn.ReLU(True),
             nn.ConvTranspose2d(256, 64, 4),      # B,  64,  4,  4
             nn.ReLU(True),
