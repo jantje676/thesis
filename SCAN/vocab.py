@@ -77,11 +77,11 @@ def from_txt(txt):
 
 
 
-def build_vocab(data_path, data_name, caption_file, threshold):
+def build_vocab(data_path, data_name, version, caption_file, threshold):
     """Build a simple vocabulary wrapper."""
     counter = Counter()
     for path in caption_file[data_name]:
-        full_path = "{}/data_captions_{}.txt".format(data_path, path)
+        full_path = "{}/data_captions_{}_{}.txt".format(data_path,version, path)
         captions = from_txt(full_path)
         for i, caption in enumerate(captions):
             tokens = nltk.tokenize.word_tokenize(
@@ -107,19 +107,20 @@ def build_vocab(data_path, data_name, caption_file, threshold):
     return vocab
 
 
-def main(data_path, data_name):
+def main(data_path, data_name, version):
     data_path = "../data/Fashion200K/"
     data_name = "Fashion200K"
-    vocab = build_vocab(data_path, data_name, caption_file=annotations, threshold=1)
-    serialize_vocab(vocab, '../vocab/%s_vocab.json' % data_name)
-    print("Saved vocabulary file to ", '../vocab/%s_vocab.json' % data_name)
+    vocab = build_vocab(data_path, data_name, version, caption_file=annotations, threshold=1)
+    serialize_vocab(vocab, '../vocab/{}_vocab_{}.json'.format(data_name, version))
+    print("Saved vocabulary file to ", '../vocab/{}_vocab_{}.json'.format(data_name, version))
 
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', default='data')
-    parser.add_argument('--data_name', default='f30k_precomp',
-                        help='{coco,f30k}_precomp')
+    parser.add_argument('--data_name', default='f30k_precomp', help='{coco,f30k}_precomp')
+    parser.add_argument('--version', default=None, help='version')
+
     opt = parser.parse_args()
-    main(opt.data_path, opt.data_name)
+    main(opt.data_path, opt.data_name, opt.version)

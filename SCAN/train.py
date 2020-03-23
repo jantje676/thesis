@@ -91,6 +91,8 @@ def main():
                         help='LogSumExp temp.')
     parser.add_argument('--lambda_softmax', default=9., type=float,
                         help='Attention softmax temperature.')
+    parser.add_argument('--version', default=None, type=str,
+                        help='version.')
     opt = parser.parse_args()
     print(opt)
 
@@ -103,7 +105,7 @@ def main():
     tb_logger.configure(opt.logger_name, flush_secs=5)
 
     # Load Vocabulary Wrapper, create dictionary that can switch between ids and words
-    vocab = deserialize_vocab("{}{}_vocab.json".format(opt.vocab_path, opt.data_name))
+    vocab = deserialize_vocab("{}{}_vocab_{}.json".format(opt.vocab_path, opt.data_name, opt.version))
     opt.vocab_size = len(vocab)
 
     # Load data loaders

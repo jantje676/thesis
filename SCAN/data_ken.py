@@ -26,7 +26,7 @@ class PrecompDataset(data.Dataset):
     Possible options: f30k_precomp, coco_precomp
     """
 
-    def __init__(self, data_path, data_split, vocab):
+    def __init__(self, data_path, data_split, vocab, version):
         self.vocab = vocab
         loc = data_path + '/'
 
@@ -34,7 +34,7 @@ class PrecompDataset(data.Dataset):
         self.captions = []
 
 
-        with open('{}/data_captions_{}.txt'.format(data_path, data_split), 'r', newline='') as csvfile:
+        with open('{}/data_captions_{}_{}.txt'.format(data_path, version, data_split), 'r', newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t')
 
             for line in reader:
@@ -42,7 +42,7 @@ class PrecompDataset(data.Dataset):
 
 
         # Image features
-        self.images = np.load("{}/data_ims_{}.npy".format(data_path, data_split))
+        self.images = np.load("{}/data_ims_{}_{}.npy".format(data_path, version, data_split))
         self.length = len(self.captions)
         print(self.images.shape)
         print(self.length)
@@ -109,7 +109,7 @@ def collate_fn(data):
 def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
                        shuffle=True, num_workers=2):
     """Returns torch.utils.data.DataLoader for custom coco dataset."""
-    dset = PrecompDataset(data_path, data_split, vocab)
+    dset = PrecompDataset(data_path, data_split, vocab, opt.version)
 
     data_loader = torch.utils.data.DataLoader(dataset=dset,
                                               batch_size=batch_size,

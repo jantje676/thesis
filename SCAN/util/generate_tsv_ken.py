@@ -138,16 +138,23 @@ def generate_tsv(image_ids, args):
     net.eval()
 
     # transformations for the net
+    # transform = transforms.Compose([
+    #     padd(),
+    #     transforms.Resize((256, 256)),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize(mean=[0.485, 0.456, 0.406],
+    #                           std=[0.229, 0.224, 0.225])])
+
+
     transform = transforms.Compose([
-        padd(),
-        transforms.Resize((256, 256)),
+        transforms.Resize((300, 300)),
+        transforms.CenterCrop((256, 256)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                               std=[0.229, 0.224, 0.225])])
-
     count_stop = 0
     # open file to write data to TSV
-    with open("../../data/Fashion200K/tsv_output_segmentations.tsv", 'a') as tsvfile:
+    with open("../../data/Fashion200K/tsv_output_segmentations_{}.tsv".format(args.version), 'a') as tsvfile:
         writer = csv.DictWriter(tsvfile, delimiter = '\t', fieldnames = FIELDNAMES)
         print("Started reading images")
         # for every image create seven segmentations and push them through pretrained net
@@ -176,7 +183,7 @@ def generate_tsv(image_ids, args):
     return data
 
 
-def combine_data_captions(image_ids_images, data, data_captions, image_ids_captions):
+def combine_data_captions(image_ids_images, data, data_captions, image_ids_captions, args):
 
     ids_needed = []
     for id in image_ids_captions:
@@ -189,10 +196,10 @@ def combine_data_captions(image_ids_images, data, data_captions, image_ids_capti
     if data_out.shape[0] != len(ids_needed):
         print("length should be equal!!")
         exit()
-    np.save( "../../data/Fashion200K/data_ims.npy", data_out)
+    np.save( "../../data/Fashion200K/data_ims_{}.npy".format(args.version), data_out)
 
 
-    with open('../../data/Fashion200K/data_captions.txt', 'w', newline='') as csvfile:
+    with open('../../data/Fashion200K/data_captions_{}.txt'.format(args.version), 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter='\t')
 
         for id in ids_needed:
@@ -205,12 +212,12 @@ def parse_args():
     Parse input arguments
     """
     parser = argparse.ArgumentParser(description='Generate features from image')
-    parser.add_argument('--out', dest='outfile',
-                        help='output filepath',
-                        default=None, type=str)
-    parser.add_argument('--early_stop',
-                        help='take lower number of samples for testing purpose',
-                        default=None, type=int)
+    parser.add_argument('--out', dest='outfile',help='output filepath',default=None, type=str)
+    parser.add_argument('--early_stop',help='take lower number of samples for testing purpose', default=None, type=int)
+    parser.add_argument('--version',help='add version', default=None, type=str)
+
+
+
 
     args = parser.parse_args()
     return args
@@ -236,4 +243,4 @@ if __name__ == '__main__':
     data = generate_tsv(image_ids_images, args)
 
     # create numpy stack from features and match with captions
-    combine_data_captions(image_ids_captions, data, data_captions, image_ids_captions)
+    combine_data_captions(image_ids_captions, data, data_captions, image_ids_captions, args)
