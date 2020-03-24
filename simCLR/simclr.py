@@ -33,7 +33,7 @@ class SimCLR(object):
     def __init__(self, dataset, config):
         self.config = config
         self.device = self._get_device()
-        self.writer = SummaryWriter()
+        self.writer = SummaryWriter("runs_simCLR")
         self.dataset = dataset
         self.nt_xent_criterion = NTXentLoss(self.device, config['batch_size'], **config['loss'])
 
@@ -122,7 +122,7 @@ class SimCLR(object):
 
     def _load_pre_trained_weights(self, model):
         try:
-            checkpoints_folder = os.path.join('./runs', self.config['fine_tune_from'], 'checkpoints')
+            checkpoints_folder = os.path.join('./runs_simCLR', self.config['fine_tune_from'], 'checkpoints')
             state_dict = torch.load(os.path.join(checkpoints_folder, 'model.pth'))
             model.load_state_dict(state_dict)
             print("Loaded pre-trained model with success.")
