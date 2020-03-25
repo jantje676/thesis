@@ -91,7 +91,7 @@ def main():
                         help='LogSumExp temp.')
     parser.add_argument('--lambda_softmax', default=9., type=float,
                         help='Attention softmax temperature.')
-    parser.add_argument('--version', default=None, type=str,
+    parser.add_argument('--version', default="laenen", type=str,
                         help='version.')
     opt = parser.parse_args()
     print(opt)
@@ -308,18 +308,7 @@ def find_run_name(opt):
     if len(runs) == 0:
         return opt
     elif len(runs) > 1:
-        last_run = runs[-1].split("/")[1]
-    else:
-        last_run = runs[0].split("/")[1]
-
-    nr_last_run = last_run[-1]
-
-    if nr_last_run.isdigit():
-        nr_last_run = int(nr_last_run)
-        nr_next_run = nr_last_run + 1
-    else:
-        nr_next_run = 0
-
+        nr_next_run = len(runs)
     opt.model_name = './runs/run{}/checkpoint'.format(nr_next_run)
     opt.logger_name = './runs/run{}/log'.format(nr_next_run)
 
