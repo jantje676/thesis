@@ -4,14 +4,14 @@ import numpy as np
 
 class NTXentLoss(torch.nn.Module):
 
-    def __init__(self, device, batch_size, temperature, use_cosine_similarity):
+    def __init__(self, device, opt):
         super(NTXentLoss, self).__init__()
-        self.batch_size = batch_size
-        self.temperature = temperature
+        self.batch_size = opt.batch_size
+        self.temperature = opt.temperature
         self.device = device
         self.softmax = torch.nn.Softmax(dim=-1)
         self.mask_samples_from_same_repr = self._get_correlated_mask().type(torch.bool)
-        self.similarity_function = self._get_similarity_function(use_cosine_similarity)
+        self.similarity_function = self._get_similarity_function(opt.use_cosine_similarity)
         self.criterion = torch.nn.CrossEntropyLoss(reduction="sum")
 
     def _get_similarity_function(self, use_cosine_similarity):

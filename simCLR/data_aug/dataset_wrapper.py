@@ -23,14 +23,14 @@ class CustomImageFolder(ImageFolder):
 
 class DataSetWrapper(object):
 
-    def __init__(self, batch_size, num_workers, valid_size, input_shape, s, name_dataset, dset_dir):
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.valid_size = valid_size
-        self.s = s
-        self.input_shape = eval(input_shape)
-        self.name_dataset = name_dataset
-        self.dset_dir = dset_dir
+    def __init__(self,opt):
+        self.batch_size = opt.batch_size
+        self.num_workers = opt.num_workers
+        self.valid_size = opt.valid_size
+        self.s = opt.s
+        self.input_shape = (opt.input_shape_width, opt.input_shape_height)
+        self.name_dataset = opt.name_dataset
+        self.dset_dir = opt.dset_dir
     def get_data_loaders(self):
         data_augment = self._get_simclr_pipeline_transform()
         transform = SimCLRDataTransform(data_augment)
@@ -68,7 +68,7 @@ class DataSetWrapper(object):
         # ax2 = fig.add_subplot(2,2,2)
         # ax2.imshow(train_loader.dataset[nr][1].permute(1, 2, 0) )
         # plt.show()
-
+        # exit()
         return train_loader, valid_loader
 
     def _get_simclr_pipeline_transform(self):
