@@ -5,6 +5,7 @@ fine_tune_from: None
 log_every_n_steps: 50
 weight_decay: 10e-6
 fp16_precision: False
+output_dir: "runs_simCLR/"
 
 model:
   out_dim: 256
@@ -12,9 +13,11 @@ model:
 
 dataset:
   s: 1
-  input_shape: (96,96,3)
+  input_shape: (96,96*2,3) #(W,H,C)
   num_workers: 0
-  valid_size: 0.05
+  valid_size: 0.4
+  name_dataset: "test_seg" #dresses_segmentations, pictures_only
+  dset_dir: "../data"
 
 loss:
   temperature: 0.5

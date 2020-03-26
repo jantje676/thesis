@@ -6,6 +6,7 @@ from loss.nt_xent import NTXentLoss
 import os
 import shutil
 import sys
+import glob
 
 apex_support = False
 try:
@@ -28,12 +29,25 @@ def _save_config_file(model_checkpoints_folder):
         shutil.copy('./config.yaml', os.path.join(model_checkpoints_folder, 'config.yaml'))
 
 
+def find_run_name(config):
+    path = "{}run*".format(config["output_dir"])
+    runs = glob.glob(path)
+    runs.sort()
+    if len(runs) == 0:
+        return 0
+    elif len(runs) > 0:
+        nr_next_run = len(runs)
+
+    return nr_next_run
+
+
 class SimCLR(object):
 
     def __init__(self, dataset, config):
         self.config = config
         self.device = self._get_device()
-        self.writer = SummaryWriter("runs_simCLR")
+        self.run_name = find_run_name(config)
+        self.writer = SummaryWriter("runs_simCLR/run_{}".format(self.run_name))
         self.dataset = dataset
         self.nt_xent_criterion = NTXentLoss(self.device, config['batch_size'], **config['loss'])
 
@@ -46,13 +60,13 @@ class SimCLR(object):
 
         # get the representations and the projections
         ris, zis = model(xis)  # [N,C]
-
         # get the representations and the projections
         rjs, zjs = model(xjs)  # [N,C]
 
         # normalize projection feature vectors
         zis = F.normalize(zis, dim=1)
         zjs = F.normalize(zjs, dim=1)
+
 
         loss = self.nt_xent_criterion(zis, zjs)
         return loss
@@ -62,6 +76,7 @@ class SimCLR(object):
         train_loader, valid_loader = self.dataset.get_data_loaders()
 
         model = ResNetSimCLR(**self.config["model"]).to(self.device)
+
         model = self._load_pre_trained_weights(model)
 
         optimizer = torch.optim.Adam(model.parameters(), 3e-4, weight_decay=eval(self.config['weight_decay']))
@@ -83,14 +98,17 @@ class SimCLR(object):
         valid_n_iter = 0
         best_valid_loss = np.inf
 
+        tempi = []
+        tempj = []
         for epoch_counter in range(self.config['epochs']):
-            for (xis, xjs), _ in train_loader:
+            for x in train_loader:
                 optimizer.zero_grad()
 
-                xis = xis.to(self.device)
-                xjs = xjs.to(self.device)
+                xis = x[0]
+                xjs = x[1]
 
                 loss = self._step(model, xis, xjs, n_iter)
+
 
                 if n_iter % self.config['log_every_n_steps'] == 0:
                     self.writer.add_scalar('train_loss', loss, global_step=n_iter)
@@ -103,6 +121,7 @@ class SimCLR(object):
 
                 optimizer.step()
                 n_iter += 1
+
 
             # validate the model if requested
             if epoch_counter % self.config['eval_every_n_epochs'] == 0:
@@ -132,13 +151,15 @@ class SimCLR(object):
         return model
 
     def _validate(self, model, valid_loader):
-
         # validation steps
         with torch.no_grad():
             model.eval()
 
             valid_loss = 0.0
-            for counter, ((xis, xjs), _) in enumerate(valid_loader):
+
+            for counter, x in enumerate(valid_loader):
+                xis = x[0]
+                xjs = x[1]
                 xis = xis.to(self.device)
                 xjs = xjs.to(self.device)
 
