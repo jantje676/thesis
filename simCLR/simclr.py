@@ -23,10 +23,10 @@ import numpy as np
 torch.manual_seed(0)
 
 
-def _save_config_file(model_checkpoints_folder):
+def _save_config_file(model_checkpoints_folder, config):
     if not os.path.exists(model_checkpoints_folder):
         os.makedirs(model_checkpoints_folder)
-        shutil.copy('./config.yaml', os.path.join(model_checkpoints_folder, 'config.yaml'))
+        shutil.copy('{}config.yaml'.format(config["config_file"]), os.path.join(model_checkpoints_folder, 'config.yaml'))
 
 
 def find_run_name(config):
@@ -62,7 +62,8 @@ class SimCLR(object):
         ris, zis = model(xis)  # [N,C]
         # get the representations and the projections
         rjs, zjs = model(xjs)  # [N,C]
-
+        print(">>>>>>>>>")
+        print(zjs.shape)
         # normalize projection feature vectors
         zis = F.normalize(zis, dim=1)
         zjs = F.normalize(zjs, dim=1)
@@ -92,7 +93,7 @@ class SimCLR(object):
         model_checkpoints_folder = os.path.join(self.writer.log_dir, 'checkpoints')
 
         # save config file
-        _save_config_file(model_checkpoints_folder)
+        _save_config_file(model_checkpoints_folder, config)
 
         n_iter = 0
         valid_n_iter = 0
