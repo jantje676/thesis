@@ -307,7 +307,7 @@ def find_run_name(opt):
     runs.sort()
     if len(runs) == 0:
         return opt
-    elif len(runs) > 1:
+    elif len(runs) > 0:
         nr_next_run = len(runs)
     opt.model_name = './runs/run{}/checkpoint'.format(nr_next_run)
     opt.logger_name = './runs/run{}/log'.format(nr_next_run)
