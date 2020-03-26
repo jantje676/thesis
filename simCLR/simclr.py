@@ -108,6 +108,9 @@ class SimCLR(object):
                 xis = x[0]
                 xjs = x[1]
 
+                xis = xis.to(self.device)
+                xjs = xjs.to(self.device)
+                
                 loss = self._step(model, xis, xjs, n_iter)
 
 
