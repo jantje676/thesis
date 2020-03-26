@@ -3,7 +3,7 @@ from data_aug.dataset_wrapper import DataSetWrapper
 import argparse
 from util import str2bool
 
-def main():
+def main(opt):
     dataset = DataSetWrapper(opt)
     simclr = SimCLR(dataset, opt)
     simclr.train()
