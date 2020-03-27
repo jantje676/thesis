@@ -8,6 +8,7 @@
 
 # Python files
 */__pycache__/*.pyc
+**/__pycache__/*.pyc
 
 # data
 data/*
