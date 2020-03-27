@@ -7,6 +7,7 @@ import os
 import sys
 import json
 from util import find_run_name
+from tqdm import tqdm
 
 
 apex_support = False
@@ -52,8 +53,7 @@ class SimCLR(object):
         ris, zis = model(xis)  # [N,C]
         # get the representations and the projections
         rjs, zjs = model(xjs)  # [N,C]
-        print(">>>>>>>>>")
-        print(zjs.shape)
+
         # normalize projection feature vectors
         zis = F.normalize(zis, dim=1)
         zjs = F.normalize(zjs, dim=1)
@@ -89,8 +89,10 @@ class SimCLR(object):
         valid_n_iter = 0
         best_valid_loss = np.inf
 
-        tempi = []
-        tempj = []
+        # create progress bar
+        pbar = tqdm(total=self.opt.epochs)
+        pbar.update(n_iter)
+
         for epoch_counter in range(self.opt.epochs):
             for x in train_loader:
                 optimizer.zero_grad()
@@ -115,6 +117,7 @@ class SimCLR(object):
 
                 optimizer.step()
                 n_iter += 1
+            pbar.update(1)
 
 
             # validate the model if requested
@@ -132,6 +135,8 @@ class SimCLR(object):
             if epoch_counter >= 10:
                 scheduler.step()
             self.writer.add_scalar('cosine_lr_decay', scheduler.get_lr()[0], global_step=n_iter)
+        pbar.write("[Training Finished]")
+        pbar.close()
 
     def _load_pre_trained_weights(self, model):
         try:
