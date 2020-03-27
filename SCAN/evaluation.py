@@ -302,13 +302,17 @@ def shard_xattn_i2t(images, captions, caplens, opt, shard_size=128):
     n_cap_shard = (len(captions)-1)/shard_size + 1
 
     d = np.zeros((len(images), len(captions)))
-    for i in range(n_im_shard):
+    for i in range(int(n_im_shard)):
         im_start, im_end = shard_size*i, min(shard_size*(i+1), len(images))
-        for j in range(n_cap_shard):
+        for j in range(int(n_cap_shard)):
             sys.stdout.write('\r>> shard_xattn_i2t batch (%d,%d)' % (i,j))
             cap_start, cap_end = shard_size*j, min(shard_size*(j+1), len(captions))
-            im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True).cuda()
-            s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True).cuda()
+            if torch.cuda.is_available():
+                im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True).cuda()
+                s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True).cuda()
+            else:
+                im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True)
+                s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True)
             l = caplens[cap_start:cap_end]
             sim = xattn_score_i2t(im, s, l, opt)
             d[im_start:im_end, cap_start:cap_end] = sim.data.cpu().numpy()

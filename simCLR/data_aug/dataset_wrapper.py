@@ -50,13 +50,13 @@ class DataSetWrapper(object):
                                   batch_size=self.batch_size,
                                   num_workers=self.num_workers,
                                   drop_last=True,
-                                  shuffle=False)
+                                  shuffle=True)
 
         valid_loader = DataLoader(val_data,
                                   batch_size=self.batch_size,
                                   num_workers=self.num_workers,
                                   drop_last=True,
-                                  shuffle=False)
+                                  shuffle=True)
         print(len(train_loader.dataset))
         print(len(valid_loader.dataset))
 
@@ -81,27 +81,6 @@ class DataSetWrapper(object):
                                               GaussianBlur(kernel_size=int(0.1 * self.input_shape[0])),
                                               transforms.ToTensor()])
         return data_transforms
-
-    def get_train_validation_data_loaders(self, train_dataset):
-        # obtain training indices that will be used for validation
-        num_train = len(train_dataset)
-        indices = list(range(num_train))
-        np.random.shuffle(indices)
-
-        split = int(np.floor(self.valid_size * num_train))
-        train_idx, valid_idx = indices[split:], indices[:split]
-
-        # define samplers for obtaining training and validation batches
-        train_sampler = SubsetRandomSampler(train_idx)
-        valid_sampler = SubsetRandomSampler(valid_idx)
-
-        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, sampler=train_sampler,
-                                  num_workers=self.num_workers, drop_last=True, shuffle=False)
-
-        valid_loader = DataLoader(train_dataset, batch_size=self.batch_size, sampler=valid_sampler,
-                                  num_workers=self.num_workers, drop_last=True)
-        return train_loader, valid_loader
-
 
 class SimCLRDataTransform(object):
     def __init__(self, transform):

@@ -14,7 +14,7 @@
 import os
 import time
 import shutil
-import glob
+
 
 import torch
 import numpy
@@ -24,10 +24,9 @@ from vocab import Vocabulary, deserialize_vocab
 from model import SCAN
 from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data, shard_xattn_t2i, shard_xattn_i2t
 from torch.autograd import Variable
-
+from utils import find_run_name, save_hyperparameters
 import logging
 import tensorboard_logger as tb_logger
-
 import argparse
 
 def main():
@@ -114,6 +113,9 @@ def main():
 
     # Construct the model
     model = SCAN(opt)
+
+    # save hyperparameters in file
+    save_hyperparameters(opt.logger_name, opt)
 
     best_rsum = 0
     start_epoch = 0
@@ -301,18 +303,6 @@ def accuracy(output, target, topk=(1,)):
     return res
 
 
-def find_run_name(opt):
-    path = "runs/run*"
-    runs = glob.glob(path)
-    runs.sort()
-    if len(runs) == 0:
-        return opt
-    elif len(runs) > 0:
-        nr_next_run = len(runs)
-    opt.model_name = './runs/run{}/checkpoint'.format(nr_next_run)
-    opt.logger_name = './runs/run{}/log'.format(nr_next_run)
-
-    return opt
 
 
 if __name__ == '__main__':
