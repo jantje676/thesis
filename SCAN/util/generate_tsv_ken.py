@@ -198,7 +198,6 @@ def combine_data_captions(image_ids_images, data, data_captions, image_ids_capti
         exit()
     np.save( "../../data/Fashion200K/data_ims_{}.npy".format(args.version), data_out)
 
-
     with open('../../data/Fashion200K/data_captions_{}.txt'.format(args.version), 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter='\t')
 
@@ -216,15 +215,8 @@ def parse_args():
     parser.add_argument('--early_stop',help='take lower number of samples for testing purpose', default=None, type=int)
     parser.add_argument('--version',help='add version', default=None, type=str)
 
-
-
-
     args = parser.parse_args()
     return args
-
-
-
-
 
 if __name__ == '__main__':
 

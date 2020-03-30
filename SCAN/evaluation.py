@@ -143,7 +143,7 @@ def encode_data(model, data_loader, log_step=10, logging=print):
     return img_embs, cap_embs, cap_lens
 
 
-def evalrank(model_path, plot_path,run, data_path=None, split='dev', fold5=False, vocab_path="../vocab/"):
+def evalrank(model_path, plot_path,run, version, data_path=None, split='dev', fold5=False, vocab_path="../vocab/"):
     """
     Evaluate a trained model on either dev or test. If `fold5=True`, 5 fold
     cross-validation is done (only for MSCOCO). Otherwise, the full data is
@@ -157,9 +157,9 @@ def evalrank(model_path, plot_path,run, data_path=None, split='dev', fold5=False
         opt.data_path = data_path
 
     # load vocabulary used by the model
-    vocab = deserialize_vocab("{}{}_vocab.json".format(vocab_path, opt.data_name))
+    vocab = deserialize_vocab("{}{}_vocab_{}.json".format(vocab_path, opt.data_name, version))
     opt.vocab_size = len(vocab)
-
+    print(opt.vocab_size)
     # construct model
     model = SCAN(opt)
 
@@ -242,6 +242,8 @@ def evalrank(model_path, plot_path,run, data_path=None, split='dev', fold5=False
         print("Text to image: %.1f %.1f %.1f %.1f %.1f" %
               mean_metrics[5:10])
 
+    if not os.path.exists('plots_scan'):
+        os.makedirs('plots_scan')
     torch.save({'rt': rt, 'rti': rti}, 'plots_scan/ranks_{}.pth.tar'.format(run))
     return rt, rti
 

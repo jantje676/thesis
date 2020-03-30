@@ -9,21 +9,25 @@ import numpy as np
 import glob
 import argparse
 
+"Probabaly there is still a bug in the t2i matching process. \
+The t2i recall shows that  there is 25% match rate, but pictures\
+but show that there is no match rate"
 
 def main(args):
-
+    print(args.version)
     caption_test_path = args.caption_test_path
     run = args.run
     checkpoint = args.checkpoint
     data_path = args.data_path
     nr_examples = args.nr_examples
+    version = args.version
 
+    caption_test_path = "{}/data_captions_{}_test.txt".format(caption_test_path, version)
     model_path = "{}{}/checkpoint/{}".format(args.model_path, run,checkpoint )
     plot_path = "{}{}/checkpoint/".format(args.plot_path,  run)
-    rt, rti = evaluation.evalrank(model_path, plot_path, run, data_path=args.data_path, split="test", vocab_path=args.vocab_path)
+    rt, rti = evaluation.evalrank(model_path, plot_path, run, version, data_path=args.data_path, split="test", vocab_path=args.vocab_path)
 
-    # rt = (ranks, top1)
-    # tuple (image_id, caption)
+    # dictionary to turn test_ids to data_ids
     test_id2data = {}
 
     # find the caption and image with every id in the test file
@@ -53,7 +57,10 @@ def get_matches_i2t(top1, test_id2data, nr_examples):
         caption_id = top1[i]
         caption = test_id2data[caption_id][1]
         image_id = test_id2data[i][0]
-        matches.append((image_id, caption))
+        match = "Incorrect"
+        if i == caption_id:
+            match = "correct"
+        matches.append((image_id, caption, match))
     return matches
 
 
@@ -67,7 +74,10 @@ def get_matches_t2i(top1, test_id2data, nr_examples):
         image_id = top1[i]
         image_id = test_id2data[image_id][0]
         caption = test_id2data[i][1]
-        matches.append((image_id, caption))
+        match = "Incorrect"
+        if i == image_id:
+            match = "correct"
+        matches.append((image_id, caption, match))
     return matches
 
 
@@ -75,7 +85,7 @@ def get_matches_t2i(top1, test_id2data, nr_examples):
 def show_plots(matches, n_example, title, plot_path, run):
     w = 10
     h = 10
-    fig = plt.figure(figsize=(10, 5))
+    fig = plt.figure(figsize=(20, 20))
     columns = n_example
     rows = 1
 
@@ -95,12 +105,9 @@ def show_plots(matches, n_example, title, plot_path, run):
         # create subplot and append to ax
         ax.append( fig.add_subplot(rows, columns, j+1) )
         j+=1
-        ax[-1].set_title(title + ":" + matches[i][1])  # set title
+        ax[-1].set_title(title + ":" + matches[i][1] + " ({})".format(matches[i][2]))  # set title
         plt.imshow(img)
 
-    # plt.savefig('{}save_plots_{}.png'.format(plot_path, title))
-    # plt.close(fig)
-    # print("plot saved at: {}save_plots_{}.png".format(plot_path, title))
 
     plt.savefig('plots_scan/save_plots_{}_{}.png'.format(title, run))
     plt.close(fig)
@@ -111,7 +118,7 @@ def show_plots(matches, n_example, title, plot_path, run):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Evaluate trained SCAN model')
 
-    parser.add_argument('--caption_test_path', default="/$TMPDIR/thesis/data/Fashion200K/data_captions_test.txt", type=str, help='path to captions')
+    parser.add_argument('--caption_test_path', default="/$TMPDIR/thesis/data/Fashion200K", type=str, help='path to captions')
     parser.add_argument('--run', default="Run0", type=str, help='Which run to evaluate')
     parser.add_argument('--checkpoint', default="model_best.pth.tar", type=str, help='which checkpoint to use')
     parser.add_argument('--model_path', default="/$TMPDIR/runs/", type=str, help='which checkpoint to use')
@@ -119,10 +126,7 @@ if __name__ == "__main__":
     parser.add_argument('--data_path', default="/$TMPDIR/thesis/data/", type=str, help='which checkpoint to use')
     parser.add_argument('--vocab_path', default="/$TMPDIR/thesis/vocab/", type=str, help='which checkpoint to use')
     parser.add_argument('--plot_path', default="/$HOME/runs/", type=str, help='which checkpoint to use')
-
-
-
-
+    parser.add_argument('--version', default="laenen", type=str, help='which version of features and vocab to use')
 
     args = parser.parse_args()
     main(args)
