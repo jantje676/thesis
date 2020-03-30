@@ -6,6 +6,7 @@ from data_aug.gaussian_blur import GaussianBlur
 from torchvision import datasets
 from torchvision.datasets import ImageFolder
 import os
+import time
 
 np.random.seed(0)
 
@@ -50,13 +51,15 @@ class DataSetWrapper(object):
                                   batch_size=self.batch_size,
                                   num_workers=self.num_workers,
                                   drop_last=True,
-                                  shuffle=True)
+                                  shuffle=True,
+                                  pin_memory=True)
 
         valid_loader = DataLoader(val_data,
                                   batch_size=self.batch_size,
                                   num_workers=self.num_workers,
                                   drop_last=True,
-                                  shuffle=True)
+                                  shuffle=True,
+                                  pin_memory=True)
         print(len(train_loader.dataset))
         print(len(valid_loader.dataset))
 
@@ -89,4 +92,5 @@ class SimCLRDataTransform(object):
     def __call__(self, sample):
         xi = self.transform(sample)
         xj = self.transform(sample)
+        end_time = time.time()
         return xi, xj

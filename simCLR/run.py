@@ -26,7 +26,7 @@ if __name__ == "__main__":
     parser.add_argument('--s', default=1, type=int, help='s for colorjitter')
     parser.add_argument('--input_shape_width', default=96, type=int, help='W, H, C')
     parser.add_argument('--input_shape_height', default=192, type=int, help='W, H, C')
-    parser.add_argument('--num_workers', default=0 , type=int, help='num workers')
+    parser.add_argument('--num_workers', default=8 , type=int, help='num workers')
     parser.add_argument('--valid_size', default=0.1  , type=float, help='percentage for validation')
     parser.add_argument('--name_dataset', default="test_seg", type=str, help='which dataset')
     parser.add_argument('--dset_dir', default="../data", type=str, help='data diretory, ./thesis/data for lisa')
