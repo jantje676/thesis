@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import time
 
 
 class NTXentLoss(torch.nn.Module):
@@ -45,6 +46,7 @@ class NTXentLoss(torch.nn.Module):
         return v
 
     def forward(self, zis, zjs):
+        start_time = time.time()
         representations = torch.cat([zjs, zis], dim=0)
 
         similarity_matrix = self.similarity_function(representations, representations)
@@ -61,5 +63,6 @@ class NTXentLoss(torch.nn.Module):
 
         labels = torch.zeros(2 * self.batch_size).to(self.device).long()
         loss = self.criterion(logits, labels)
-
+        end_time = time.time()
+        print("loss time is: {}".format(end_time - start_time))
         return loss / (2 * self.batch_size)

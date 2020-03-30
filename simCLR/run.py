@@ -2,6 +2,7 @@ from simclr import SimCLR
 from data_aug.dataset_wrapper import DataSetWrapper
 import argparse
 from util import str2bool
+import time
 
 def main(opt):
     dataset = DataSetWrapper(opt)

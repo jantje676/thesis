@@ -8,6 +8,7 @@ import sys
 import json
 from util import find_run_name
 from tqdm import tqdm
+import time
 
 
 apex_support = False
@@ -49,15 +50,17 @@ class SimCLR(object):
 
     def _step(self, model, xis, xjs, n_iter):
 
-        # get the representations and the projections
+        # get the representations and the projection
         ris, zis = model(xis)  # [N,C]
         # get the representations and the projections
         rjs, zjs = model(xjs)  # [N,C]
 
         # normalize projection feature vectors
+        start_time = time.time()
         zis = F.normalize(zis, dim=1)
         zjs = F.normalize(zjs, dim=1)
-
+        end_time = time.time()
+        print("time to normalize: {}".format(end_time - start_time))
 
         loss = self.nt_xent_criterion(zis, zjs)
         return loss
@@ -102,7 +105,7 @@ class SimCLR(object):
 
                 xis = xis.to(self.device)
                 xjs = xjs.to(self.device)
-
+                print("to step")
                 loss = self._step(model, xis, xjs, n_iter)
 
 
@@ -165,6 +168,6 @@ class SimCLR(object):
                 loss = self._step(model, xis, xjs, counter)
                 valid_loss += loss.item()
 
-            valid_loss /= counter
+            valid_loss /= (counter + 1)
         model.train()
         return valid_loss
