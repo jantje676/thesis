@@ -28,13 +28,10 @@ class ResNetSimCLR(nn.Module):
             raise ("Invalid model name. Check the config file and pass one of: resnet18 or resnet50")
 
     def forward(self, x):
-        start_time = time.time()
         h = self.features(x)
         h = h.squeeze()
 
         x = self.l1(h)
         x = F.relu(x)
         x = self.l2(x)
-        end_time = time.time()
-        print("model forward: {}".format(end_time - start_time))
         return h, x

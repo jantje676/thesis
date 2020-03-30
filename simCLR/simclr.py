@@ -56,11 +56,8 @@ class SimCLR(object):
         rjs, zjs = model(xjs)  # [N,C]
 
         # normalize projection feature vectors
-        start_time = time.time()
         zis = F.normalize(zis, dim=1)
         zjs = F.normalize(zjs, dim=1)
-        end_time = time.time()
-        print("time to normalize: {}".format(end_time - start_time))
 
         loss = self.nt_xent_criterion(zis, zjs)
         return loss
@@ -96,32 +93,24 @@ class SimCLR(object):
         pbar = tqdm(total=self.opt.epochs)
         pbar.update(n_iter)
 
-        t_start = time.time()
         for epoch_counter in range(self.opt.epochs):
             for x in train_loader:
                 optimizer.zero_grad()
-                print("dataloader: {}".format(time.time() - t_start))
                 xis = x[0]
                 xjs = x[1]
 
                 xis = xis.to(self.device)
                 xjs = xjs.to(self.device)
-                print("to step")
                 loss = self._step(model, xis, xjs, n_iter)
 
 
                 if n_iter % self.opt.log_every_n_steps == 0:
                     self.writer.add_scalar('train_loss', loss, global_step=n_iter)
 
-                loss_time = time.time()
                 loss.backward()
-                print("loss backward time: {}".format(time.time() - loss_time))
 
-                optim_time = time.time()
                 optimizer.step()
-                print("optimezer time: {}".format(time.time() - optim_time))
                 n_iter += 1
-                t_start = time.time()
             pbar.update(1)
 
 

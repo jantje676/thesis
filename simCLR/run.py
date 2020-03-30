@@ -13,8 +13,8 @@ def main(opt):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', default=4, type=int, help='batch size')
-    parser.add_argument('--epochs', default=80, type=int, help='epochs to run')
-    parser.add_argument('--eval_every_n_epochs', default=1, type=int, help='when to evaluate')
+    parser.add_argument('--epochs', default=5, type=int, help='epochs to run')
+    parser.add_argument('--eval_every_n_epochs', default=10, type=int, help='when to evaluate')
     parser.add_argument('--fine_tune_from', default="None", type=str, help='load pretrained model')
     parser.add_argument('--log_every_n_steps', default=50, type=int, help='when to log')
     parser.add_argument('--weight_decay', default=10e-6, type=float, help='wheight decay')
