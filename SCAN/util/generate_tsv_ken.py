@@ -17,6 +17,12 @@ from PIL import Image
 from matplotlib import pyplot as plt
 from math import floor
 import torch.nn as nn
+import sys
+import torch
+sys.path.append('../../simclr')
+sys.path.append('../../SimCLR_pre')
+from models.resnet_simclr import ResNetSimCLR
+from modules.simclr import SimCLR
 
 FIELDNAMES = ['image_id', 'image_w','image_h','num_boxes', 'boxes', 'features']
 
@@ -46,7 +52,8 @@ def get_captions():
     data_captions = {}
     image_ids_captions =[]
     count = 0
-    with open("../../data/Fashion200K/labels/dress_train_detect_all.txt", newline = '') as file:
+
+    with open(args.labels, newline = '') as file:
         caption_reader = csv.reader(file, delimiter='\t')
 
         # read every line
@@ -98,7 +105,11 @@ def segment(img, net, img_idx, transform):
         # add extra dimension
         seg_transformed = seg_transformed.unsqueeze(0)
         feature = net(seg_transformed)
-        feature = feature.squeeze()
+
+        if args.network == "alex":
+            feature = feature.squeeze()
+        elif args.network == "simCLR" or args.network == "simCLR_pre":
+            feature = feature[0].squeeze()
         features.append(feature.detach().numpy())
 
     features = np.stack(features, axis=0)
@@ -115,7 +126,7 @@ def segment(img, net, img_idx, transform):
 def load_image_ids():
 
     split = []
-    path = "../../data/Fashion200K/pictures_only/pictures_only/*.jpeg"
+    path = args.image_path
 
     img_paths = glob.glob(path)
     for img_path in img_paths:
@@ -128,33 +139,44 @@ def load_image_ids():
 
 def generate_tsv(image_ids, args):
     data = {}
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    # choose model
-    net = models.alexnet(pretrained=True)
-    # take aways the last layers
-    net.classifier = nn.Sequential(*[net.classifier[i] for i in range(5)])
+    if args.network == "alex":
+        # choose model
+        net = models.alexnet(pretrained=True)
+        # take aways the last layers
+        net.classifier = nn.Sequential(*[net.classifier[i] for i in range(5)])
 
-    # set to evaluation
-    net.eval()
+        # set to evaluation
+        net.eval()
 
-    # transformations for the net
-    # transform = transforms.Compose([
-    #     padd(),
-    #     transforms.Resize((256, 256)),
-    #     transforms.ToTensor(),
-    #     transforms.Normalize(mean=[0.485, 0.456, 0.406],
-    #                           std=[0.229, 0.224, 0.225])])
+        transform = transforms.Compose([
+            transforms.Resize((300, 300)),
+            transforms.CenterCrop((256, 256)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                  std=[0.229, 0.224, 0.225])])
+    elif args.network == "simCLR":
+        net = ResNetSimCLR("resnet18", args.output_dim)
+        net.load_state_dict(torch.load("../../simCLR/runs_simCLR/run_26/checkpoints/model.pth", map_location=torch.device(device)))
+        net.eval()
+        # to transformations here
+        transform = transforms.Compose([
+            transforms.RandomResizedCrop(size=(args.input_shape_height, args.input_shape_width)),
+            transforms.ToTensor()])
 
+    elif args.network == "simCLR_pre":
+        net = SimCLR(args)
+        net.load_state_dict(torch.load(args.checkpoint_simCLR_pre, map_location=torch.device(device)))
+        net.eval()
 
-    transform = transforms.Compose([
-        transforms.Resize((300, 300)),
-        transforms.CenterCrop((256, 256)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                              std=[0.229, 0.224, 0.225])])
+        transform = transforms.Compose([
+            transforms.RandomResizedCrop(size=(224, 224)),
+            transforms.ToTensor()])
+
     count_stop = 0
     # open file to write data to TSV
-    with open("../../data/Fashion200K/tsv_output_segmentations_{}.tsv".format(args.version), 'a') as tsvfile:
+    with open("{}/tsv_output_segmentations_{}.tsv".format(args.data_dir, args.version), 'a') as tsvfile:
         writer = csv.DictWriter(tsvfile, delimiter = '\t', fieldnames = FIELDNAMES)
         print("Started reading images")
         # for every image create seven segmentations and push them through pretrained net
@@ -196,9 +218,9 @@ def combine_data_captions(image_ids_images, data, data_captions, image_ids_capti
     if data_out.shape[0] != len(ids_needed):
         print("length should be equal!!")
         exit()
-    np.save( "../../data/Fashion200K/data_ims_{}.npy".format(args.version), data_out)
+    np.save( "{}/data_ims_{}.npy".format(args.data_dir, args.version), data_out)
 
-    with open('../../data/Fashion200K/data_captions_{}.txt'.format(args.version), 'w', newline='') as csvfile:
+    with open('{}/data_captions_{}.txt'.format(args.data_dir, args.version), 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter='\t')
 
         for id in ids_needed:
@@ -211,12 +233,40 @@ def parse_args():
     Parse input arguments
     """
     parser = argparse.ArgumentParser(description='Generate features from image')
-    parser.add_argument('--out', dest='outfile',help='output filepath',default=None, type=str)
     parser.add_argument('--early_stop',help='take lower number of samples for testing purpose', default=None, type=int)
     parser.add_argument('--version',help='add version', default=None, type=str)
+    parser.add_argument('--network',help='alex|simCLR|simCLR_pre', default="alex", type=str)
+    parser.add_argument('--labels',help='location of labels', default="../../data/Fashion200K/labels/dress_train_detect_all.txt", type=str)
+    parser.add_argument('--image_path',help='location of images', default="../../data/Fashion200K/pictures_only/pictures_only/*.jpeg", type=str)
+    parser.add_argument('--checkpoint_simCLR_pre',help='location pretrained model', default="../../SimCLR_pre/checkpoint_100.tar", type=str)
+    parser.add_argument('--data_dir',help='location data directory', default="../../data/Fashion200K", type=str)
+
+
+    # WHEN PRETRAINED simCLR IS USED
+    parser.add_argument('--output_dim',help='if simCLR is used, size of output dim', default=256, type=int)
+    parser.add_argument('--input_shape_width', default=96, type=int, help='(W, H, C) for when pretrained network is used' )
+    parser.add_argument('--input_shape_height', default=192, type=int, help='(W, H, C) for when pretrained network is used')
+
+    # WHEN simCLR_pre IS USED
+    parser.add_argument('--resnet',help='which resnet to use', default="resnet50", type=str)
+    parser.add_argument('--normalize',help='use normalize', default="True", type=str2bool)
+    parser.add_argument('--projection_dim',help='size of projection dim', default=64, type=int)
 
     args = parser.parse_args()
+
     return args
+
+
+
+def str2bool(v):
+    # codes from : https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 if __name__ == '__main__':
 
