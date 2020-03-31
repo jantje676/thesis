@@ -94,7 +94,6 @@ def main():
                         help='version.')
     opt = parser.parse_args()
     print(opt)
-
     opt = find_run_name(opt)
 
 
