@@ -19,10 +19,10 @@ from math import floor
 import torch.nn as nn
 import sys
 import torch
-sys.path.append('../../simclr')
-sys.path.append('../../SimCLR_pre')
-from models.resnet_simclr import ResNetSimCLR
-from modules.simclr import SimCLR
+sys.path.append('../../')
+
+from simCLR.models.resnet_simclr import ResNetSimCLR
+from SimCLR_pre.modules.simclr import SimCLR
 
 FIELDNAMES = ['image_id', 'image_w','image_h','num_boxes', 'boxes', 'features']
 
