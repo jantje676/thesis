@@ -134,8 +134,7 @@ class SimCLR(object):
 
     def _load_pre_trained_weights(self, model):
         try:
-            checkpoints_folder = os.path.join('./runs_simCLR', self.opt.fine_tune_from, 'checkpoints')
-            state_dict = torch.load(os.path.join(checkpoints_folder, 'model.pth'))
+            state_dict = torch.load("{}/model.pth".format(args.checkpoint_dir))
             model.load_state_dict(state_dict)
             print("Loaded pre-trained model with success.")
         except FileNotFoundError:
