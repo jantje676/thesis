@@ -268,6 +268,8 @@ def xattn_score_t2i(images, captions, cap_lens, opt):
         weiContext = weiContext.contiguous()
         # (n_image, n_word)
         row_sim = cosine_similarity(cap_i_expand, weiContext, dim=2)
+        print(">>>>>>")
+        print(row_sim.shape)
         if opt.agg_func == 'LogSumExp':
             row_sim.mul_(opt.lambda_lse).exp_()
             row_sim = row_sim.sum(dim=1, keepdim=True)
