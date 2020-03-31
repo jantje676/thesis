@@ -240,12 +240,7 @@ def cosine_similarity(x1, x2, dim=1, eps=1e-8):
     w1 = torch.norm(x1, 2, dim)
     w2 = torch.norm(x2, 2, dim)
     temp = (w12 / (w1 * w2).clamp(min=eps))
-    print(x1.shape)
-    print(x2.shape)
-    print(w1.shape)
-    print(w2.shape)
-    print("temp")
-    print(temp.shape)
+
     return temp.squeeze()
 
 
@@ -275,8 +270,7 @@ def xattn_score_t2i(images, captions, cap_lens, opt):
         weiContext = weiContext.contiguous()
         # (n_image, n_word)
         row_sim = cosine_similarity(cap_i_expand, weiContext, dim=2)
-        print(">>>>>>")
-        print(row_sim.shape)
+        
         if opt.agg_func == 'LogSumExp':
             row_sim.mul_(opt.lambda_lse).exp_()
             row_sim = row_sim.sum(dim=1, keepdim=True)
