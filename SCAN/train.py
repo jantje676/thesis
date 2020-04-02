@@ -96,9 +96,6 @@ def main():
     print(opt)
     opt = find_run_name(opt)
 
-
-
-
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     tb_logger.configure(opt.logger_name, flush_secs=5)
 

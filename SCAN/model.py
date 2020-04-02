@@ -183,7 +183,6 @@ def func_attention(query, context, opt, smooth, eps=1e-8):
     batch_size_q, queryL = query.size(0), query.size(1)
     batch_size, sourceL = context.size(0), context.size(1)
 
-
     # Get attention
     # --> (batch, d, queryL)
     queryT = torch.transpose(query, 1, 2)
@@ -253,11 +252,13 @@ def xattn_score_t2i(images, captions, cap_lens, opt):
     similarities = []
     n_image = images.size(0)
     n_caption = captions.size(0)
+    attention_store = []
     for i in range(n_caption):
         # Get the i-th text description
         n_word = cap_lens[i]
         cap_i = captions[i, :n_word, :].unsqueeze(0).contiguous()
         # --> (n_image, n_word, d)
+
         cap_i_expand = cap_i.repeat(n_image, 1, 1)
         """
             word(query): (n_image, n_word, d)
@@ -266,11 +267,11 @@ def xattn_score_t2i(images, captions, cap_lens, opt):
             attn: (n_image, n_region, n_word)
         """
         weiContext, attn = func_attention(cap_i_expand, images, opt, smooth=opt.lambda_softmax)
+        attention_store.append(attn)
         cap_i_expand = cap_i_expand.contiguous()
         weiContext = weiContext.contiguous()
         # (n_image, n_word)
         row_sim = cosine_similarity(cap_i_expand, weiContext, dim=2)
-        
         if opt.agg_func == 'LogSumExp':
             row_sim.mul_(opt.lambda_lse).exp_()
             row_sim = row_sim.sum(dim=1, keepdim=True)
@@ -288,7 +289,7 @@ def xattn_score_t2i(images, captions, cap_lens, opt):
     # (n_image, n_caption)
     similarities = torch.cat(similarities, 1)
 
-    return similarities
+    return similarities, attention_store
 
 
 def xattn_score_i2t(images, captions, cap_lens, opt):
@@ -301,6 +302,8 @@ def xattn_score_i2t(images, captions, cap_lens, opt):
     n_image = images.size(0)
     n_caption = captions.size(0)
     n_region = images.size(1)
+    attention_store = []
+
     for i in range(n_caption):
         # Get the i-th text description
         n_word = cap_lens[i]
@@ -314,8 +317,11 @@ def xattn_score_i2t(images, captions, cap_lens, opt):
             attn: (n_image, n_word, n_region)
         """
         weiContext, attn = func_attention(images, cap_i_expand, opt, smooth=opt.lambda_softmax)
+        attention_store.append(attn)
+
         # (n_image, n_region)
         row_sim = cosine_similarity(images, weiContext, dim=2)
+
         if opt.agg_func == 'LogSumExp':
             row_sim.mul_(opt.lambda_lse).exp_()
             row_sim = row_sim.sum(dim=1, keepdim=True)
@@ -332,7 +338,7 @@ def xattn_score_i2t(images, captions, cap_lens, opt):
 
     # (n_image, n_caption)
     similarities = torch.cat(similarities, 1)
-    return similarities
+    return similarities, attention_store
 
 
 class ContrastiveLoss(nn.Module):
@@ -348,9 +354,9 @@ class ContrastiveLoss(nn.Module):
     def forward(self, im, s, s_l):
         # compute image-sentence score matrix
         if self.opt.cross_attn == 't2i':
-            scores = xattn_score_t2i(im, s, s_l, self.opt)
+            scores, _ = xattn_score_t2i(im, s, s_l, self.opt)
         elif self.opt.cross_attn == 'i2t':
-            scores = xattn_score_i2t(im, s, s_l, self.opt)
+            scores, _ = xattn_score_i2t(im, s, s_l, self.opt)
         else:
             raise ValueError("unknown first norm type:", opt.raw_feature_norm)
         diagonal = scores.diag().view(im.size(0), 1)

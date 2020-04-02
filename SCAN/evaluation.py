@@ -173,79 +173,34 @@ def evalrank(model_path, plot_path,run, version, data_path=None, split='dev', fo
     print('Computing results...')
     img_embs, cap_embs, cap_lens = encode_data(model, data_loader)
     print('Images: %d, Captions: %d' %
-          (img_embs.shape[0] / 5, cap_embs.shape[0]))
+          (img_embs.shape[0] , cap_embs.shape[0]))
 
-
-    if not fold5:
-        # no cross-validation, full evaluation
-        # img_embs = np.array([img_embs[i] for i in range(0, len(img_embs), 5)])
-
-        start = time.time()
-        if opt.cross_attn == 't2i':
-            sims = shard_xattn_t2i(img_embs, cap_embs, cap_lens, opt, shard_size=128)
-        elif opt.cross_attn == 'i2t':
-            sims = shard_xattn_i2t(img_embs, cap_embs, cap_lens, opt, shard_size=128)
-        else:
-            raise NotImplementedError
-        end = time.time()
-        print("calculate similarity time:", end-start)
-
-        # r = (r1, r2, r5, medr, meanr), rt= (ranks, top1)
-        r, rt = i2t(img_embs, cap_embs, cap_lens, sims, return_ranks=True)
-        ri, rti = t2i(img_embs, cap_embs, cap_lens, sims, return_ranks=True)
-        ar = (r[0] + r[1] + r[2]) / 3
-        ari = (ri[0] + ri[1] + ri[2]) / 3
-        rsum = r[0] + r[1] + r[2] + ri[0] + ri[1] + ri[2]
-        print("rsum: %.1f" % rsum)
-        print("Average i2t Recall: %.1f" % ar)
-        print("Image to text: %.1f %.1f %.1f %.1f %.1f" % r)
-        print("Average t2i Recall: %.1f" % ari)
-        print("Text to image: %.1f %.1f %.1f %.1f %.1f" % ri)
+    t2i_switch = True
+    if opt.cross_attn == 't2i':
+        sims, attn = shard_xattn_t2i(img_embs, cap_embs, cap_lens, opt, shard_size=128)
+    elif opt.cross_attn == 'i2t':
+        sims, attn = shard_xattn_i2t(img_embs, cap_embs, cap_lens, opt, shard_size=128)
+        t2i_switch = False
     else:
-        # 5fold cross-validation, only for MSCOCO
-        results = []
-        for i in range(5):
-            img_embs_shard = img_embs[i * 5000:(i + 1) * 5000:5]
-            cap_embs_shard = cap_embs[i * 5000:(i + 1) * 5000]
-            cap_lens_shard = cap_lens[i * 5000:(i + 1) * 5000]
-            start = time.time()
-            if opt.cross_attn == 't2i':
-                sims = shard_xattn_t2i(img_embs_shard, cap_embs_shard, cap_lens_shard, opt, shard_size=128)
-            elif opt.cross_attn == 'i2t':
-                sims = shard_xattn_i2t(img_embs_shard, cap_embs_shard, cap_lens_shard, opt, shard_size=128)
-            else:
-                raise NotImplementedError
-            end = time.time()
-            print("calculate similarity time:", end-start)
+        raise NotImplementedError
 
-            r, rt0 = i2t(img_embs_shard, cap_embs_shard, cap_lens_shard, sims, return_ranks=True)
-            print("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" % r)
-            ri, rti0 = t2i(img_embs_shard, cap_embs_shard, cap_lens_shard, sims, return_ranks=True)
-            print("Text to image: %.1f, %.1f, %.1f, %.1f, %.1f" % ri)
+    # r = (r1, r2, r5, medr, meanr), rt= (ranks, top1)
+    r, rt = i2t(img_embs, cap_embs, cap_lens, sims, return_ranks=True)
+    ri, rti = t2i(img_embs, cap_embs, cap_lens, sims, return_ranks=True)
+    ar = (r[0] + r[1] + r[2]) / 3
+    ari = (ri[0] + ri[1] + ri[2]) / 3
+    rsum = r[0] + r[1] + r[2] + ri[0] + ri[1] + ri[2]
+    print("rsum: %.1f" % rsum)
+    print("Average i2t Recall: %.1f" % ar)
+    print("Image to text: %.1f %.1f %.1f %.1f %.1f" % r)
+    print("Average t2i Recall: %.1f" % ari)
+    print("Text to image: %.1f %.1f %.1f %.1f %.1f" % ri)
 
-            if i == 0:
-                rt, rti = rt0, rti0
-            ar = (r[0] + r[1] + r[2]) / 3
-            ari = (ri[0] + ri[1] + ri[2]) / 3
-            rsum = r[0] + r[1] + r[2] + ri[0] + ri[1] + ri[2]
-            print("rsum: %.1f ar: %.1f ari: %.1f" % (rsum, ar, ari))
-            results += [list(r) + list(ri) + [ar, ari, rsum]]
-
-        print("-----------------------------------")
-        print("Mean metrics: ")
-        mean_metrics = tuple(np.array(results).mean(axis=0).flatten())
-        print("rsum: %.1f" % (mean_metrics[10] * 6))
-        print("Average i2t Recall: %.1f" % mean_metrics[11])
-        print("Image to text: %.1f %.1f %.1f %.1f %.1f" %
-              mean_metrics[:5])
-        print("Average t2i Recall: %.1f" % mean_metrics[12])
-        print("Text to image: %.1f %.1f %.1f %.1f %.1f" %
-              mean_metrics[5:10])
 
     if not os.path.exists('plots_scan'):
         os.makedirs('plots_scan')
-    torch.save({'rt': rt, 'rti': rti}, 'plots_scan/ranks_{}.pth.tar'.format(run))
-    return rt, rti
+    torch.save({'rt': rt, 'rti': rti, "attn": attn, "t2i_switch": t2i_switch }, 'plots_scan/ranks_{}_{}.pth.tar'.format(run, version))
+    return rt, rti, attn
 
 
 def softmax(X, axis):
@@ -273,13 +228,12 @@ def shard_xattn_t2i(images, captions, caplens, opt, shard_size=128):
     n_cap_shard = (len(captions)-1)/shard_size + 1
 
     d = np.zeros((len(images), len(captions)))
-    # print("d-shape: ", d.shape)
-    # print("images shape: ", images.shape)
-    # print("captions shape: ", captions.shape)
+
+    attention = []
+
+
     for i in range(int(n_im_shard)):
         im_start, im_end = shard_size*i, min(shard_size*(i+1), len(images))
-        # print("im_start:" , im_start)
-        # print("im end: ", im_end )
         for j in range(int(n_cap_shard)):
             sys.stdout.write('\r>> shard_xattn_t2i batch (%d,%d)' % (i,j))
             cap_start, cap_end = shard_size*j, min(shard_size*(j+1), len(captions))
@@ -290,10 +244,13 @@ def shard_xattn_t2i(images, captions, caplens, opt, shard_size=128):
                 im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True)
                 s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True)
             l = caplens[cap_start:cap_end]
-            sim = xattn_score_t2i(im, s, l, opt)
+
+            sim, attn = xattn_score_t2i(im, s, l, opt)
             d[im_start:im_end, cap_start:cap_end] = sim.data.cpu().numpy()
+
+            attention = attention + attn
     sys.stdout.write('\n')
-    return d
+    return d, attention
 
 
 def shard_xattn_i2t(images, captions, caplens, opt, shard_size=128):
@@ -303,6 +260,7 @@ def shard_xattn_i2t(images, captions, caplens, opt, shard_size=128):
     n_im_shard = (len(images)-1)/shard_size + 1
     n_cap_shard = (len(captions)-1)/shard_size + 1
 
+    attention = []
     d = np.zeros((len(images), len(captions)))
     for i in range(int(n_im_shard)):
         im_start, im_end = shard_size*i, min(shard_size*(i+1), len(images))
@@ -316,38 +274,37 @@ def shard_xattn_i2t(images, captions, caplens, opt, shard_size=128):
                 im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True)
                 s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True)
             l = caplens[cap_start:cap_end]
-            sim = xattn_score_i2t(im, s, l, opt)
+            sim, attn = xattn_score_i2t(im, s, l, opt)
             d[im_start:im_end, cap_start:cap_end] = sim.data.cpu().numpy()
+            attention = attention + attn
     sys.stdout.write('\n')
-    return d
+    return d, attention
 
 
 def i2t(images, captions, caplens, sims, npts=None, return_ranks=False):
     """
     Images->Text (Image Annotation)
     Images: (N, n_region, d) matrix of images
-    Captions: (5N, max_n_word, d) matrix of captions
-    CapLens: (5N) array of caption lengths
-    sims: (N, 5N) matrix of similarity im-cap
+    Captions: (N, max_n_word, d) matrix of captions
+    CapLens: (N) array of caption lengths
+    sims: (N, N) matrix of similarity im-cap
+    top1: highest ranking caption/image for every id
+    rank: what is the rank of the corresponding image/caption,
+          when 0 the image-caption is matched, because rank is highest
     """
     npts = images.shape[0]
     ranks = np.zeros(npts)
     top1 = np.zeros(npts)
 
-    print("sims: ", sims.shape)
     for index in range(npts):
 
-        # sort the array and reverse the order
+        # sort the array and reverse the order to find most similar caption to image
         inds = np.argsort(sims[index])[::-1]
         # Score
         rank = 1e20
 
-
-
+        # return indexes where inds == index
         tmp = np.where(inds == index)
-            # print("index: " , index)
-            # print("i: ", i)
-            # print("tmp: ", tmp)
         tmp = tmp[0][0]
 
         if tmp < rank:
@@ -371,9 +328,9 @@ def t2i(images, captions, caplens, sims, npts=None, return_ranks=False):
     """
     Text->Images (Image Search)
     Images: (N, n_region, d) matrix of images
-    Captions: (5N, max_n_word, d) matrix of captions
-    CapLens: (5N) array of caption lengths
-    sims: (N, 5N) matrix of similarity im-cap
+    Captions: (N, max_n_word, d) matrix of captions
+    CapLens: (N) array of caption lengths
+    sims: (N, N) matrix of similarity im-cap
     """
     npts = images.shape[0]
     ranks = np.zeros(npts)
