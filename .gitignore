@@ -3,8 +3,10 @@
 **/.DS_Store
 *.icloud
 
+
 # zip files
 *.zip
+*.sh
 
 # Python files
 */__pycache__/*.pyc
@@ -19,4 +21,5 @@ Dis/checkpoints_dis/*
 Beta-VAE/outputs/*
 SCAN/runs/*
 Beta-VAE/checkpoints/*
+vocab/*
 
