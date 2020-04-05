@@ -1,6 +1,7 @@
 import glob
 import os
 import json
+import random
 
 def save_hyperparameters(log_path, opt):
     if not os.path.exists(log_path):
@@ -20,3 +21,9 @@ def find_run_name(opt):
     opt.logger_name = './runs/run{}/log'.format(nr_next_run)
 
     return opt
+
+def get_random_indx(nr_examples, max_len):
+    rnd = [x for x in range(max_len)]
+    random.shuffle(rnd)
+    rnd = rnd[:nr_examples]
+    return rnd

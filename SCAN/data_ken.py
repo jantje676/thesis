@@ -29,23 +29,16 @@ class PrecompDataset(data.Dataset):
     def __init__(self, data_path, data_split, vocab, version):
         self.vocab = vocab
         loc = data_path + '/'
-
-        # Captions
         self.captions = []
-
 
         with open('{}/data_captions_{}_{}.txt'.format(data_path, version, data_split), 'r', newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t')
-
             for line in reader:
                 self.captions.append(line[1].strip())
-
 
         # Image features
         self.images = np.load("{}/data_ims_{}_{}.npy".format(data_path, version, data_split))
         self.length = len(self.captions)
-        print(self.images.shape)
-        print(self.length)
 
         # rkiros data has redundancy in images, we divide by 5, 10crop doesn't
         if self.images.shape[0] != self.length:
@@ -57,8 +50,6 @@ class PrecompDataset(data.Dataset):
     def __getitem__(self, index):
         # handle the image redundancy
         img_id = int(index/self.im_div)
-
-
         image = torch.Tensor(self.images[img_id])
         caption = self.captions[index]
         vocab = self.vocab

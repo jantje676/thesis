@@ -219,9 +219,9 @@ def validate(opt, val_loader, model):
 
     # find the similarity between every caption and image in the validation set?
     if opt.cross_attn == 't2i':
-        sims = shard_xattn_t2i(img_embs, cap_embs, cap_lens, opt, shard_size=128)
+        sims, _ = shard_xattn_t2i(img_embs, cap_embs, cap_lens, opt, shard_size=128)
     elif opt.cross_attn == 'i2t':
-        sims = shard_xattn_i2t(img_embs, cap_embs, cap_lens, opt, shard_size=128)
+        sims, _= shard_xattn_i2t(img_embs, cap_embs, cap_lens, opt, shard_size=128)
     else:
         raise NotImplementedError
     end = time.time()
