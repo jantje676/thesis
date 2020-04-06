@@ -310,7 +310,6 @@ def i2t(images, captions, caplens, sims, npts=None, return_ranks=False):
         if tmp < rank:
             rank = tmp
         ranks[index] = rank
-        print(inds.shape)
         top1[index] = inds[0]
 
     # Compute metrics
