@@ -189,7 +189,7 @@ def func_attention(query, context, opt, smooth, eps=1e-8):
 
     # (batch, sourceL, d)(batch, d, queryL)
     # --> (batch, sourceL, queryL)
-    attn = torch.bmm(context, queryT.double())
+    attn = torch.bmm(context, queryT)
     if opt.raw_feature_norm == "softmax":
         # --> (batch*sourceL, queryL)
         attn = attn.view(batch_size*sourceL, queryL)
