@@ -189,7 +189,7 @@ def func_attention(query, context, opt, smooth, eps=1e-8):
 
     # (batch, sourceL, d)(batch, d, queryL)
     # --> (batch, sourceL, queryL)
-    attn = torch.bmm(context, queryT)
+    attn = torch.bmm(context, queryT.double())
     if opt.raw_feature_norm == "softmax":
         # --> (batch*sourceL, queryL)
         attn = attn.view(batch_size*sourceL, queryL)
@@ -256,6 +256,7 @@ def xattn_score_t2i(images, captions, cap_lens, opt):
     for i in range(n_caption):
         # Get the i-th text description
         n_word = cap_lens[i]
+
         cap_i = captions[i, :n_word, :].unsqueeze(0).contiguous()
         # --> (n_image, n_word, d)
 

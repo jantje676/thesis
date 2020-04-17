@@ -176,7 +176,7 @@ def train(opt, train_loader, model, epoch, val_loader):
 
         # make sure train logger is used
         model.logger = train_logger
-
+        
         # Update the model
         model.train_emb(*train_data)
 
