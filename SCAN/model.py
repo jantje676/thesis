@@ -365,16 +365,15 @@ class ContrastiveLoss(nn.Module):
             scores, _ = xattn_score_i2t(im, s, s_l, self.opt)
         else:
             raise ValueError("unknown first norm type:", opt.raw_feature_norm)
-        print("Scores", scores.shape)
+
         diagonal = scores.diag().view(im.size(0), 1)
         d1 = diagonal.expand_as(scores)
         d2 = diagonal.t().expand_as(scores)
 
         # compare every diagonal score to scores in its column
         # caption retrieval
-        adap = True
 
-        if adap:
+        if self.opt.adap_margin:
             margin1, margin2 = adap_margin(freq_score, scores, self.margin)
         else:
             margin1 = self.margin

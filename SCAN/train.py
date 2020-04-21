@@ -24,7 +24,7 @@ from vocab import Vocabulary, deserialize_vocab
 from model import SCAN
 from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data, shard_xattn_t2i, shard_xattn_i2t
 from torch.autograd import Variable
-from utils import find_run_name, save_hyperparameters
+from utils import find_run_name, save_hyperparameters, str2bool
 import logging
 import tensorboard_logger as tb_logger
 import argparse
@@ -91,6 +91,8 @@ def main():
     parser.add_argument('--lambda_softmax', default=9., type=float,
                         help='Attention softmax temperature.')
     parser.add_argument('--version', default="laenen", type=str,
+                        help='version.')
+    parser.add_argument('--adap_margin', default=False, type=str2bool,
                         help='version.')
     opt = parser.parse_args()
     print(opt)
