@@ -19,6 +19,7 @@ import torch.backends.cudnn as cudnn
 from torch.nn.utils.clip_grad import clip_grad_norm
 import numpy as np
 from collections import OrderedDict
+from utils import adap_margin
 
 
 def l1norm(X, dim, eps=1e-8):
@@ -355,7 +356,8 @@ class ContrastiveLoss(nn.Module):
         self.margin = margin
         self.max_violation = max_violation
 
-    def forward(self, im, s, s_l):
+
+    def forward(self, im, s, s_l, freq_score):
         # compute image-sentence score matrix
         if self.opt.cross_attn == 't2i':
             scores, _ = xattn_score_t2i(im, s, s_l, self.opt)
@@ -363,16 +365,28 @@ class ContrastiveLoss(nn.Module):
             scores, _ = xattn_score_i2t(im, s, s_l, self.opt)
         else:
             raise ValueError("unknown first norm type:", opt.raw_feature_norm)
+        print("Scores", scores.shape)
         diagonal = scores.diag().view(im.size(0), 1)
         d1 = diagonal.expand_as(scores)
         d2 = diagonal.t().expand_as(scores)
 
         # compare every diagonal score to scores in its column
         # caption retrieval
-        cost_s = (self.margin + scores - d1).clamp(min=0)
+        adap = True
+
+        if adap:
+            margin1, margin2 = adap_margin(freq_score, scores, self.margin)
+        else:
+            margin1 = self.margin
+            margin2 = self.margin
+
+
+        cost_s = (margin1 + scores - d1).clamp(min=0)
+
+
         # compare every diagonal score to scores in its row
         # image retrieval
-        cost_im = (self.margin + scores - d2).clamp(min=0)
+        cost_im = (margin2 + scores - d2).clamp(min=0)
 
         # clear diagonals
         mask = torch.eye(scores.size(0)) > .5
@@ -459,27 +473,26 @@ class SCAN(object):
         cap_emb, cap_lens = self.txt_enc(captions, lengths)
         return img_emb, cap_emb, cap_lens
 
-    def forward_loss(self, img_emb, cap_emb, cap_len, **kwargs):
+    def forward_loss(self, img_emb, cap_emb, cap_len, freq_score, **kwargs):
         """Compute the loss given pairs of image and caption embeddings
         """
-        loss = self.criterion(img_emb, cap_emb, cap_len)
+        loss = self.criterion(img_emb, cap_emb, cap_len, freq_score)
         self.logger.update('Le', loss.item(), img_emb.size(0))
         return loss
 
-    def train_emb(self, images, captions, lengths, ids=None, *args):
+    def train_emb(self, images, captions, lengths, ids=None, freq_score=None, *args):
         """One training step given images and captions.
         """
         self.Eiters += 1
         self.logger.update('Eit', self.Eiters)
         self.logger.update('lr', self.optimizer.param_groups[0]['lr'])
-
         # compute the embeddings
         img_emb, cap_emb, cap_lens = self.forward_emb(images, captions, lengths)
 
         # measure accuracy and record loss
         self.optimizer.zero_grad()
 
-        loss = self.forward_loss(img_emb, cap_emb, cap_lens)
+        loss = self.forward_loss(img_emb, cap_emb, cap_lens, freq_score)
 
         # compute gradient and do SGD step
         loss.backward()

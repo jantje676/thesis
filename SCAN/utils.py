@@ -2,6 +2,8 @@ import glob
 import os
 import json
 import random
+import numpy as np
+import torch
 
 def save_hyperparameters(log_path, opt):
     if not os.path.exists(log_path):
@@ -27,3 +29,70 @@ def get_random_indx(nr_examples, max_len):
     random.shuffle(rnd)
     rnd = rnd[:nr_examples]
     return rnd
+
+
+def str2bool(v):
+    # codes from : https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+def print_result_subset(rs, r, version, word_asked):
+    print("Score {} for word: {}".format(version, word_asked))
+    print("r1: %.1f \t (%.1f)" % (rs[0], r[0]))
+    print("r5: %.1f \t (%.1f)" % (rs[1], r[1]))
+    print("r10: %.1f \t (%.1f)" % (rs[2], r[2]))
+
+def calculate_r(ranks, version):
+    r1 = 100.0 * len(np.where(ranks < 1)[0]) / len(ranks)
+    r5 = 100.0 * len(np.where(ranks < 5)[0]) / len(ranks)
+    r10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
+    return (r1, r5, r10)
+
+# count the frequency of the words
+def count_words(captions):
+    count = {}
+    for caption in captions:
+        print(caption)
+        for word in caption.split(" "):
+            print(word)
+            if word in count.keys():
+                count[word] += 1
+            else:
+                count[word] = 1
+    minimum = min(count.values())
+    maximum = max(count.values())
+    return count, maximum, minimum
+
+# calculate a frequency score of a caption
+def calculatate_freq(caption, max, min, count):
+    caption = caption.split(" ")
+    tot_freq = 0
+    caption_l = len(caption)
+    for word in caption:
+        try:
+            tot_freq += count[word]
+        except:
+            caption_length -= 1
+
+    freq = tot_freq / caption_l
+    freq_score = freq / max
+
+    # turn around scores in this way high frequency words will have low scores and visa versa
+    freq_score = 1 - freq
+
+    return freq_score
+
+# calculate the adaptive margin according to the frequency scores of captions
+def adap_margin(freq_score, scores, margin):
+    freq = list(freq_score)
+
+    freq = torch.FloatTensor(freq)
+    freq = 0.2 + (freq * 0.2)
+    margin1 = freq.expand_as(scores)
+    margin2 = freq.t().expand_as(scores)
+    return margin1, margin2

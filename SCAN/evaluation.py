@@ -98,10 +98,10 @@ def encode_data(model, data_loader, log_step=10, logging=print):
     cap_lens = None
 
     max_n_word = 0
-    for i, (images, captions, lengths, ids) in enumerate(data_loader):
+    for i, (images, captions, lengths, ids, freq_score) in enumerate(data_loader):
         max_n_word = max(max_n_word, max(lengths))
 
-    for i, (images, captions, lengths, ids) in enumerate(data_loader):
+    for i, (images, captions, lengths, ids, freq_score) in enumerate(data_loader):
         # make sure val logger is used
         model.logger = val_logger
 
@@ -126,7 +126,7 @@ def encode_data(model, data_loader, log_step=10, logging=print):
             cap_lens[nid] = cap_len[j]
 
         # measure accuracy and record loss
-        model.forward_loss(img_emb, cap_emb, cap_len)
+        model.forward_loss(img_emb, cap_emb, cap_len, freq_score)
 
         # measure elapsed time
         batch_time.update(time.time() - end)

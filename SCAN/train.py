@@ -7,7 +7,7 @@
 # Writen by Kuang-Huei Lee, 2018
 # ---------------------------------------------------------------
 """Training script"""
-"BEFORE RUNNINH"
+"BEFORE RUNNING"
 "generate_tsv_ken.py"
 "split_data.py"
 "vocab.py"
@@ -176,7 +176,6 @@ def train(opt, train_loader, model, epoch, val_loader):
 
         # make sure train logger is used
         model.logger = train_logger
-        
         # Update the model
         model.train_emb(*train_data)
 
