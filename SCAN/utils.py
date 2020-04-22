@@ -57,9 +57,7 @@ def calculate_r(ranks, version):
 def count_words(captions):
     count = {}
     for caption in captions:
-        print(caption)
         for word in caption.split(" "):
-            print(word)
             if word in count.keys():
                 count[word] += 1
             else:
@@ -90,9 +88,11 @@ def calculatate_freq(caption, max, min, count):
 # calculate the adaptive margin according to the frequency scores of captions
 def adap_margin(freq_score, scores, margin):
     freq = list(freq_score)
-
     freq = torch.FloatTensor(freq)
-    freq = 0.2 + (freq * 0.2)
+    freq = 0.2 + (freq * 0.1)
+
     margin1 = freq.expand_as(scores)
-    margin2 = freq.t().expand_as(scores)
+
+    margin2 = freq.expand_as(scores).t()
+
     return margin1, margin2
