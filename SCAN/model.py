@@ -379,7 +379,7 @@ class ContrastiveLoss(nn.Module):
             margin1 = self.margin
             margin2 = self.margin
 
-    
+
         cost_s = (margin1 + scores - d1).clamp(min=0)
 
 
