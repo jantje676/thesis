@@ -92,7 +92,7 @@ def main():
                         help='Attention softmax temperature.')
     parser.add_argument('--version', default="laenen", type=str,
                         help='version.')
-    parser.add_argument('--adap_margin', default=False, type=str2bool,
+    parser.add_argument('--adap_margin', default=True, type=str2bool,
                         help='version.')
     opt = parser.parse_args()
     print(opt)
