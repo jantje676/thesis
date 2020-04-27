@@ -24,7 +24,7 @@ from vocab import Vocabulary, deserialize_vocab
 from model import SCAN
 from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data, shard_xattn_t2i, shard_xattn_i2t
 from torch.autograd import Variable
-from utils import find_run_name, save_hyperparameters, str2bool
+from utils import find_run_name, save_hyperparameters
 import logging
 import tensorboard_logger as tb_logger
 import argparse
