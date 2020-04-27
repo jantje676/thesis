@@ -373,11 +373,11 @@ class ContrastiveLoss(nn.Module):
         # compare every diagonal score to scores in its column
         # caption retrieval
 
-        if self.opt.adap_margin == 1:
-            margin1, margin2 = adap_margin(freq_score, scores, self.margin)
-        else:
-            margin1 = self.margin
-            margin2 = self.margin
+        # if self.opt.adap_margin == 1:
+        #     margin1, margin2 = adap_margin(freq_score, scores, self.margin)
+        # else:
+        margin1 = self.margin
+        margin2 = self.margin
 
 
         cost_s = (margin1 + scores - d1).clamp(min=0)
