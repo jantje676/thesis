@@ -64,34 +64,44 @@ def count_words(captions):
                 count[word] += 1
             else:
                 count[word] = 1
-    minimum = min(count.values())
-    maximum = max(count.values())
-    return count, maximum, minimum
+    return count
 
 # calculate a frequency score of a caption
-def calculatate_freq(caption, max, min, count):
-    caption = caption.split(" ")
-    tot_freq = 0
-    caption_l = len(caption)
-    for word in caption:
-        try:
-            tot_freq += count[word]
-        except:
-            caption_length -= 1
+def calculatate_freq(captions, count):
+    freq_score = []
+    for caption in captions:
+        caption = caption.split(" ")
+        tot_freq = 0
+        caption_l = len(caption)
+        for word in caption:
+            try:
+                tot_freq += count[word]
+            except:
+                caption_length -= 1
 
-    freq = tot_freq / caption_l
-    freq_score = freq / max
+        freq = tot_freq / caption_l
+        freq_score.append(freq)
 
-    # turn around scores in this way high frequency words will have low scores and visa versa
-    freq_score = 1 - freq
+    freq_score = normalize(freq_score)
+    return freq_score
 
+def normalize(freq_score):
+    max_freq = max(freq_score)
+    min_freq = min(freq_score)
+
+    if max_freq == min_freq:
+        for i in range(len(freq_score)):
+            freq_score[i] = freq_score[i] / min_freq
+    else:
+        for i in range(len(freq_score)):
+            freq_score[i] = (freq_score[i] - min_freq)/(max_freq - min_freq)
     return freq_score
 
 # calculate the adaptive margin according to the frequency scores of captions
 def adap_margin(freq_score, scores, margin):
     freq = list(freq_score)
     freq = torch.FloatTensor(freq)
-    freq = 0.2 + (freq * 0.1)
+    freq = 0.2 + ( (1- freq) * 0.1)
 
     margin1 = freq.expand_as(scores)
 

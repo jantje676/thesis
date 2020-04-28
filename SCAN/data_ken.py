@@ -46,10 +46,11 @@ class PrecompDataset(data.Dataset):
         else:
             self.im_div = 1
 
-        count, max, min = count_words(self.captions)
+        count = count_words(self.captions)
+        freqs = calculatate_freq(self.captions, count)
+        self.freqs = freqs
         self.count = count
-        self.max = max
-        self.min = min
+
 
     def __getitem__(self, index):
         # handle the image redundancy
@@ -57,7 +58,7 @@ class PrecompDataset(data.Dataset):
         image = torch.Tensor(self.images[img_id])
         caption = self.captions[index]
         vocab = self.vocab
-        freq_score = calculatate_freq(caption, self.max, self.min, self.count)
+        freq_score = self.freqs[index]
 
         # Convert caption (string) to word ids.
         tokens = nltk.tokenize.word_tokenize(

@@ -92,11 +92,18 @@ def main():
                         help='Attention softmax temperature.')
     parser.add_argument('--version', default="laenen", type=str,
                         help='version.')
-    # parser.add_argument('--adap_margin', default=0, type=int, help="0 is false, 1 is true")
+    parser.add_argument('--adap_margin', action='store_true',
+                        help="use adaptive margin")
+    parser.add_argument('--add_cost', action='store_true',
+                        help="use extra cost for low frequency sentences")
+    parser.add_argument('--cost_thres', default=0.4, type=float,
+                        help='threhold use for cost function')
+    parser.add_argument('--gamma', default=0.8, type=float,
+                        help='fraction of normal similarity used for sentences that have low frequency')
 
     opt = parser.parse_args()
-    print(opt)
     opt = find_run_name(opt)
+    print(opt)
 
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     tb_logger.configure(opt.logger_name, flush_secs=5)
