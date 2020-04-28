@@ -370,7 +370,7 @@ class ContrastiveLoss(nn.Module):
         diagonal = scores.diag().view(im.size(0), 1)
 
         if self.opt.add_cost == True:
-d            temp = [1 if score > self.opt.cost_thres else self.opt.gamma for score in freq_score]
+            temp = [1 if score > self.opt.cost_thres else self.opt.gamma for score in freq_score]
             temp = torch.FloatTensor(temp).unsqueeze(dim=1)
             temp  = Variable(temp)
             if torch.cuda.is_available():
