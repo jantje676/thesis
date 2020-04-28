@@ -92,14 +92,14 @@ def main():
                         help='Attention softmax temperature.')
     parser.add_argument('--version', default="laenen", type=str,
                         help='version.')
-    parser.add_argument('--adap_margin', action='store_true',
-                        help="use adaptive margin")
-    parser.add_argument('--add_cost', action='store_true',
-                        help="use extra cost for low frequency sentences")
-    parser.add_argument('--cost_thres', default=0.4, type=float,
-                        help='threhold use for cost function')
-    parser.add_argument('--gamma', default=0.8, type=float,
-                        help='fraction of normal similarity used for sentences that have low frequency')
+    # parser.add_argument('--adap_margin', action='store_true',
+    #                     help="use adaptive margin")
+    # parser.add_argument('--add_cost', action='store_true',
+    #                     help="use extra cost for low frequency sentences")
+    # parser.add_argument('--cost_thres', default=0.4, type=float,
+    #                     help='threhold use for cost function')
+    # parser.add_argument('--gamma', default=0.8, type=float,
+    #                     help='fraction of normal similarity used for sentences that have low frequency')
 
     opt = parser.parse_args()
     opt = find_run_name(opt)
