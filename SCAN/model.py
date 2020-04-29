@@ -369,30 +369,26 @@ class ContrastiveLoss(nn.Module):
 
         diagonal = scores.diag().view(im.size(0), 1)
 
-        # if self.opt.add_cost == True:
-        #     temp = [1 if score > self.opt.cost_thres else self.opt.gamma for score in freq_score]
-        #     temp = torch.FloatTensor(temp).unsqueeze(dim=1)
-        #     temp  = Variable(temp)
-        #     if torch.cuda.is_available():
-        #         temp = temp.cuda()
-        #     diagonal = diagonal * temp
-        #
-        #
+        if self.opt.add_cost == True:
+            temp = [1 if score > self.opt.cost_thres else self.opt.gamma for score in freq_score]
+            temp = torch.FloatTensor(temp).unsqueeze(dim=1)
+            temp  = Variable(temp)
+            if torch.cuda.is_available():
+                temp = temp.cuda()
+            diagonal = diagonal * temp
+
+
         d1 = diagonal.expand_as(scores)
         d2 = diagonal.t().expand_as(scores)
-        #
-        # # compare every diagonal score to scores in its column
-        # # caption retrieval
-        #
-        # if self.opt.adap_margin:
-        #     margin1, margin2 = adap_margin(freq_score, scores, self.margin)
-        # else:
-        margin1 = self.margin
-        margin2 = self.margin
+
+        if self.opt.adap_margin:
+            margin1, margin2 = adap_margin(freq_score, scores, self.margin)
+        else:
+            margin1 = self.margin
+            margin2 = self.margin
 
 
         cost_s = (margin1 + scores - d1).clamp(min=0)
-
 
         # compare every diagonal score to scores in its row
         # image retrieval
