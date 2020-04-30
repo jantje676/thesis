@@ -5,7 +5,7 @@ import random
 import numpy as np
 import torch
 import argparse
-
+import nltk
 
 def save_hyperparameters(log_path, opt):
     if not os.path.exists(log_path):
@@ -58,8 +58,10 @@ def calculate_r(ranks, version):
 # count the frequency of the words
 def count_words(captions):
     count = {}
+
     for caption in captions:
-        for word in caption.split(" "):
+        tokens = nltk.tokenize.word_tokenize(str(caption).lower())
+        for word in tokens:
             if word in count.keys():
                 count[word] += 1
             else:
@@ -77,7 +79,7 @@ def calculatate_freq(captions, count):
         word_count = [0]
 
 
-        caption = caption.split(" ")
+        caption = nltk.tokenize.word_tokenize(str(caption).lower())
         tot_freq = 0
         caption_l = len(caption)
         for word in caption:
