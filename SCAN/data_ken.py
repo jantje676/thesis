@@ -47,7 +47,8 @@ class PrecompDataset(data.Dataset):
             self.im_div = 1
 
         count = count_words(self.captions)
-        freqs = calculatate_freq(self.captions, count)
+        freq_score, freqs = calculatate_freq(self.captions, count)
+        self.freq_score = freq_score
         self.freqs = freqs
         self.count = count
 
@@ -58,7 +59,8 @@ class PrecompDataset(data.Dataset):
         image = torch.Tensor(self.images[img_id])
         caption = self.captions[index]
         vocab = self.vocab
-        freq_score = self.freqs[index]
+        freq_score = self.freq_score[index]
+        freqs = self.freqs[index]
 
         # Convert caption (string) to word ids.
         tokens = nltk.tokenize.word_tokenize(
@@ -68,7 +70,7 @@ class PrecompDataset(data.Dataset):
         caption.extend([vocab(token) for token in tokens])
         caption.append(vocab('<end>'))
         target = torch.Tensor(caption)
-        return image, target, index, img_id, freq_score
+        return image, target, index, img_id, freq_score, freqs
 
     def __len__(self):
         return self.length
@@ -88,7 +90,7 @@ def collate_fn(data):
     """
     # Sort a data list by caption length
     data.sort(key=lambda x: len(x[1]), reverse=True)
-    images, captions, ids, img_ids, freq_score = zip(*data)
+    images, captions, ids, img_ids, freq_score, freqs = zip(*data)
 
     # Merge images (convert tuple of 3D tensor to 4D tensor)
     images = torch.stack(images, 0)
@@ -100,7 +102,7 @@ def collate_fn(data):
         end = lengths[i]
         targets[i, :end] = cap[:end]
 
-    return images, targets, lengths, ids, freq_score
+    return images, targets, lengths, ids, freq_score, freqs
 
 
 def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,

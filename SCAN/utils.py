@@ -68,22 +68,33 @@ def count_words(captions):
 
 # calculate a frequency score of a caption
 def calculatate_freq(captions, count):
+    # normalized score for frequency of words in sentence
     freq_score = []
+    # frequency of every word in sentence
+    freqs = []
     for caption in captions:
+        # add zero for <start> sign
+        word_count = [0]
+
+
         caption = caption.split(" ")
         tot_freq = 0
         caption_l = len(caption)
         for word in caption:
             try:
                 tot_freq += count[word]
+                word_count.append(count[word])
             except:
-                caption_length -= 1
+                caption_l -= 1
+                word_count.append(0)
 
         freq = tot_freq / caption_l
         freq_score.append(freq)
+        word_count.append(0)
+        freqs.append(word_count)
 
     freq_score = normalize(freq_score)
-    return freq_score
+    return freq_score, freqs
 
 def normalize(freq_score):
     max_freq = max(freq_score)

@@ -79,7 +79,7 @@ def main():
     parser.add_argument('--raw_feature_norm', default="clipped_l2norm",
                         help='clipped_l2norm|l2norm|clipped_l1norm|l1norm|no_norm|softmax')
     parser.add_argument('--agg_func', default="LogSumExp",
-                        help='LogSumExp|Mean|Max|Sum')
+                        help='LogSumExp|Mean|Max|Sum|Freq')
     parser.add_argument('--cross_attn', default="t2i",
                         help='t2i|i2t')
     parser.add_argument('--precomp_enc_type', default="basic",
@@ -99,7 +99,9 @@ def main():
     parser.add_argument('--cost_thres', default=0.4, type=float,
                         help='threhold use for cost function')
     parser.add_argument('--gamma', default=0.8, type=float,
-                        help='fraction of normal similarity used for sentences that have low frequency')
+                        help='(Used for add_cost) fraction of normal similarity used for sentences that have low frequency')
+    parser.add_argument('--epsilon', default=1.0, type=float,
+                        help='(Used for agg_func=frew) regulaizer for emphasis on non-frequent words')
 
     opt = parser.parse_args()
     opt = find_run_name(opt)
@@ -218,7 +220,7 @@ def train(opt, train_loader, model, epoch, val_loader):
 def validate(opt, val_loader, model):
 
     # compute the encoding for all the validation images and captions
-    img_embs, cap_embs, cap_lens = encode_data(
+    img_embs, cap_embs, cap_lens, freqs = encode_data(
         model, val_loader, opt.log_step, logging.info)
 
     # 1 caption per image, so changed the step size to 1 instead of 5
@@ -227,9 +229,9 @@ def validate(opt, val_loader, model):
 
     # find the similarity between every caption and image in the validation set?
     if opt.cross_attn == 't2i':
-        sims, _ = shard_xattn_t2i(img_embs, cap_embs, cap_lens, opt, shard_size=128)
+        sims, _ = shard_xattn_t2i(img_embs, cap_embs, cap_lens, freqs, opt, shard_size=128)
     elif opt.cross_attn == 'i2t':
-        sims, _= shard_xattn_i2t(img_embs, cap_embs, cap_lens, opt, shard_size=128)
+        sims, _= shard_xattn_i2t(img_embs, cap_embs, cap_lens, freqs,  opt, shard_size=128)
     else:
         raise NotImplementedError
     end = time.time()

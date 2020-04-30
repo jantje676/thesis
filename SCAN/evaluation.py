@@ -96,18 +96,19 @@ def encode_data(model, data_loader, log_step=10, logging=print):
     img_embs = None
     cap_embs = None
     cap_lens = None
+    freqs_new = None
 
     max_n_word = 0
-    for i, (images, captions, lengths, ids, freq_score) in enumerate(data_loader):
+    for i, (images, captions, lengths, ids, freq_score, freqs) in enumerate(data_loader):
         max_n_word = max(max_n_word, max(lengths))
 
-    for i, (images, captions, lengths, ids, freq_score) in enumerate(data_loader):
+    for i, (images, captions, lengths, ids, freq_score, freqs) in enumerate(data_loader):
         # make sure val logger is used
         model.logger = val_logger
 
         # compute the embeddings
         img_emb, cap_emb, cap_len = model.forward_emb(images, captions, lengths, volatile=True)
-        #print(img_emb)
+
         if img_embs is None:
             if img_emb.dim() == 3:
                 img_embs = np.zeros((len(data_loader.dataset), img_emb.size(1), img_emb.size(2)))
@@ -115,8 +116,8 @@ def encode_data(model, data_loader, log_step=10, logging=print):
                 img_embs = np.zeros((len(data_loader.dataset), img_emb.size(1)))
             cap_embs = np.zeros((len(data_loader.dataset), max_n_word, cap_emb.size(2)))
             cap_lens = [0] * len(data_loader.dataset)
+            freqs_new = [0] * len(data_loader.dataset)
         # cache embeddings
-
         # changes ids tuple to list
         ids = list(ids)
 
@@ -124,9 +125,10 @@ def encode_data(model, data_loader, log_step=10, logging=print):
         cap_embs[ids,:max(lengths),:] = cap_emb.data.cpu().numpy().copy()
         for j, nid in enumerate(ids):
             cap_lens[nid] = cap_len[j]
+            freqs_new[nid] = freqs[j]
 
         # measure accuracy and record loss
-        model.forward_loss(img_emb, cap_emb, cap_len, freq_score)
+        model.forward_loss(img_emb, cap_emb, cap_len, freq_score, freqs)
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -140,7 +142,7 @@ def encode_data(model, data_loader, log_step=10, logging=print):
                         i, len(data_loader), batch_time=batch_time,
                         e_log=str(model.logger)))
         del images, captions
-    return img_embs, cap_embs, cap_lens
+    return img_embs, cap_embs, cap_lens, freqs_new
 
 
 def evalrank(model_path, plot_path,run, version, data_path=None, split='dev', fold5=False, vocab_path="../vocab/"):
@@ -171,15 +173,15 @@ def evalrank(model_path, plot_path,run, version, data_path=None, split='dev', fo
                                   opt.batch_size, opt.workers, opt)
 
     print('Computing results...')
-    img_embs, cap_embs, cap_lens = encode_data(model, data_loader)
+    img_embs, cap_embs, cap_lens, freqs = encode_data(model, data_loader)
     print('Images: %d, Captions: %d' %
           (img_embs.shape[0] , cap_embs.shape[0]))
 
     t2i_switch = True
     if opt.cross_attn == 't2i':
-        sims, attn = shard_xattn_t2i(img_embs, cap_embs, cap_lens, opt, shard_size=128)
+        sims, attn = shard_xattn_t2i(img_embs, cap_embs, cap_lens, freqs, opt, shard_size=128)
     elif opt.cross_attn == 'i2t':
-        sims, attn = shard_xattn_i2t(img_embs, cap_embs, cap_lens, opt, shard_size=128)
+        sims, attn = shard_xattn_i2t(img_embs, cap_embs, cap_lens, freqs, opt, shard_size=128)
         t2i_switch = False
     else:
         raise NotImplementedError
@@ -219,7 +221,7 @@ def softmax(X, axis):
     return p
 
 
-def shard_xattn_t2i(images, captions, caplens, opt, shard_size=128):
+def shard_xattn_t2i(images, captions, caplens, freqs, opt, shard_size=128):
     """
     Computer pairwise t2i image-caption distance with locality sharding
     """
@@ -245,7 +247,7 @@ def shard_xattn_t2i(images, captions, caplens, opt, shard_size=128):
                 s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True)
             l = caplens[cap_start:cap_end]
 
-            sim, attn = xattn_score_t2i(im, s, l, opt)
+            sim, attn = xattn_score_t2i(im, s, l, freqs, opt)
             d[im_start:im_end, cap_start:cap_end] = sim.data.cpu().numpy()
 
             attention = attention + attn
@@ -253,7 +255,7 @@ def shard_xattn_t2i(images, captions, caplens, opt, shard_size=128):
     return d, attention
 
 
-def shard_xattn_i2t(images, captions, caplens, opt, shard_size=128):
+def shard_xattn_i2t(images, captions, caplens, freqs, opt, shard_size=128):
     """
     Computer pairwise i2t image-caption distance with locality sharding
     """
@@ -274,7 +276,7 @@ def shard_xattn_i2t(images, captions, caplens, opt, shard_size=128):
                 im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True)
                 s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True)
             l = caplens[cap_start:cap_end]
-            sim, attn = xattn_score_i2t(im, s, l, opt)
+            sim, attn = xattn_score_i2t(im, s, l, freqs, opt)
             d[im_start:im_end, cap_start:cap_end] = sim.data.cpu().numpy()
             attention = attention + attn
     sys.stdout.write('\n')

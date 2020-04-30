@@ -244,7 +244,7 @@ def cosine_similarity(x1, x2, dim=1, eps=1e-8):
     return temp.squeeze()
 
 
-def xattn_score_t2i(images, captions, cap_lens, opt):
+def xattn_score_t2i(images, captions, cap_lens, freqs, opt):
     """
     Images: (n_image, n_regions, d) matrix of images
     Captions: (n_caption, max_n_word, d) matrix of captions
@@ -257,7 +257,7 @@ def xattn_score_t2i(images, captions, cap_lens, opt):
     for i in range(n_caption):
         # Get the i-th text description
         n_word = cap_lens[i]
-
+        freq = freqs[i]
         cap_i = captions[i, :n_word, :].unsqueeze(0).contiguous()
         # --> (n_image, n_word, d)
 
@@ -287,6 +287,14 @@ def xattn_score_t2i(images, captions, cap_lens, opt):
             row_sim = row_sim.sum(dim=1, keepdim=True)
         elif opt.agg_func == 'Mean':
             row_sim = row_sim.mean(dim=1, keepdim=True)
+        elif opt.agg_func == "Freq":
+            eps = opt.epsilon
+            freqs_log = torch.FloatTensor([1 / (np.log(freq[j] + eps)) if freq[j] != 0 else 0 for j in range(len(freq)) ])
+            log_sum = torch.sum(freqs_log)
+            freqs_log = freqs_log / log_sum
+            freqs_log = freqs_log.repeat(n_image,1)
+            row_sim = row_sim * freqs_log
+            row_sim = row_sim.sum(dim=1, keepdim=True)
         else:
             raise ValueError("unknown aggfunc: {}".format(opt.agg_func))
         similarities.append(row_sim)
@@ -297,7 +305,7 @@ def xattn_score_t2i(images, captions, cap_lens, opt):
     return similarities, attention_store
 
 
-def xattn_score_i2t(images, captions, cap_lens, opt):
+def xattn_score_i2t(images, captions, cap_lens, freqs, opt):
     """
     Images: (batch_size, n_regions, d) matrix of images
     Captions: (batch_size, max_n_words, d) matrix of captions
@@ -337,6 +345,9 @@ def xattn_score_i2t(images, captions, cap_lens, opt):
             row_sim = row_sim.sum(dim=1, keepdim=True)
         elif opt.agg_func == 'Mean':
             row_sim = row_sim.mean(dim=1, keepdim=True)
+        elif opt.agg_func == "freq":
+            print("freq approach works only with t2i!!")
+            exit()
         else:
             raise ValueError("unknown aggfunc: {}".format(opt.agg_func))
         similarities.append(row_sim)
@@ -357,12 +368,12 @@ class ContrastiveLoss(nn.Module):
         self.max_violation = max_violation
 
 
-    def forward(self, im, s, s_l, freq_score):
+    def forward(self, im, s, s_l, freq_score, freqs):
         # compute image-sentence score matrix
         if self.opt.cross_attn == 't2i':
-            scores, _ = xattn_score_t2i(im, s, s_l, self.opt)
+            scores, _ = xattn_score_t2i(im, s, s_l, freqs, self.opt)
         elif self.opt.cross_attn == 'i2t':
-            scores, _ = xattn_score_i2t(im, s, s_l, self.opt)
+            scores, _ = xattn_score_i2t(im, s, s_l, freqs, self.opt)
         else:
             raise ValueError("unknown first norm type:", opt.raw_feature_norm)
 
@@ -479,14 +490,14 @@ class SCAN(object):
         cap_emb, cap_lens = self.txt_enc(captions, lengths)
         return img_emb, cap_emb, cap_lens
 
-    def forward_loss(self, img_emb, cap_emb, cap_len, freq_score, **kwargs):
+    def forward_loss(self, img_emb, cap_emb, cap_len, freq_score, freqs, **kwargs):
         """Compute the loss given pairs of image and caption embeddings
         """
-        loss = self.criterion(img_emb, cap_emb, cap_len, freq_score)
+        loss = self.criterion(img_emb, cap_emb, cap_len, freq_score, freqs)
         self.logger.update('Le', loss.item(), img_emb.size(0))
         return loss
 
-    def train_emb(self, images, captions, lengths, ids=None, freq_score=None, *args):
+    def train_emb(self, images, captions, lengths, ids=None, freq_score=None,freqs=None, *args):
         """One training step given images and captions.
         """
         self.Eiters += 1
@@ -498,7 +509,7 @@ class SCAN(object):
         # measure accuracy and record loss
         self.optimizer.zero_grad()
 
-        loss = self.forward_loss(img_emb, cap_emb, cap_lens, freq_score)
+        loss = self.forward_loss(img_emb, cap_emb, cap_lens, freq_score, freqs)
 
         # compute gradient and do SGD step
         loss.backward()
