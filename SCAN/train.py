@@ -112,6 +112,7 @@ def main():
 
     # Load Vocabulary Wrapper, create dictionary that can switch between ids and words
     vocab = deserialize_vocab("{}{}_vocab_{}.json".format(opt.vocab_path, opt.data_name, opt.version))
+
     opt.vocab_size = len(vocab)
 
     # Load data loaders
@@ -147,7 +148,6 @@ def main():
     for epoch in range(start_epoch, opt.num_epochs):
         print(opt.logger_name)
         print(opt.model_name)
-
         adjust_learning_rate(opt, model.optimizer, epoch)
 
         # train for one epoch
@@ -178,7 +178,6 @@ def train(opt, train_loader, model, epoch, val_loader):
 
     end = time.time()
     for i, train_data in enumerate(train_loader):
-
         # switch to train mode
         model.train_start()
 
@@ -218,7 +217,6 @@ def train(opt, train_loader, model, epoch, val_loader):
 
 # see how well the model makes captions
 def validate(opt, val_loader, model):
-
     # compute the encoding for all the validation images and captions
     img_embs, cap_embs, cap_lens, freqs = encode_data(
         model, val_loader, opt.log_step, logging.info)

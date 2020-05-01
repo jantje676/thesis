@@ -45,7 +45,7 @@ class PrecompDataset(data.Dataset):
             self.im_div = 5
         else:
             self.im_div = 1
-
+            
         count = count_words(self.captions)
         freq_score, freqs = calculatate_freq(self.captions, count)
         self.freq_score = freq_score

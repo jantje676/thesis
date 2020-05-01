@@ -246,8 +246,9 @@ def shard_xattn_t2i(images, captions, caplens, freqs, opt, shard_size=128):
                 im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True)
                 s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True)
             l = caplens[cap_start:cap_end]
+            f = freqs[cap_start:cap_end]
 
-            sim, attn = xattn_score_t2i(im, s, l, freqs, opt)
+            sim, attn = xattn_score_t2i(im, s, l, f, opt)
             d[im_start:im_end, cap_start:cap_end] = sim.data.cpu().numpy()
 
             attention = attention + attn
