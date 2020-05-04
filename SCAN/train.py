@@ -28,8 +28,16 @@ from utils import find_run_name, save_hyperparameters
 import logging
 import tensorboard_logger as tb_logger
 import argparse
+import numpy as np
+import random
 
 def main():
+    torch.manual_seed(17)
+    np.random.seed(17)
+    random.seed(17)
+
+
+
     # Hyper Parameters
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', default='../data',
