@@ -5,7 +5,7 @@ import tb as tb_logger
 import logging
 
 def main(opt):
-    nr_runs = 3
+    nr_runs = opt.nr_runs
     seeds = [17, 4, 26]
 
 
