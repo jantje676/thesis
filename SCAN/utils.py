@@ -18,13 +18,17 @@ def find_run_name(opt):
     runs = glob.glob(path)
     runs.sort()
     if len(runs) == 0:
-        return opt
+        return 0
     elif len(runs) > 0:
         nr_next_run = len(runs) + 1
-    opt.model_name = './runs/run{}/checkpoint'.format(nr_next_run)
-    opt.logger_name = './runs/run{}/log'.format(nr_next_run)
+    return nr_next_run
 
+def set_run_name(opt, nr_next_run, seed):
+    opt.model_name = './runs/run{}/seed{}/checkpoint'.format(nr_next_run, seed)
+    opt.logger_name = './runs/run{}/seed{}/log'.format(nr_next_run, seed)
     return opt
+
+
 
 def get_random_indx(nr_examples, max_len):
     rnd = [x for x in range(max_len)]
@@ -99,6 +103,7 @@ def calculatate_freq(captions, count):
     return freq_score, freqs
 
 def normalize(freq_score):
+    print(freq_score)
     max_freq = max(freq_score)
     min_freq = min(freq_score)
 
