@@ -12,6 +12,12 @@
 */__pycache__/*.pyc
 **/__pycache__/*.pyc
 
+# folder I don't need anymore
+simCLR/*
+SimCLR_pre/*
+simCLR_adap/*
+
+
 # data
 data/*
 Beta-VAE/data/*
