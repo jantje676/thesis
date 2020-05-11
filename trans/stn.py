@@ -63,7 +63,6 @@ class STN(nn.Module):
             part_x = conv(x[i * batch_size : (i + 1) * batch_size])
             stack.append(part_x)
         temp = torch.stack(stack, 1)
-        print(temp.shape)
         return temp
 
 def retrieve_convnets(n_detectors, net="alex"):
@@ -72,6 +71,8 @@ def retrieve_convnets(n_detectors, net="alex"):
         if net == "alex":
             temp_alex = models.alexnet(pretrained=True)
             temp_alex.classifier = nn.Sequential(*[temp_alex.classifier[i] for i in range(5)],nn.ReLU(), nn.Linear(4096, 1024))
+            if torch.cuda.is_available():
+                temp_alex = temp_alex.cuda()
             conv.append(temp_alex)
 
     return conv
