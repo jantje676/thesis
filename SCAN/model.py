@@ -505,7 +505,7 @@ class SCAN(object):
         self.logger.update('lr', self.optimizer.param_groups[0]['lr'])
         # compute the embeddings
         img_emb, cap_emb, cap_lens = self.forward_emb(images, captions, lengths)
-
+        
         # measure accuracy and record loss
         self.optimizer.zero_grad()
 

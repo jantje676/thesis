@@ -91,15 +91,19 @@ def start_experiment(opt, seed):
         if not os.path.exists(opt.model_name):
             os.mkdir(opt.model_name)
 
+        last_epoch = False
+        if epoch == (opt.num_epochs - 1):
+            last_epoch = True
+
         # only save when best epoch, or last epoch for further training
-        if is_best or epoch == (opt.num_epochs - 1):
+        if is_best or last_epoch:
             save_checkpoint({
                 'epoch': epoch,
                 'model': model.state_dict(),
                 'best_rsum': best_rsum,
                 'opt': opt,
                 'Eiters': model.Eiters,
-            }, is_best, filename='checkpoint_{}.pth.tar'.format(epoch), prefix=opt.model_name + '/')
+            }, is_best, last_epoch, filename='checkpoint_{}.pth.tar'.format(epoch), prefix=opt.model_name + '/')
 
 
 def train(opt, train_loader, model, epoch, val_loader):
@@ -195,16 +199,23 @@ def validate(opt, val_loader, model):
     return currscore
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar', prefix=''):
+def save_checkpoint(state, is_best, last_epoch, filename='checkpoint.pth.tar', prefix=''):
     tries = 15
     error = None
 
     # deal with unstable I/O. Usually not necessary.
     while tries:
         try:
-            torch.save(state, prefix + filename)
+            # torch.save(state, prefix + filename)
+            # if is_best:
+            #     shutil.copyfile(prefix + filename, prefix + 'model_best.pth.tar')
             if is_best:
-                shutil.copyfile(prefix + filename, prefix + 'model_best.pth.tar')
+                torch.save(state, prefix + 'model_best.pth.tar')
+            elif last_epoch:
+                torch.save(state, prefix + filename)
+
+
+
         except IOError as e:
             error = e
             tries -= 1

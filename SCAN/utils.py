@@ -103,7 +103,6 @@ def calculatate_freq(captions, count):
     return freq_score, freqs
 
 def normalize(freq_score):
-    print(freq_score)
     max_freq = max(freq_score)
     min_freq = min(freq_score)
 
