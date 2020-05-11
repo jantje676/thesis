@@ -33,6 +33,8 @@ class STN(nn.Module):
         self.fc_loc[2].bias.data.copy_(start_transformation)
 
         self.mask = get_mask(n_detectors)
+        if torch.cuda.is_available():
+            self.mask = self.mask.cuda()
 
     # Spatial transformer network forward function
     def stn(self, x):
