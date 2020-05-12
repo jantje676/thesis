@@ -7,17 +7,16 @@ from matplotlib import pyplot as plt
 
 
 class STN(nn.Module):
-    def __init__(self, n_detectors):
+    def __init__(self, n_detectors, embed_size):
         super(STN, self).__init__()
         self.n_detectors = n_detectors
 
         # conv nets
-        self.conv = retrieve_convnets(self.n_detectors)
+        self.conv = retrieve_convnets(self.n_detectors, embed_size)
 
         # Spatial transformer localization-network
         self.localization = models.alexnet(pretrained=True)
         self.localization = self.localization.features
-
 
         # create n transformation parameters according to n_detectors
         self.fc_loc = nn.Sequential(
@@ -38,19 +37,20 @@ class STN(nn.Module):
 
     # Spatial transformer network forward function
     def stn(self, x):
+
         xs = self.localization(x)
 
         xs = xs.view(-1, 12544)
         theta = self.fc_loc(xs)
 
-
         theta = theta * self.mask
         theta = theta.view(-1, 2, 3)
-        x = x.repeat(self.n_detectors, 1,1, 1)
+        indices = get_indices(self.n_detectors, x.shape[0])
+        theta = torch.index_select(theta, 0, indices)
 
+        x = x.repeat(self.n_detectors, 1,1, 1)
         grid = F.affine_grid(theta, x.size())
         x = F.grid_sample(x, grid)
-
         return x
 
     def forward(self, x):
@@ -65,12 +65,22 @@ class STN(nn.Module):
         temp = torch.stack(stack, 1)
         return temp
 
-def retrieve_convnets(n_detectors, net="alex"):
+
+def get_indices(n_detectors, batch_size):
+    # get the indices so that I can resort theta using index select
+    temp = []
+    for i in range(n_detectors):
+        ind = torch.arange(i,batch_size*n_detectors, n_detectors)
+        temp.append(ind)
+    indices = torch.cat(temp)
+
+    return indices
+def retrieve_convnets(n_detectors, embed_size, net="alex"):
     conv = []
     for i in range(n_detectors):
         if net == "alex":
             temp_alex = models.alexnet(pretrained=True)
-            temp_alex.classifier = nn.Sequential(*[temp_alex.classifier[i] for i in range(5)],nn.ReLU(), nn.Linear(4096, 1024))
+            temp_alex.classifier = nn.Sequential(*[temp_alex.classifier[i] for i in range(5)],nn.ReLU(), nn.Linear(4096, embed_size))
             if torch.cuda.is_available():
                 temp_alex = temp_alex.cuda()
             conv.append(temp_alex)
@@ -78,8 +88,43 @@ def retrieve_convnets(n_detectors, net="alex"):
     return conv
 
 def init_trans(n_detectors):
-    identiy = torch.tensor([1, 0, 0, 0, 1 ,0], dtype=torch.float)
-    trans = identiy.repeat(n_detectors)
+    # calculate values according to n_detectors
+    if n_detectors % 2 == 0:
+        print("n detectors should be an odd number!")
+        exit()
+    # for now take 2 columns and make rows flexible according to number of detectors
+    column = 2
+    row = int((n_detectors - 1)/column)
+    step_column = 1/(column - 1)
+    step_row = 1/ (row - 1)
+
+    # for now this zoom is good!
+    z = 0.5
+
+    # add identity for odd number, if even skip this!
+    s_x = [1]
+    s_y = [1]
+    t_x = [0]
+    t_y = [0]
+
+    # init in tiles
+    for i in range(column):
+        for j in range(row):
+            t_x.append(-0.5 + step_column*i)
+            t_y.append(-0.5 + step_row*j)
+            s_x.append(z)
+            s_y.append(z)
+    # print("s_x", s_x)
+    # print("s_y", s_y)
+    # print("t_x", t_x)
+    # print("t_y", t_y)
+
+    temp = []
+    for i in range(n_detectors):
+        t = torch.tensor([s_x[i], 0, t_x[i], 0, s_y[i] ,t_y[i]], dtype=torch.float)
+        temp.append(t)
+    trans = torch.cat(temp)
+
     return trans
 
 def get_mask(n_detectors):
@@ -87,21 +132,19 @@ def get_mask(n_detectors):
     mask = start_mask.repeat(n_detectors)
     return mask
 
-def check_image(img):
-    img = img.data.numpy().transpose(1,2,0)
-    plt.imshow(img, interpolation='nearest')
-    plt.show()
+def check_image(x, indx, n_detectors):
 
-def shapen():
-    a = torch.arange(1,4)
-    b = torch.arange(1,4)
-    print(a)
-    print(b)
-    # c = torch.cat([a,b],0)
-    c = torch.stack([a,b], 1)
-    print(c.shape)
-    print(c)
-    # c = c.view(2, 3).t()
-    print(c)
-    c = c.reshape(6)
-    print(c)
+
+    f, axarr = plt.subplots(n_detectors,1)
+    batch = int(x.shape[0]/n_detectors)
+    images = []
+
+    # find images
+    for i in range(n_detectors):
+        images.append(x[indx + i * batch].data.numpy().transpose(1,2,0))
+
+    # plot images
+    for i in range(n_detectors):
+        axarr[i].imshow(images[i],  interpolation='nearest')
+
+    plt.show()

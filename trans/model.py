@@ -44,7 +44,7 @@ def EncoderImage(data_name, img_dim, embed_size, n_detectors, precomp_enc_type='
     """A wrapper to image encoders. Chooses between an different encoders
     that uses precomputed image features.
     """
-    img_enc =STN(n_detectors)
+    img_enc =STN(n_detectors, embed_size)
     # if precomp_enc_type == 'basic':
     #     img_enc = EncoderImagePrecomp(
     #         img_dim, embed_size, no_imgnorm)
