@@ -73,7 +73,8 @@ def get_indices(n_detectors, batch_size):
         ind = torch.arange(i,batch_size*n_detectors, n_detectors)
         temp.append(ind)
     indices = torch.cat(temp)
-
+    if torch.cuda.is_available():
+        indices = indices.cuda()
     return indices
 def retrieve_convnets(n_detectors, embed_size, net="alex"):
     conv = []
