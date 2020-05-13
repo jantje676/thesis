@@ -15,7 +15,7 @@ class STN(nn.Module):
         self.conv = retrieve_convnets(self.n_detectors, embed_size)
 
         # Spatial transformer localization-network
-        self.localization = models.alexnet(pretrained=True)
+        self.localization = models.alexnet()
         self.localization = self.localization.features
 
         # create n transformation parameters according to n_detectors
@@ -37,7 +37,6 @@ class STN(nn.Module):
 
     # Spatial transformer network forward function
     def stn(self, x):
-
         xs = self.localization(x)
 
         xs = xs.view(-1, 12544)
@@ -55,14 +54,17 @@ class STN(nn.Module):
 
     def forward(self, x):
         # transform the input
+
         batch_size = x.shape[0]
         x = self.stn(x)
+        # check_image(x, 0, self.n_detectors)
         stack = []
         for i in range(self.n_detectors):
             conv = self.conv[i]
             part_x = conv(x[i * batch_size : (i + 1) * batch_size])
             stack.append(part_x)
         temp = torch.stack(stack, 1)
+    
         return temp
 
 
@@ -76,6 +78,7 @@ def get_indices(n_detectors, batch_size):
     if torch.cuda.is_available():
         indices = indices.cuda()
     return indices
+
 def retrieve_convnets(n_detectors, embed_size, net="alex"):
     conv = []
     for i in range(n_detectors):
@@ -124,6 +127,7 @@ def init_trans(n_detectors):
     for i in range(n_detectors):
         t = torch.tensor([s_x[i], 0, t_x[i], 0, s_y[i] ,t_y[i]], dtype=torch.float)
         temp.append(t)
+
     trans = torch.cat(temp)
 
     return trans
