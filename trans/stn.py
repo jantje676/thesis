@@ -82,7 +82,7 @@ def retrieve_convnets(n_detectors, embed_size, net="alex"):
     conv = []
     for i in range(n_detectors):
         if net == "alex":
-            temp_alex = models.alexnet(pretrained=True)
+            temp_alex = models.alexnet()
             temp_alex.classifier = nn.Sequential(*[temp_alex.classifier[i] for i in range(5)],nn.ReLU(), nn.Linear(4096, embed_size))
             if torch.cuda.is_available():
                 temp_alex = temp_alex.cuda()
