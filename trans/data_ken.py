@@ -34,6 +34,7 @@ class PrecompDataset(data.Dataset):
         loc = data_path + '/'
         self.captions = []
         self.images = []
+        
         self.image_path = image_path
 
         with open('{}/data_captions_{}_{}.txt'.format(data_path, version, data_split), 'r', newline='') as csvfile:

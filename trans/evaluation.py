@@ -166,12 +166,22 @@ def evalrank(model_path,run, version, data_path=None, split='dev', fold5=False, 
     vocab = deserialize_vocab("{}{}_vocab_{}.json".format(vocab_path, opt.data_name, version))
     opt.vocab_size = len(vocab)
     print(opt.vocab_size)
+
+
     # construct model
     model = SCAN(opt)
 
+    # for dict in model.state_dict():
+    #     for tens in dict:
+    #         print(tens)
+    # print(model.img_enc.paramaters())
+    print(model.img_enc)
     # load model state
     model.load_state_dict(checkpoint['model'])
 
+
+
+    exit()
     print('Loading dataset')
     data_loader = get_test_loader(split, opt.data_name, vocab,
                                   opt.batch_size, opt.workers, opt)

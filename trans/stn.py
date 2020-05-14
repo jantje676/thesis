@@ -12,12 +12,11 @@ class STN(nn.Module):
         self.n_detectors = n_detectors
 
         # conv nets
-        self.conv = retrieve_convnets(self.n_detectors, embed_size)
+        self.conv = nn.ModuleList(retrieve_convnets(self.n_detectors, embed_size))
 
         # Spatial transformer localization-network
         self.localization = models.alexnet()
         self.localization = self.localization.features
-
         # create n transformation parameters according to n_detectors
         self.fc_loc = nn.Sequential(
             nn.Linear(12544, 6125),
@@ -82,7 +81,7 @@ def retrieve_convnets(n_detectors, embed_size, net="alex"):
     conv = []
     for i in range(n_detectors):
         if net == "alex":
-            temp_alex = models.alexnet()
+            temp_alex = models.alexnet(pretrained=True)
             temp_alex.classifier = nn.Sequential(*[temp_alex.classifier[i] for i in range(5)],nn.ReLU(), nn.Linear(4096, embed_size))
             if torch.cuda.is_available():
                 temp_alex = temp_alex.cuda()
