@@ -171,11 +171,6 @@ def evalrank(model_path,run, version, data_path=None, split='dev', fold5=False, 
     # construct model
     model = SCAN(opt)
 
-    # for dict in model.state_dict():
-    #     for tens in dict:
-    #         print(tens)
-    # print(model.img_enc.paramaters())
-    print(model.img_enc)
     # load model state
     model.load_state_dict(checkpoint['model'])
 

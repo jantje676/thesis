@@ -11,8 +11,6 @@ def main(opt):
     nr_runs = opt.nr_runs
     seeds = [17, 4, 26]
 
-
-
     # find run name and set to seed1
     nr_next_run = find_run_name(opt)
 
@@ -109,6 +107,8 @@ if __name__ == '__main__':
                         help='Number of experiments.')
     parser.add_argument('--n_detectors', default=5, type=int,
                         help='How many localizers to use for spatial transformers')
+    parser.add_argument('--pretrained_alex', action='store_true',
+                        help="use pretrained alexnets for features extractors")
 
     opt = parser.parse_args()
     main(opt)
