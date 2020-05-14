@@ -496,6 +496,7 @@ class SCAN(object):
 
         # cap_emb (tensor), cap_lens (list)
         cap_emb, cap_lens = self.txt_enc(captions, lengths)
+
         return img_emb, cap_emb, cap_lens
 
     def forward_loss(self, img_emb, cap_emb, cap_len, freq_score, freqs, **kwargs):

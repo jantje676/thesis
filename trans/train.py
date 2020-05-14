@@ -60,10 +60,11 @@ def start_experiment(opt, seed):
     if opt.resume:
         if os.path.isfile(opt.resume):
             print("=> loading checkpoint '{}'".format(opt.resume))
-            checkpoint = torch.load(opt.resume)
+            checkpoint = torch.load(opt.resume, map_location=torch.device('cpu'))
             start_epoch = checkpoint['epoch'] + 1
             best_rsum = checkpoint['best_rsum']
             model.load_state_dict(checkpoint['model'])
+    
             # Eiters is used to show logs as the continuation of another
             # training
             model.Eiters = checkpoint['Eiters']

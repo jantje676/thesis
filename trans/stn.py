@@ -64,7 +64,6 @@ class STN(nn.Module):
             part_x = conv(x[i * batch_size : (i + 1) * batch_size])
             stack.append(part_x)
         temp = torch.stack(stack, 1)
-    
         return temp
 
 

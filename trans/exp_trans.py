@@ -4,6 +4,9 @@ from utils import find_run_name, set_run_name
 import tb as tb_logger
 import logging
 
+
+# python exp_trans.py --version laenen_1k --batch_size 64 --n_detectors 5 --resume "runs/test0/seed1/checkpoint/model_best.pth.tar"
+
 def main(opt):
     nr_runs = opt.nr_runs
     seeds = [17, 4, 26]
@@ -104,7 +107,7 @@ if __name__ == '__main__':
                         help='Number of experiments.')
     parser.add_argument('--image_path', default="../data/Fashion200K/pictures_only/pictures_only", type=str,
                         help='Number of experiments.')
-    parser.add_argument('--n_detectors', default=7, type=int,
+    parser.add_argument('--n_detectors', default=5, type=int,
                         help='How many localizers to use for spatial transformers')
 
     opt = parser.parse_args()
