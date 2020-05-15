@@ -39,7 +39,7 @@ def l2norm(X, dim, eps=1e-8):
     return X
 
 
-def EncoderImage(data_name, img_dim, embed_size, precomp_enc_type='basic',
+def EncoderImage(data_name, img_dim, embed_size, n_attention, precomp_enc_type='basic',
                  no_imgnorm=False):
     """A wrapper to image encoders. Chooses between an different encoders
     that uses precomputed image features.
@@ -52,7 +52,7 @@ def EncoderImage(data_name, img_dim, embed_size, precomp_enc_type='basic',
             img_dim, embed_size, no_imgnorm)
     elif precomp_enc_type == "attention":
             img_enc = EncoderImageAttention(
-                img_dim, embed_size, 4, no_imgnorm)
+                img_dim, embed_size, n_attention, no_imgnorm)
     else:
         raise ValueError("Unknown precomp_enc_type: {}".format(precomp_enc_type))
 
@@ -91,7 +91,8 @@ class EncoderImageAttention(nn.Module):
 
         features = torch.bmm(attention, images)
         features = self.w3(features)
-
+        print(features.shape)
+        exit()
         # normalize in the joint embedding space
         if not self.no_imgnorm:
             features = l2norm(features, dim=-1)
@@ -483,7 +484,7 @@ class SCAN(object):
     def __init__(self, opt):
         # Build Models
         self.grad_clip = opt.grad_clip
-        self.img_enc = EncoderImage(opt.data_name, opt.img_dim, opt.embed_size,
+        self.img_enc = EncoderImage(opt.data_name, opt.img_dim, opt.embed_size, opt.n_attention,
                                     precomp_enc_type=opt.precomp_enc_type,
                                     no_imgnorm=opt.no_imgnorm)
         self.txt_enc = EncoderText(opt.vocab_size, opt.word_dim,

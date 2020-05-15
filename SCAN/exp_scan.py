@@ -102,6 +102,8 @@ if __name__ == '__main__':
                         help='(Used for agg_func=frew) regulaizer for emphasis on non-frequent words')
     parser.add_argument('--nr_runs', default=1, type=int,
                         help='Number of experiments.')
+    parser.add_argument('--n_attention', default=7, type=int,
+                        help='Number of attention maps to create.')
 
     opt = parser.parse_args()
     main(opt)
