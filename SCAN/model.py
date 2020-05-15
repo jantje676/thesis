@@ -91,8 +91,7 @@ class EncoderImageAttention(nn.Module):
 
         features = torch.bmm(attention, images)
         features = self.w3(features)
-        print(features.shape)
-        exit()
+    
         # normalize in the joint embedding space
         if not self.no_imgnorm:
             features = l2norm(features, dim=-1)
