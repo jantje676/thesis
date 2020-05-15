@@ -206,16 +206,10 @@ def save_checkpoint(state, is_best, last_epoch, filename='checkpoint.pth.tar', p
     # deal with unstable I/O. Usually not necessary.
     while tries:
         try:
-            # torch.save(state, prefix + filename)
-            # if is_best:
-            #     shutil.copyfile(prefix + filename, prefix + 'model_best.pth.tar')
             if is_best:
                 torch.save(state, prefix + 'model_best.pth.tar')
             elif last_epoch:
                 torch.save(state, prefix + filename)
-
-
-
         except IOError as e:
             error = e
             tries -= 1

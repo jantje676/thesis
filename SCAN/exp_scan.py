@@ -81,7 +81,7 @@ if __name__ == '__main__':
     parser.add_argument('--cross_attn', default="t2i",
                         help='t2i|i2t')
     parser.add_argument('--precomp_enc_type', default="basic",
-                        help='basic|weight_norm')
+                        help='basic|weight_norm|attention')
     parser.add_argument('--bi_gru', action='store_true',
                         help='Use bidirectional GRU.')
     parser.add_argument('--lambda_lse', default=6., type=float,
