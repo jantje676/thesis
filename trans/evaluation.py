@@ -174,9 +174,6 @@ def evalrank(model_path,run, version, data_path=None, split='dev', fold5=False, 
     # load model state
     model.load_state_dict(checkpoint['model'])
 
-
-
-    exit()
     print('Loading dataset')
     data_loader = get_test_loader(split, opt.data_name, vocab,
                                   opt.batch_size, opt.workers, opt)
