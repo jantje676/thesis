@@ -29,12 +29,12 @@ class PrecompDataset(data.Dataset):
     Possible options: f30k_precomp, coco_precomp
     """
 
-    def __init__(self, data_path, data_split, vocab, version, image_path):
+    def __init__(self, data_path, data_split, vocab, version, image_path, rectangle):
         self.vocab = vocab
         loc = data_path + '/'
         self.captions = []
         self.images = []
-        
+
         self.image_path = image_path
 
         with open('{}/data_captions_{}_{}.txt'.format(data_path, version, data_split), 'r', newline='') as csvfile:
@@ -57,7 +57,10 @@ class PrecompDataset(data.Dataset):
         self.freq_score = freq_score
         self.freqs = freqs
         self.count = count
-
+        if rectangle:
+            self.height = 512
+        else:
+            self.height = 256
 
 
     def __getitem__(self, index):
@@ -67,10 +70,10 @@ class PrecompDataset(data.Dataset):
         # load image
         image = Image.open("{}/{}_0.jpeg".format(self.image_path, img_id))
 
-        # image = mpimg.imread("{}/{}_0.jpeg".format(self.image_path, img_id))
-        # img = Image.fromarray(img)
+
         transform = transforms.Compose([
-            transforms.Resize((256, 256)),
+            # transforms.Resize((256, 256)),
+            transforms.Resize((self.height, 256)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                   std=[0.229, 0.224, 0.225])])
@@ -134,7 +137,7 @@ def collate_fn(data):
 def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
                        shuffle=True, num_workers=2):
     """Returns torch.utils.data.DataLoader for custom coco dataset."""
-    dset = PrecompDataset(data_path, data_split, vocab, opt.version, opt.image_path)
+    dset = PrecompDataset(data_path, data_split, vocab, opt.version, opt.image_path, opt.rectangle)
 
     data_loader = torch.utils.data.DataLoader(dataset=dset,
                                               batch_size=batch_size,

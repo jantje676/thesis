@@ -39,12 +39,12 @@ def l2norm(X, dim, eps=1e-8):
     return X
 
 
-def EncoderImage(data_name, img_dim, embed_size, n_detectors, pretrained_alex, precomp_enc_type='basic',
+def EncoderImage(data_name, img_dim, embed_size, n_detectors, pretrained_alex, rectangle, precomp_enc_type='basic',
                  no_imgnorm=False):
     """A wrapper to image encoders. Chooses between an different encoders
     that uses precomputed image features.
     """
-    img_enc =STN(n_detectors, embed_size, pretrained_alex)
+    img_enc =STN(n_detectors, embed_size, pretrained_alex, rectangle)
     # if precomp_enc_type == 'basic':
     #     img_enc = EncoderImagePrecomp(
     #         img_dim, embed_size, no_imgnorm)
@@ -431,7 +431,7 @@ class SCAN(object):
         # Build Models
         self.grad_clip = opt.grad_clip
         self.img_enc = EncoderImage(opt.data_name, opt.img_dim, opt.embed_size, opt.n_detectors,
-                                    opt.pretrained_alex,
+                                    opt.pretrained_alex, opt.rectangle,
                                     precomp_enc_type=opt.precomp_enc_type,
                                     no_imgnorm=opt.no_imgnorm)
         self.txt_enc = EncoderText(opt.vocab_size, opt.word_dim,

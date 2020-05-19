@@ -109,6 +109,8 @@ if __name__ == '__main__':
                         help='How many localizers to use for spatial transformers')
     parser.add_argument('--pretrained_alex', action='store_true',
                         help="use pretrained alexnets for features extractors")
+    parser.add_argument('--rectangle', action='store_true',
+                        help="use rectangle ratio for images")
 
     opt = parser.parse_args()
     main(opt)
