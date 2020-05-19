@@ -57,8 +57,6 @@ class STN(nn.Module):
 
         batch_size = x.shape[0]
         x = self.stn(x)
-        check_image(x, 0, self.n_detectors)
-        exit()
         stack = []
         for i in range(self.n_detectors):
             conv = self.conv[i]
