@@ -4,6 +4,7 @@ import torchvision.models as models
 import torch.nn.functional as F
 import numpy as np
 from matplotlib import pyplot as plt
+import math
 
 
 class STN(nn.Module):
@@ -56,7 +57,8 @@ class STN(nn.Module):
 
         batch_size = x.shape[0]
         x = self.stn(x)
-        # check_image(x, 0, self.n_detectors)
+        check_image(x, 0, self.n_detectors)
+        exit()
         stack = []
         for i in range(self.n_detectors):
             conv = self.conv[i]
@@ -83,7 +85,7 @@ def retrieve_convnets(n_detectors, embed_size, pretrained_alex, net="alex"):
         if net == "alex":
 
             temp_alex = models.alexnet(pretrained=pretrained_alex)
-        
+
             temp_alex.classifier = nn.Sequential(*[temp_alex.classifier[i] for i in range(5)],nn.ReLU(), nn.Linear(4096, embed_size))
             if torch.cuda.is_available():
                 temp_alex = temp_alex.cuda()
@@ -92,24 +94,26 @@ def retrieve_convnets(n_detectors, embed_size, pretrained_alex, net="alex"):
     return conv
 
 def init_trans(n_detectors):
-    # calculate values according to n_detectors
-    if n_detectors % 2 == 0:
-        print("n detectors should be an odd number!")
-        exit()
     # for now take 2 columns and make rows flexible according to number of detectors
     column = 2
-    row = int((n_detectors - 1)/column)
+    row = math.ceil((n_detectors - 1)/column)
     step_column = 1/(column - 1)
     step_row = 1/ (row - 1)
 
     # for now this zoom is good!
     z = 0.5
 
+
+    s_x = []
+    s_y = []
+    t_x = []
+    t_y = []
     # add identity for odd number, if even skip this!
-    s_x = [1]
-    s_y = [1]
-    t_x = [0]
-    t_y = [0]
+    if n_detectors % 2 != 0:
+        s_x = [1]
+        s_y = [1]
+        t_x = [0]
+        t_y = [0]
 
     # init in tiles
     for i in range(column):
@@ -118,10 +122,7 @@ def init_trans(n_detectors):
             t_y.append(-0.5 + step_row*j)
             s_x.append(z)
             s_y.append(z)
-    # print("s_x", s_x)
-    # print("s_y", s_y)
-    # print("t_x", t_x)
-    # print("t_y", t_y)
+
 
     temp = []
     for i in range(n_detectors):
