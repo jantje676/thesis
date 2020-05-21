@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 import math
 
 
+
 class STN(nn.Module):
     def __init__(self, n_detectors, embed_size, pretrained_alex, rectangle):
         super(STN, self).__init__()
@@ -54,7 +55,7 @@ class STN(nn.Module):
 
         grid = F.affine_grid(theta, (x.shape[0], 3, 256, 256))
         x = F.grid_sample(x, grid)
-
+    
         return x
 
     def forward(self, x):
@@ -99,7 +100,7 @@ def retrieve_convnets(n_detectors, embed_size, pretrained_alex, net="alex"):
 def init_trans(n_detectors, rectangle):
     # for now take 2 columns and make rows flexible according to number of detectors
     column = 2
-    row = math.ceil((n_detectors - 1)/column)
+    row = math.floor((n_detectors - 1)/column)
     step_column = 1/(column - 1)
     step_row = 1/ (row - 1)
 
@@ -111,16 +112,17 @@ def init_trans(n_detectors, rectangle):
 
     z_y = 0.5
 
-    s_x = []
-    s_y = []
-    t_x = []
-    t_y = []
+    s_x = [1]
+    s_y = [1]
+    t_x = [0]
+    t_y = [0]
     # add identity for odd number, if even skip this!
-    if n_detectors % 2 != 0:
-        s_x = [1]
-        s_y = [1]
-        t_x = [0]
-        t_y = [0]
+    if n_detectors % 2 == 0:
+        s_x.append(0.7)
+        s_y.append(0.7)
+        t_x.append(0)
+        t_y.append(0)
+
 
     # init in tiles
     for i in range(column):
