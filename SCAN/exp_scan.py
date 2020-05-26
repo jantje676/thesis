@@ -32,6 +32,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', default='../data',
                         help='path to datasets')
+    parser.add_argument('--clothing', default='dresses',
+                        help='which clothing item')
     parser.add_argument('--data_name', default='Fashion200K',
                         help='{coco,f30k}_precomp')
     parser.add_argument('--vocab_path', default='../vocab/',

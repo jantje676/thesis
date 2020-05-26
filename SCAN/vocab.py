@@ -72,11 +72,6 @@ def from_txt(txt):
 
 
 
-
-
-
-
-
 def build_vocab(data_path, data_name, version, caption_file, threshold):
     """Build a simple vocabulary wrapper."""
     counter = Counter()
@@ -107,12 +102,12 @@ def build_vocab(data_path, data_name, version, caption_file, threshold):
     return vocab
 
 
-def main(data_path, data_name, version):
-    data_path = "../data/Fashion200K/"
+def main(data_path, data_name, version, clothing):
+    data_path = "../data/Fashion200K/{}/".format(clothing)
     data_name = "Fashion200K"
     vocab = build_vocab(data_path, data_name, version, caption_file=annotations, threshold=1)
-    serialize_vocab(vocab, '../vocab/{}_vocab_{}.json'.format(data_name, version))
-    print("Saved vocabulary file to ", '../vocab/{}_vocab_{}.json'.format(data_name, version))
+    serialize_vocab(vocab, '../vocab/{}/{}_vocab_{}.json'.format(clothing, data_name, version))
+    print("Saved vocabulary file to ", '../vocab/{}/{}_vocab_{}.json'.format(clothing, data_name, version))
 
 
 
@@ -121,6 +116,8 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', default='data')
     parser.add_argument('--data_name', default='f30k_precomp', help='{coco,f30k}_precomp')
     parser.add_argument('--version', default=None, help='version')
+    parser.add_argument('--clothing', default=None, help='clothing')
+
 
     opt = parser.parse_args()
-    main(opt.data_path, opt.data_name, opt.version)
+    main(opt.data_path, opt.data_name, opt.version, opt.clothing)

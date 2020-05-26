@@ -9,7 +9,7 @@ import numpy as np
 import glob
 import argparse
 
-# python evaluate_model.py --model_path "runs/" --run run11 --vocab_path "../vocab/" --version short --data_path "../data/"
+# python evaluate_model.py --model_path "runs/" --run run7 --vocab_path "../vocab/" --version short --data_path "../data/"
 
 def main(args):
     run = args.run
@@ -19,6 +19,7 @@ def main(args):
 
 
     folders = glob.glob("{}{}/seed*/".format(args.model_path, run))
+    print(folders)
     nr_runs = len(folders)
 
 
