@@ -162,10 +162,6 @@ def evalrank(model_path,run, version, data_path=None, split='dev', fold5=False, 
     if data_path is not None:
         opt.data_path = data_path
 
-    # add 
-    d = vars(opt)
-    d["clothing"] = "dresses"
-    opt.image_path = "pictures_only/pictures_only"
 
     # load vocabulary used by the model
     vocab = deserialize_vocab("{}{}/{}_vocab_{}.json".format(vocab_path, opt.clothing, opt.data_name, version))
