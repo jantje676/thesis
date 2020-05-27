@@ -55,7 +55,7 @@ class STN(nn.Module):
 
         grid = F.affine_grid(theta, (x.shape[0], 3, 256, 256))
         x = F.grid_sample(x, grid)
-    
+
         return x
 
     def forward(self, x):
@@ -63,6 +63,7 @@ class STN(nn.Module):
 
         batch_size = x.shape[0]
         x = self.stn(x)
+        # check_image(x, 0, self.n_detectors)
         stack = []
         for i in range(self.n_detectors):
             conv = self.conv[i]

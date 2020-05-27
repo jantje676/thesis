@@ -103,7 +103,9 @@ if __name__ == '__main__':
                         help='(Used for agg_func=frew) regulaizer for emphasis on non-frequent words')
     parser.add_argument('--nr_runs', default=1, type=int,
                         help='Number of experiments.')
-    parser.add_argument('--image_path', default="../data/Fashion200K/pictures_only/pictures_only", type=str,
+    # parser.add_argument('--image_path', default="../data/Fashion200K/pictures_only/pictures_only", type=str,
+    #                     help='Number of experiments.')
+    parser.add_argument('--image_path', default="pictures_only/pictures_only", type=str,
                         help='Number of experiments.')
     parser.add_argument('--n_detectors', default=5, type=int,
                         help='How many localizers to use for spatial transformers')
@@ -111,6 +113,8 @@ if __name__ == '__main__':
                         help="use pretrained alexnets for features extractors")
     parser.add_argument('--rectangle', action='store_true',
                         help="use rectangle ratio for images")
+    parser.add_argument('--clothing', default="dresses", type=str,
+                        help='dresses|pants.')
 
     opt = parser.parse_args()
     main(opt)

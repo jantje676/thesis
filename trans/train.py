@@ -40,7 +40,7 @@ def start_experiment(opt, seed):
     # tb_logger.configure(opt.logger_name, flush_secs=5)
 
     # Load Vocabulary Wrapper, create dictionary that can switch between ids and words
-    vocab = deserialize_vocab("{}{}_vocab_{}.json".format(opt.vocab_path, opt.data_name, opt.version))
+    vocab = deserialize_vocab("{}/{}/{}_vocab_{}.json".format(opt.vocab_path, opt.clothing, opt.data_name, opt.version))
 
     opt.vocab_size = len(vocab)
 
@@ -64,7 +64,7 @@ def start_experiment(opt, seed):
             start_epoch = checkpoint['epoch'] + 1
             best_rsum = checkpoint['best_rsum']
             model.load_state_dict(checkpoint['model'])
-    
+
             # Eiters is used to show logs as the continuation of another
             # training
             model.Eiters = checkpoint['Eiters']

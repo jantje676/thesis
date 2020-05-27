@@ -162,8 +162,13 @@ def evalrank(model_path,run, version, data_path=None, split='dev', fold5=False, 
     if data_path is not None:
         opt.data_path = data_path
 
+    # add 
+    d = vars(opt)
+    d["clothing"] = "dresses"
+    opt.image_path = "pictures_only/pictures_only"
+
     # load vocabulary used by the model
-    vocab = deserialize_vocab("{}{}_vocab_{}.json".format(vocab_path, opt.data_name, version))
+    vocab = deserialize_vocab("{}{}/{}_vocab_{}.json".format(vocab_path, opt.clothing, opt.data_name, version))
     opt.vocab_size = len(vocab)
     print(opt.vocab_size)
 
@@ -205,9 +210,9 @@ def evalrank(model_path,run, version, data_path=None, split='dev', fold5=False, 
     print("Text to image: %.1f %.1f %.1f %.1f %.1f" % ri)
 
 
-    if not os.path.exists('plots_scan'):
-        os.makedirs('plots_scan')
-    torch.save({'rt': rt, 'rti': rti, "attn": attn, "t2i_switch": t2i_switch }, 'plots_scan/ranks_{}_{}.pth.tar'.format(run, version))
+    if not os.path.exists('plots_trans'):
+        os.makedirs('plots_trans')
+    torch.save({'rt': rt, 'rti': rti, "attn": attn, "t2i_switch": t2i_switch }, 'plots_trans/ranks_{}_{}.pth.tar'.format(run, version))
     return rt, rti, attn, r, ri
 
 

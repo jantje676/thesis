@@ -137,7 +137,8 @@ def collate_fn(data):
 def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
                        shuffle=True, num_workers=2):
     """Returns torch.utils.data.DataLoader for custom coco dataset."""
-    dset = PrecompDataset(data_path, data_split, vocab, opt.version, opt.image_path, opt.rectangle)
+    image_path = "{}/{}/{}/{}".format(opt.data_path, opt.data_name, opt.clothing, opt.image_path)
+    dset = PrecompDataset(data_path, data_split, vocab, opt.version, image_path, opt.rectangle)
 
     data_loader = torch.utils.data.DataLoader(dataset=dset,
                                               batch_size=batch_size,
@@ -148,7 +149,7 @@ def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
 
 
 def get_loaders(data_name, vocab, batch_size, workers, opt):
-    dpath = os.path.join(opt.data_path, data_name)
+    dpath = os.path.join(opt.data_path, data_name, opt.clothing)
     train_loader = get_precomp_loader(dpath, 'train', vocab, opt,
                                       batch_size, True, workers)
 
@@ -159,7 +160,7 @@ def get_loaders(data_name, vocab, batch_size, workers, opt):
 
 def get_test_loader(split_name, data_name, vocab, batch_size,
                     workers, opt):
-    dpath = os.path.join(opt.data_path, data_name)
+    dpath = os.path.join(opt.data_path, data_name, opt.clothing)
     test_loader = get_precomp_loader(dpath, split_name, vocab, opt,
                                      batch_size, False, workers)
     return test_loader
