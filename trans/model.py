@@ -486,8 +486,8 @@ class SCAN(object):
         """
         # Set mini-batch dataset
 
-        images = Variable(images, volatile=volatile)
-        captions = Variable(captions, volatile=volatile)
+        images = Variable(images)
+        captions = Variable(captions)
         if torch.cuda.is_available():
             images = images.cuda()
             captions = captions.cuda()
