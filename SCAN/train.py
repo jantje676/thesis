@@ -152,35 +152,37 @@ def train(opt, train_loader, model, epoch, val_loader):
 
 # see how well the model makes captions
 def validate(opt, val_loader, model):
+    
     # compute the encoding for all the validation images and captions
-    img_embs, cap_embs, cap_lens, freqs = encode_data(
-        model, val_loader, opt.log_step, logging.info)
+    with torch.no_grad():
+        img_embs, cap_embs, cap_lens, freqs = encode_data(
+            model, val_loader, opt.log_step, logging.info)
 
-    # 1 caption per image, so changed the step size to 1 instead of 5
-    img_embs = numpy.array([img_embs[i] for i in range(0, len(img_embs), 1)])
-    start = time.time()
+        # 1 caption per image, so changed the step size to 1 instead of 5
+        img_embs = numpy.array([img_embs[i] for i in range(0, len(img_embs), 1)])
+        start = time.time()
 
-    # find the similarity between every caption and image in the validation set?
-    if opt.cross_attn == 't2i':
-        sims, _ = shard_xattn_t2i(img_embs, cap_embs, cap_lens, freqs, opt, shard_size=128)
-    elif opt.cross_attn == 'i2t':
-        sims, _= shard_xattn_i2t(img_embs, cap_embs, cap_lens, freqs,  opt, shard_size=128)
-    else:
-        raise NotImplementedError
-    end = time.time()
-    print("calculate similarity time:", end-start)
+        # find the similarity between every caption and image in the validation set?
+        if opt.cross_attn == 't2i':
+            sims, _ = shard_xattn_t2i(img_embs, cap_embs, cap_lens, freqs, opt, shard_size=128)
+        elif opt.cross_attn == 'i2t':
+            sims, _= shard_xattn_i2t(img_embs, cap_embs, cap_lens, freqs,  opt, shard_size=128)
+        else:
+            raise NotImplementedError
+        end = time.time()
+        print("calculate similarity time:", end-start)
 
-    # caption retrieval (find the right text with every image)
-    (r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, cap_lens, sims)
-    logging.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
-                 (r1, r5, r10, medr, meanr))
-    # image retrieval (find the right image for every text)
-    (r1i, r5i, r10i, medri, meanr) = t2i(
-        img_embs, cap_embs, cap_lens, sims)
-    logging.info("Text to image: %.1f, %.1f, %.1f, %.1f, %.1f" %
-                 (r1i, r5i, r10i, medri, meanr))
-    # sum of recalls to be used for early stopping
-    currscore = r1 + r5 + r10 + r1i + r5i + r10i
+        # caption retrieval (find the right text with every image)
+        (r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, cap_lens, sims)
+        logging.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
+                     (r1, r5, r10, medr, meanr))
+        # image retrieval (find the right image for every text)
+        (r1i, r5i, r10i, medri, meanr) = t2i(
+            img_embs, cap_embs, cap_lens, sims)
+        logging.info("Text to image: %.1f, %.1f, %.1f, %.1f, %.1f" %
+                     (r1i, r5i, r10i, medri, meanr))
+        # sum of recalls to be used for early stopping
+        currscore = r1 + r5 + r10 + r1i + r5i + r10i
 
     # record metrics in tensorboard
     tb_logger.log_value('r1', r1, step=model.Eiters)
