@@ -9,7 +9,7 @@ import logging
 
 def main(opt):
     nr_runs = opt.nr_runs
-    seeds = [17, 4, 26]
+    seeds = [4, 26, 17]
 
     # find run name and set to seed1
     nr_next_run = find_run_name(opt)
