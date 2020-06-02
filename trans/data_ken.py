@@ -95,10 +95,6 @@ class PrecompDataset(data.Dataset):
         caption.append(vocab('<end>'))
         target = torch.Tensor(caption)
 
-        # print(img_id)
-        # print(self.captions[index])
-        # print(caption)
-        # print(">>>>>>>>>")
         return image, target, index, img_id, freq_score, freqs
 
     def __len__(self):

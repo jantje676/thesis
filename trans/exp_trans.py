@@ -9,7 +9,7 @@ import logging
 
 def main(opt):
     nr_runs = opt.nr_runs
-    seeds = [4, 26, 17]
+    seeds = [26,4,17]
 
     # find run name and set to seed1
     nr_next_run = find_run_name(opt)
@@ -19,13 +19,7 @@ def main(opt):
         logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
         tb_logger.configure(opt.logger_name, flush_secs=5)
 
-
         start_experiment(opt, seeds[i])
-
-
-
-
-
 
 
 if __name__ == '__main__':
