@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 import argparse
+from math import floor
 
 from matplotlib import pyplot as plt
 import matplotlib.image as mpimg
@@ -13,7 +14,7 @@ import torch.nn as nn
 import torchvision.models as models
 
 from torchvision import transforms
-from segment_dresses import segment_dresses, segment_dresses_tile, segment_dresses_tile_nine
+
 
 
 def main(args):
@@ -30,7 +31,6 @@ def main(args):
     data_ims_train = create_features(f["input_image"], early_stop)
     data_captions_train = create_captions(f["input_name"], early_stop)
     f.close()
-
 
     save_images(data_ims_train, data_path, version, "train")
     save_captions(data_captions_train, data_path, version, "train")
@@ -137,6 +137,23 @@ def get_features(stacked_segments, net, device ):
     feature = net(stacked_segments).to("cpu")
     feature = feature.detach().numpy()
     return feature
+
+def segment_dresses_tile(img):
+    segments = {}
+    H, W, C = img.shape
+    # 1=x_1, 2=y_1, 3=x_2, 4 =y_2 linkerbovenhoek=(x_1, y_1) rechteronderhoek=(x_2, y_2)
+    bboxes = np.array([[0,0,W, floor(0.35*H)],[0,floor(0.35*H),W,H],[0,floor(0.35*H),W,floor(0.75*H)],
+                      [0,0,W,floor(0.2*H)],[0,0,floor(0.5*W),floor(0.5*H)],[floor(0.5*W),0,W,floor(0.5*H)]])
+
+    segments["top"] = img[: floor(0.33*H) , : floor(0.5*W) , :]
+    segments["full_skirt"] = img[: floor(0.33*H) ,  floor(0.5*W): , :]
+    segments["skirt_above_knee"] = img[floor(0.33*H): floor(0.66*H) , : floor(0.5*W) , :]
+    segments["neckline"] = img[floor(0.33*H): floor(0.66*H) , floor(0.5*W):  , :]
+    segments["left_sleeve"] = img[floor(0.66*H):  , : floor(0.5*W) , :]
+    segments["right_sleeve"] = img[floor(0.66*H): , floor(0.5*W):  , :]
+    segments["full"] = img
+
+    return segments, bboxes
 
 if __name__ == '__main__':
 
