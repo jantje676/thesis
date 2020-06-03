@@ -22,6 +22,7 @@ def main(args):
     early_stop = args.early_stop
     data_path = args.data_path
     version = args.version
+    data_path_out = args.data_path_out
 
     file_path = data_path + "/" +filename + "train.h5"
     f = h5py.File(file_path, 'r')
@@ -29,8 +30,8 @@ def main(args):
     data_captions_train = create_captions(f["input_name"], early_stop)
     f.close()
 
-    save_images(data_ims_train, data_path, version, "train")
-    save_captions(data_captions_train, data_path, version, "train")
+    save_images(data_ims_train, data_path_out, version, "train")
+    save_captions(data_captions_train, data_path_out, version, "train")
 
 
     file_path = data_path + "/" +filename + "validation.h5"
@@ -40,15 +41,15 @@ def main(args):
     data_captions_test = create_captions(f["input_name"], early_stop)
     f.close()
 
-    save_images(data_ims_test, data_path, version, "test")
-    save_captions(data_captions_test, data_path, version, "test")
+    save_images(data_ims_test, data_path_out, version, "test")
+    save_captions(data_captions_test, data_path_out, version, "test")
 
 
 def save_images(ims, data_path, version, split):
     if split == "train":
         filename = "{}/data_ims_{}_{}.npy".format(data_path, version, split)
     elif split == "test":
-        filename = "{}/data_ims_{}_devtrain.npy".format(data_path, version)
+        filename = "{}/data_ims_{}_devtest.npy".format(data_path, version)
 
     np.save(filename, ims)
     print("Shape data ims {} is: {}".format(split, ims.shape))
@@ -56,9 +57,9 @@ def save_images(ims, data_path, version, split):
 
 def save_captions(captions, data_path, version, split):
     if split =="train":
-        filename = '{}/data_captions_{}.txt'.format(data_path, version)
-    elif split == "test":
         filename = '{}/data_captions_{}_{}.txt'.format(data_path, version, split)
+    elif split == "test":
+        filename = '{}/data_captions_{}_devtest.txt'.format(data_path, version, split)
 
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter='\t')
@@ -171,6 +172,8 @@ if __name__ == '__main__':
                         help='path to training file')
     parser.add_argument('--data_path', default="../../data/Fashion_gen",
                         help='path to data folder.')
+    parser.add_argument('--data_path_out', default="../../data/Fashion_gen",
+                    help='path to data folder.')
     parser.add_argument('--early_stop', default=None, type=int,
                         help='Rank loss margin.')
     parser.add_argument('--version', default=None,
