@@ -23,11 +23,8 @@ def main(args):
     data_path = args.data_path
     version = args.version
 
-    f = h5py.File(filename, 'r')
-    keys = list(f.keys())
-    dset = f["index"]
-    l_data = dset.shape[0]
-
+    file_path = data_path + "/" +filename + "train.h5"
+    f = h5py.File(file_path, 'r')
     data_ims_train = create_features(f["input_image"], early_stop)
     data_captions_train = create_captions(f["input_name"], early_stop)
     f.close()
@@ -35,11 +32,23 @@ def main(args):
     save_images(data_ims_train, data_path, version, "train")
     save_captions(data_captions_train, data_path, version, "train")
 
+
+    file_path = data_path + "/" +filename + "validation.h5"
+    f = h5py.File(file_path, 'r')
+
+    data_ims_test = create_features(f["input_image"], early_stop)
+    data_captions_test = create_captions(f["input_name"], early_stop)
+    f.close()
+
+    save_images(data_ims_test, data_path, version, "test")
+    save_captions(data_captions_test, data_path, version, "test")
+
+
 def save_images(ims, data_path, version, split):
     if split == "train":
-        filename = "{}/data_ims_{}.npy".format(data_path, version)
-    elif split == "test":
         filename = "{}/data_ims_{}_{}.npy".format(data_path, version, split)
+    elif split == "test":
+        filename = "{}/data_ims_{}_devtrain.npy".format(data_path, version)
 
     np.save(filename, ims)
     print("Shape data ims {} is: {}".format(split, ims.shape))
@@ -61,7 +70,7 @@ def create_captions(captions, early_stop):
     cleaned_captions = []
     count = 0
     for caption in captions:
-        cleaned_captions.append((count, caption[0].decode("utf-8").lower()))
+        cleaned_captions.append((count, caption[0].decode("latin-1").lower()))
         count += 1
         if early_stop == count and early_stop != None:
             break
@@ -158,13 +167,13 @@ def segment_dresses_tile(img):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filename', default="../../data/Fashion_gen/fashiongen_256_256_train.h5",
+    parser.add_argument('--filename', default="fashiongen_256_256_",
                         help='path to training file')
     parser.add_argument('--data_path', default="../../data/Fashion_gen",
                         help='path to data folder.')
     parser.add_argument('--early_stop', default=None, type=int,
                         help='Rank loss margin.')
-    parser.add_argument('--version', default="tile",
+    parser.add_argument('--version', default=None,
                         help='version control')
     args = parser.parse_args()
     main(args)
