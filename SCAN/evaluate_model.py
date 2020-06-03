@@ -9,7 +9,7 @@ import numpy as np
 import glob
 import argparse
 
-# python evaluate_model.py --model_path "runs/" --run run8 --vocab_path "../vocab/" --version short --data_path "../data/"
+# python evaluate_model.py --model_path "runs/" --run run9 --vocab_path "../vocab/" --version short --data_path "../data/"
 
 def main(args):
     run = args.run

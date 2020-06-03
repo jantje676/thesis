@@ -247,11 +247,11 @@ def shard_xattn_t2i(images, captions, caplens, freqs, opt, shard_size=128):
             sys.stdout.write('\r>> shard_xattn_t2i batch (%d,%d)' % (i,j))
             cap_start, cap_end = shard_size*j, min(shard_size*(j+1), len(captions))
             if torch.cuda.is_available():
-                im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True).cuda()
-                s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True).cuda()
+                im = Variable(torch.from_numpy(images[im_start:im_end])).cuda()
+                s = Variable(torch.from_numpy(captions[cap_start:cap_end])).cuda()
             else:
-                im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True)
-                s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True)
+                im = Variable(torch.from_numpy(images[im_start:im_end]))
+                s = Variable(torch.from_numpy(captions[cap_start:cap_end]))
             l = caplens[cap_start:cap_end]
             f = freqs[cap_start:cap_end]
 

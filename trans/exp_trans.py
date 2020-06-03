@@ -97,8 +97,6 @@ if __name__ == '__main__':
                         help='(Used for agg_func=frew) regulaizer for emphasis on non-frequent words')
     parser.add_argument('--nr_runs', default=1, type=int,
                         help='Number of experiments.')
-    # parser.add_argument('--image_path', default="../data/Fashion200K/pictures_only/pictures_only", type=str,
-    #                     help='Number of experiments.')
     parser.add_argument('--image_path', default="pictures_only/pictures_only", type=str,
                         help='Number of experiments.')
     parser.add_argument('--n_detectors', default=5, type=int,
@@ -109,6 +107,8 @@ if __name__ == '__main__':
                         help="use rectangle ratio for images")
     parser.add_argument('--clothing', default="dresses", type=str,
                         help='dresses|pants.')
+    parser.add_argument('--shard_size', default=128, type=int,
+                        help='batch size for validating')
 
     opt = parser.parse_args()
     main(opt)
