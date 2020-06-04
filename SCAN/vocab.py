@@ -103,20 +103,22 @@ def build_vocab(data_path, data_name, version, caption_file, threshold):
     return vocab
 
 
-def main(data_path, data_name, version, clothing):
-    data_path = "../data/{}/{}/".format(data_name, clothing)
+def main(data_path, data_name, version, clothing, vocab_path):
+    data_path = "{}/{}/{}/".format(data_path, data_name, clothing)
+    
     vocab = build_vocab(data_path, data_name, version, caption_file=annotations, threshold=1)
-    serialize_vocab(vocab, '../vocab/{}/{}_vocab_{}.json'.format(clothing, data_name, version))
+    serialize_vocab(vocab, '{}/{}/{}_vocab_{}.json'.format(vocab_path, clothing, data_name, version))
     print("Saved vocabulary file to ", '../vocab/{}/{}_vocab_{}.json'.format(clothing, data_name, version))
 
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_path', default='data')
+    parser.add_argument('--data_path', default="../data")
+    parser.add_argument('--vocab_path', default="../vocab")
     parser.add_argument('--data_name', default='Fashion200K', help='{coco,f30k}_precomp')
     parser.add_argument('--version', default=None, help='version')
     parser.add_argument('--clothing', default=None, help='clothing')
 
     opt = parser.parse_args()
-    main(opt.data_path, opt.data_name, opt.version, opt.clothing)
+    main(opt.data_path, opt.data_name, opt.version, opt.clothing, opt.vocab_path)
