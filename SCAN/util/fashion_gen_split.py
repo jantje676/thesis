@@ -65,7 +65,10 @@ def get_unique_indices(captions):
     unique_indices = []
     prev_caption = ""
     for line in captions:
-        id, caption = line.split("\t")
+        try:
+            id, caption = line.split("\t")
+        except:
+            continue
         if prev_caption != caption:
             unique_indices.append(int(id))
             prev_caption = caption

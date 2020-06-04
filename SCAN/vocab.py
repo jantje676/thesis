@@ -78,6 +78,7 @@ def build_vocab(data_path, data_name, version, caption_file, threshold):
     counter = Counter()
     for path in caption_file[data_name]:
         full_path = "{}/data_captions_{}_{}.txt".format(data_path,version, path)
+    
         captions = from_txt(full_path)
         for i, caption in enumerate(captions):
             tokens = nltk.tokenize.word_tokenize(
@@ -104,8 +105,8 @@ def build_vocab(data_path, data_name, version, caption_file, threshold):
 
 
 def main(data_path, data_name, version, clothing, vocab_path):
-    data_path = "{}/{}/{}/".format(data_path, data_name, clothing)
-    
+    data_path = "{}/{}/{}".format(data_path, data_name, clothing)
+
     vocab = build_vocab(data_path, data_name, version, caption_file=annotations, threshold=1)
     serialize_vocab(vocab, '{}/{}/{}_vocab_{}.json'.format(vocab_path, clothing, data_name, version))
     print("Saved vocabulary file to ", '../vocab/{}/{}_vocab_{}.json'.format(clothing, data_name, version))
