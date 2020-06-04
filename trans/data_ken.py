@@ -16,6 +16,7 @@ import nltk
 from PIL import Image
 import matplotlib.image as mpimg
 from matplotlib import pyplot as plt
+import h5py
 
 import numpy as np
 import json as jsonmod
@@ -29,12 +30,12 @@ class PrecompDataset(data.Dataset):
     Possible options: f30k_precomp, coco_precomp
     """
 
-    def __init__(self, data_path, data_split, vocab, version, image_path, rectangle):
+    def __init__(self, data_path, data_split, vocab, version, image_path, rectangle, data_name):
         self.vocab = vocab
         loc = data_path + '/'
         self.captions = []
         self.images = []
-
+        self.data_name = data_name
         self.image_path = image_path
 
         with open('{}/data_captions_{}_{}.txt'.format(data_path, version, data_split), 'r', newline='') as csvfile:
@@ -43,6 +44,7 @@ class PrecompDataset(data.Dataset):
                 self.captions.append(line[1].strip())
                 self.images.append(line[0].strip())
 
+        self.h5_images =  get_h5_images(self.data_name, data_split, data_path)
 
         self.length = len(self.captions)
 
@@ -52,11 +54,11 @@ class PrecompDataset(data.Dataset):
         else:
             self.im_div = 1
 
-        count = count_words(self.captions)
-        freq_score, freqs = calculatate_freq(self.captions, count)
+        self.count  = count_words(self.captions)
+        freq_score, freqs = calculatate_freq(self.captions, self.count)
         self.freq_score = freq_score
         self.freqs = freqs
-        self.count = count
+
         if rectangle:
             self.height = 512
         else:
@@ -67,9 +69,13 @@ class PrecompDataset(data.Dataset):
         # handle the image redundancy
         img_id = int(index/self.im_div)
         img_id = self.images[img_id]
-        # load image
-        image = Image.open("{}/{}_0.jpeg".format(self.image_path, img_id))
 
+        if self.data_name == "Fashion200K":
+            # load image
+            image = Image.open("{}/{}_0.jpeg".format(self.image_path, img_id))
+        elif self.data_name == "Fashion_gen":
+            image = self.h5_images[int(img_id)]
+            image = Image.fromarray(image)
 
         transform = transforms.Compose([
             # transforms.Resize((256, 256)),
@@ -99,6 +105,19 @@ class PrecompDataset(data.Dataset):
 
     def __len__(self):
         return self.length
+
+#
+def get_h5_images(data_name, data_split, data_path):
+    if data_name == "Fashion200K":
+        return None
+    elif data_name == "Fashion_gen":
+        if data_split == "train":
+            file = "{}/fashiongen_256_256_train.h5".format(data_path)
+        else:
+            file = "{}/fashiongen_256_256_validation.h5".format(data_path)
+        f = h5py.File(file, 'r')
+        dset = f["input_image"]
+        return dset
 
 
 def collate_fn(data):
@@ -134,7 +153,7 @@ def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
                        shuffle=True, num_workers=2):
     """Returns torch.utils.data.DataLoader for custom coco dataset."""
     image_path = "{}/{}/{}/{}".format(opt.data_path, opt.data_name, opt.clothing, opt.image_path)
-    dset = PrecompDataset(data_path, data_split, vocab, opt.version, image_path, opt.rectangle)
+    dset = PrecompDataset(data_path, data_split, vocab, opt.version, image_path, opt.rectangle, opt.data_name)
 
     data_loader = torch.utils.data.DataLoader(dataset=dset,
                                               batch_size=batch_size,

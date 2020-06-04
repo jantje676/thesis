@@ -36,8 +36,6 @@ def start_experiment(opt, seed):
     np.random.seed(seed)
     random.seed(seed)
 
-
-
     # Load Vocabulary Wrapper, create dictionary that can switch between ids and words
     vocab = deserialize_vocab("{}/{}/{}_vocab_{}.json".format(opt.vocab_path, opt.clothing, opt.data_name, opt.version))
 
@@ -152,7 +150,7 @@ def train(opt, train_loader, model, epoch, val_loader):
 
 # see how well the model makes captions
 def validate(opt, val_loader, model):
-    
+
     # compute the encoding for all the validation images and captions
     with torch.no_grad():
         img_embs, cap_embs, cap_lens, freqs = encode_data(

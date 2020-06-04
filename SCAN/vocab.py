@@ -16,7 +16,8 @@ import json
 import csv
 
 annotations = {
-    'Fashion200K': ['train', 'dev']
+    'Fashion200K': ['train', 'dev'],
+    'Fashion_gen': ['train', 'dev']
 }
 
 
@@ -103,8 +104,7 @@ def build_vocab(data_path, data_name, version, caption_file, threshold):
 
 
 def main(data_path, data_name, version, clothing):
-    data_path = "../data/Fashion200K/{}/".format(clothing)
-    data_name = "Fashion200K"
+    data_path = "../data/{}/{}/".format(data_name, clothing)
     vocab = build_vocab(data_path, data_name, version, caption_file=annotations, threshold=1)
     serialize_vocab(vocab, '../vocab/{}/{}_vocab_{}.json'.format(clothing, data_name, version))
     print("Saved vocabulary file to ", '../vocab/{}/{}_vocab_{}.json'.format(clothing, data_name, version))
@@ -114,10 +114,9 @@ def main(data_path, data_name, version, clothing):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', default='data')
-    parser.add_argument('--data_name', default='f30k_precomp', help='{coco,f30k}_precomp')
+    parser.add_argument('--data_name', default='Fashion200K', help='{coco,f30k}_precomp')
     parser.add_argument('--version', default=None, help='version')
     parser.add_argument('--clothing', default=None, help='clothing')
-
 
     opt = parser.parse_args()
     main(opt.data_path, opt.data_name, opt.version, opt.clothing)
