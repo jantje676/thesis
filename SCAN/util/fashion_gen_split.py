@@ -52,6 +52,7 @@ def get_dev_test_indices(unique_indices, dev_size, test_size):
 
     total = dev_size + test_size
     if total < len(unique_indices):
+        unique_indices = unique_indices[:total]
         rnd_dev = unique_indices[:dev_size]
         rnd_test = unique_indices[dev_size:]
     else:
