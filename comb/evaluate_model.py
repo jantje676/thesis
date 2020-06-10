@@ -14,7 +14,7 @@ Evaluate the trained model on the test set
 """
 
 
-# python evaluate_model.py --model_path "runs/" --run run8 --vocab_path "../vocab/" --data_path "../data/"
+# python evaluate_model.py --model_path "runs/" --run run15 --vocab_path "../vocab/" --data_path "../data/"
 
 def main(args):
     run = args.run

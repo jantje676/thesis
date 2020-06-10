@@ -78,7 +78,7 @@ def build_vocab(data_path, data_name, version, caption_file, threshold):
     counter = Counter()
     for path in caption_file[data_name]:
         full_path = "{}/data_captions_{}_{}.txt".format(data_path,version, path)
-    
+
         captions = from_txt(full_path)
         for i, caption in enumerate(captions):
             tokens = nltk.tokenize.word_tokenize(

@@ -156,7 +156,6 @@ def validate(opt, val_loader, model):
         img_embs, cap_embs, cap_lens, freqs = encode_data(
             model, val_loader, opt.log_step, logging.info)
 
-        # 1 caption per image, so changed the step size to 1 instead of 5
         img_embs = numpy.array([img_embs[i] for i in range(0, len(img_embs), 1)])
         start = time.time()
 

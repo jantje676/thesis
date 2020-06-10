@@ -102,7 +102,7 @@ if __name__ == '__main__':
                         help='Number of attention maps to create.')
     parser.add_argument('--seed1', default=17, type=int,
                         help='first seed to change easily')
-                        
+
     # Specific for trans
     parser.add_argument('--trans', action='store_true',
                         help="use SCAN with spatial transformers")

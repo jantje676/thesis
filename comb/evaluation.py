@@ -198,9 +198,6 @@ def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_pat
     print("Average t2i Recall: %.1f" % ari)
     print("Text to image: %.1f %.1f %.1f %.1f %.1f" % ri)
 
-
-
-
     if opt.trans:
         save_dir = "plots_trans"
     else:
