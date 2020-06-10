@@ -36,7 +36,7 @@ class PrecompTrans(data.Dataset):
         self.data_name = data_name
         self.image_path = image_path
         self.data_path = data_path
-
+        
         with open('{}/data_captions_{}_{}.txt'.format(data_path, version, data_split), 'r', newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t')
             for line in reader:

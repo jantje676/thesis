@@ -504,9 +504,15 @@ class SCAN(object):
         self.criterion = ContrastiveLoss(opt=opt,
                                          margin=opt.margin,
                                          max_violation=opt.max_violation)
-        params = list(self.txt_enc.parameters())
-        # params += list(self.img_enc.fc.parameters())
-        params += list(self.img_enc.parameters())
+        if opt.trans:
+            params = list(self.txt_enc.parameters())
+            for i in range(opt.n_detectors):
+                params += list(self.img_enc.conv[i].parameters())
+            params += list(self.img_enc.localization.parameters())
+            params += list(self.img_enc.fc_loc.parameters())
+        else:
+            params = list(self.txt_enc.parameters())
+            params += list(self.img_enc.parameters())
 
         self.params = params
 
