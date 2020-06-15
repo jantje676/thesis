@@ -30,14 +30,16 @@ import tb as tb_logger
 
 import numpy as np
 import random
+from GPUtil import showUtilization as gpu_usage
 
 def start_experiment(opt, seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
+
     print("Let's use", torch.cuda.device_count(), "GPUs!")
     print("Number threads:" , torch.get_num_threads())
-    exit()
+
     # Load Vocabulary Wrapper, create dictionary that can switch between ids and words
     vocab = deserialize_vocab("{}/{}/{}_vocab_{}.json".format(opt.vocab_path, opt.clothing, opt.data_name, opt.version))
 
@@ -78,11 +80,19 @@ def start_experiment(opt, seed):
         print(opt.model_name)
         adjust_learning_rate(opt, model.optimizer, epoch)
 
-        # # train for one epoch
-        # train(opt, train_loader, model, epoch, val_loader)
+        print("Checkpoint 1 [epoch {}]".format(epoch))
+        gpu_usage()
+        # train for one epoch
+        train(opt, train_loader, model, epoch, val_loader)
 
+
+        print("Checkpoint 2 [epoch {}]".format(epoch))
+        gpu_usage()
         # evaluate on validation set
         rsum = validate(opt, val_loader, model)
+
+        print("Checkpoint 3 [epoch {}]".format(epoch))
+        gpu_usage()
 
         # remember best R@ sum and save checkpoint
         is_best = rsum > best_rsum
