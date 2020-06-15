@@ -148,6 +148,9 @@ def train(opt, train_loader, model, epoch, val_loader):
                 .format(
                     epoch, i, len(train_loader), batch_time=batch_time,
                     data_time=data_time, e_log=str(model.logger)))
+                    
+        if model.Eiters % 250 == 0:
+            gpu_usage()
 
         # Record logs in tensorboard
         tb_logger.log_value('epoch', epoch, step=model.Eiters)
