@@ -35,7 +35,9 @@ def start_experiment(opt, seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
-
+    print("Let's use", torch.cuda.device_count(), "GPUs!")
+    print("Number threads:" , torch.get_num_threads())
+    exit()
     # Load Vocabulary Wrapper, create dictionary that can switch between ids and words
     vocab = deserialize_vocab("{}/{}/{}_vocab_{}.json".format(opt.vocab_path, opt.clothing, opt.data_name, opt.version))
 
@@ -76,8 +78,8 @@ def start_experiment(opt, seed):
         print(opt.model_name)
         adjust_learning_rate(opt, model.optimizer, epoch)
 
-        # train for one epoch
-        train(opt, train_loader, model, epoch, val_loader)
+        # # train for one epoch
+        # train(opt, train_loader, model, epoch, val_loader)
 
         # evaluate on validation set
         rsum = validate(opt, val_loader, model)
