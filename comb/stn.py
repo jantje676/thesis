@@ -47,8 +47,7 @@ class STN(nn.Module):
     def stn(self, x):
         xs = self.localization(x)
         xs = xs.view(-1, self.bottle)
-        theta = self.fc_loc(xs)
-        theta = theta * self.mask
+        theta = self.fc_loc(xs) * self.mask
         theta = theta.view(-1, 2, 3)
         indices = get_indices(self.n_detectors, x.shape[0])
         theta = torch.index_select(theta, 0, indices)
@@ -62,7 +61,7 @@ class STN(nn.Module):
 
     def forward(self, x):
         # transform the input
-
+        print("batch size in STN: ", x.shape)
         batch_size = x.shape[0]
         x = self.stn(x)
         # check_image(x, 0, self.n_detectors)

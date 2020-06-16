@@ -123,6 +123,7 @@ def train(opt, train_loader, model, epoch, val_loader):
 
     end = time.time()
     for i, train_data in enumerate(train_loader):
+        
         # switch to train mode
         model.train_start()
 
@@ -148,7 +149,7 @@ def train(opt, train_loader, model, epoch, val_loader):
                 .format(
                     epoch, i, len(train_loader), batch_time=batch_time,
                     data_time=data_time, e_log=str(model.logger)))
-                    
+
         if model.Eiters % 250 == 0:
             gpu_usage()
 

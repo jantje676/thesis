@@ -496,9 +496,13 @@ class SCAN(object):
                                    use_bi_gru=opt.bi_gru,
                                    no_txtnorm=opt.no_txtnorm)
         if torch.cuda.is_available():
+            if torch.cuda.device_count() > 1:
+                self.img_enc = nn.DataParallel(self.img_enc)
+                self.txt_enc = nn.DataParallel(self.txt_enc)
             self.img_enc.cuda()
             self.txt_enc.cuda()
             cudnn.benchmark = True
+            cudnn.enabled = True
 
         # Loss and Optimizer
         self.criterion = ContrastiveLoss(opt=opt,
@@ -570,6 +574,7 @@ class SCAN(object):
         self.Eiters += 1
         self.logger.update('Eit', self.Eiters)
         self.logger.update('lr', self.optimizer.param_groups[0]['lr'])
+        print("outside model batch size is: ", images.shape)
         # compute the embeddings
         img_emb, cap_emb, cap_lens = self.forward_emb(images, captions, lengths)
 
