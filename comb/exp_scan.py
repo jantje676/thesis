@@ -116,6 +116,9 @@ if __name__ == '__main__':
                         help="use rectangle ratio for images")
     parser.add_argument('--shard_size', default=128, type=int,
                         help='batch size for validating')
-
+    parser.add_argument('--filter', action='store_true',
+                        help="filter descriptions for most frequent words")
+    parser.add_argument('--n_filter', default=8, type=int,
+                        help='filter for most n most frequent words')
     opt = parser.parse_args()
     main(opt)

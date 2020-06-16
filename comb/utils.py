@@ -93,7 +93,6 @@ def calculatate_freq(captions, count):
             except:
                 caption_l -= 1
                 word_count.append(0)
-
         freq = tot_freq / caption_l
         freq_score.append(freq)
         word_count.append(0)
@@ -102,6 +101,17 @@ def calculatate_freq(captions, count):
     freq_score = normalize(freq_score)
     return freq_score, freqs
 
+# filter the descrptions of fashion_gen to only show most frequent n-words
+def filter_freq(tokens, count, n_filter):
+    freq = []
+    for token in tokens:
+        freq.append(count[token])
+    ind = np.argpartition(freq, -n_filter)[-n_filter:]
+    ind.sort()
+    tokens = [tokens[id] for id in ind]
+    return tokens
+
+# normalize the frequency scores so every sentence canbe compared
 def normalize(freq_score):
     max_freq = max(freq_score)
     min_freq = min(freq_score)

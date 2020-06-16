@@ -17,7 +17,7 @@ from PIL import Image
 import numpy as np
 import json as jsonmod
 import csv
-from utils import count_words, calculatate_freq
+from utils import count_words, calculatate_freq, filter_freq
 import h5py
 
 
@@ -28,7 +28,7 @@ class PrecompTrans(data.Dataset):
     Possible options: f30k_precomp, coco_precomp
     """
 
-    def __init__(self, data_path, data_split, vocab, version, image_path, rectangle, data_name):
+    def __init__(self, data_path, data_split, vocab, version, image_path, rectangle, data_name, filter, n_filter):
         self.vocab = vocab
         loc = data_path + '/'
         self.captions = []
@@ -36,7 +36,9 @@ class PrecompTrans(data.Dataset):
         self.data_name = data_name
         self.image_path = image_path
         self.data_path = data_path
-        
+        self.filter = filter
+        self.n_filter = n_filter
+
         with open('{}/data_captions_{}_{}.txt'.format(data_path, version, data_split), 'r', newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t')
             for line in reader:
@@ -53,7 +55,7 @@ class PrecompTrans(data.Dataset):
         else:
             self.im_div = 1
 
-        self.count  = count_words(self.captions)
+        self.count  = vocab.count
         freq_score, freqs = calculatate_freq(self.captions, self.count)
         self.freq_score = freq_score
         self.freqs = freqs
@@ -94,6 +96,8 @@ class PrecompTrans(data.Dataset):
         # Convert caption (string) to word ids.
         tokens = nltk.tokenize.word_tokenize(
             str(caption).lower())
+        if self.filter:
+            tokens = filter_freq(tokens, self.count, self.n_filter)
         caption = []
         caption.append(vocab('<start>'))
         caption.extend([vocab(token) for token in tokens])
@@ -126,10 +130,12 @@ class PrecompDataset(data.Dataset):
     Possible options: f30k_precomp, coco_precomp
     """
 
-    def __init__(self, data_path, data_split, vocab, version):
+    def __init__(self, data_path, data_split, vocab, version, filter, n_filter):
         self.vocab = vocab
         loc = data_path + '/'
         self.captions = []
+        self.filter = filter
+        self.n_filter = n_filter
 
         with open('{}/data_captions_{}_{}.txt'.format(data_path, version, data_split), 'r', newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t')
@@ -146,11 +152,12 @@ class PrecompDataset(data.Dataset):
         else:
             self.im_div = 1
 
-        count = count_words(self.captions)
-        freq_score, freqs = calculatate_freq(self.captions, count)
+
+        self.count = vocab.count
+        freq_score, freqs = calculatate_freq(self.captions, self.count)
         self.freq_score = freq_score
         self.freqs = freqs
-        self.count = count
+
 
 
     def __getitem__(self, index):
@@ -165,6 +172,8 @@ class PrecompDataset(data.Dataset):
         # Convert caption (string) to word ids.
         tokens = nltk.tokenize.word_tokenize(
             str(caption).lower())
+        if self.filter:
+            tokens = filter_freq(tokens, self.count, self.n_filter)
         caption = []
         caption.append(vocab('<start>'))
         caption.extend([vocab(token) for token in tokens])
@@ -209,9 +218,9 @@ def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
                        shuffle=True, num_workers=2):
     """Returns torch.utils.data.DataLoader for custom coco dataset."""
     if opt.trans:
-        dset = PrecompTrans(data_path, data_split, vocab, opt.version, opt.image_path, opt.rectangle, opt.data_name)
+        dset = PrecompTrans(data_path, data_split, vocab, opt.version, opt.image_path, opt.rectangle, opt.data_name, opt.filter, opt.n_filter)
     else:
-        dset = PrecompDataset(data_path, data_split, vocab, opt.version)
+        dset = PrecompDataset(data_path, data_split, vocab, opt.version, opt.filter, opt.n_filter)
 
     data_loader = torch.utils.data.DataLoader(dataset=dset,
                                               batch_size=batch_size,

@@ -28,6 +28,7 @@ class Vocabulary(object):
         self.word2idx = {}
         self.idx2word = {}
         self.idx = 0
+        self.count = {}
 
     def add_word(self, word):
         if word not in self.word2idx:
@@ -49,6 +50,7 @@ def serialize_vocab(vocab, dest):
     d['word2idx'] = vocab.word2idx
     d['idx2word'] = vocab.idx2word
     d['idx'] = vocab.idx
+    d['count'] = vocab.count
     with open(dest, "w") as f:
         json.dump(d, f)
 
@@ -60,6 +62,7 @@ def deserialize_vocab(src):
     vocab.word2idx = d['word2idx']
     vocab.idx2word = d['idx2word']
     vocab.idx = d['idx']
+    vocab.count = d['count']
     return vocab
 
 
@@ -89,7 +92,13 @@ def build_vocab(data_path, data_name, version, caption_file, threshold):
                 print("[%d/%d] tokenized the captions." % (i, len(captions)))
 
     # Discard if the occurrence of the word is less than min_word_cnt.
-    words = [word for word, cnt in counter.items() if cnt >= threshold]
+    # words = [word for word, cnt in counter.items() if cnt >= threshold]
+    words = []
+    count = {}
+    for word, cnt in counter.items():
+        if cnt >= threshold:
+            words.append(word)
+            count[word] = cnt
 
     # Create a vocab wrapper and add some special tokens.
     vocab = Vocabulary()
@@ -97,7 +106,8 @@ def build_vocab(data_path, data_name, version, caption_file, threshold):
     vocab.add_word('<start>')
     vocab.add_word('<end>')
     vocab.add_word('<unk>')
-
+    vocab.count = count
+    print(vocab.count)
     # Add words to the vocabulary.
     for i, word in enumerate(words):
         vocab.add_word(word)
