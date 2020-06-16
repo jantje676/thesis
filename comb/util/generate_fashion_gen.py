@@ -24,7 +24,6 @@ def main(args):
     data_path = args.data_path
     version = args.version
     data_path_out = args.data_path_out
-    max_length = args.max_length
     only_text = args.only_text
     description = args.descriptions
 
@@ -40,7 +39,7 @@ def main(args):
         data_ims_train = create_features(f["input_image"], early_stop)
         save_images(data_ims_train, data_path_out, version, "train")
 
-    data_captions_train = create_captions(f[field], early_stop, max_length, description)
+    data_captions_train = create_captions(f[field], early_stop, description)
     save_captions(data_captions_train, data_path_out, version, "train")
 
     f.close()
@@ -52,7 +51,7 @@ def main(args):
         data_ims_test = create_features(f["input_image"], early_stop)
         save_images(data_ims_test, data_path_out, version, "test")
 
-    data_captions_test = create_captions(f[field], early_stop, max_length, description)
+    data_captions_test = create_captions(f[field], early_stop, description)
     save_captions(data_captions_test, data_path_out, version, "test")
     f.close()
 
@@ -78,7 +77,7 @@ def save_captions(captions, data_path, version, split):
             writer.writerow((caption[0], caption[1]))
     print("length {} captions is {}".format(split, len(captions)))
 
-def create_captions(captions, early_stop, max_length, description):
+def create_captions(captions, early_stop, description):
     cleaned_captions = []
     count = 0
     for i in range(len(captions)):
@@ -87,7 +86,7 @@ def create_captions(captions, early_stop, max_length, description):
         if description:
             words = nltk.word_tokenize(caption)
             words = [word.lower() for word in words if word.isalpha()]
-            caption = " ".join(words[:max_length])
+            caption = " ".join(words)
 
         cleaned_captions.append((count, caption))
         count += 1
@@ -196,8 +195,6 @@ if __name__ == '__main__':
                         help='Rank loss margin.')
     parser.add_argument('--version', default=None,
                         help='version control')
-    parser.add_argument('--max_length', default=None, type=int,
-                        help='Maximum length of sentences')
     parser.add_argument('--only_text', action='store_true',
                         help="only create new captions")
     parser.add_argument('--descriptions', action='store_true',
