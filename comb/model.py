@@ -514,7 +514,7 @@ class SCAN(object):
         if opt.trans:
             params = list(self.txt_enc.parameters())
             for i in range(opt.n_detectors):
-                params += list(self.img_enc.conv[i].parameters())
+                params += list(self.img_enc.module.conv[i].parameters())
             params += list(self.img_enc.localization.parameters())
             params += list(self.img_enc.fc_loc.parameters())
         else:
