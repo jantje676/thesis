@@ -478,6 +478,9 @@ class ContrastiveLoss(nn.Module):
 
         return cost_s.sum() + cost_im.sum()
 
+class MyDataParallel(nn.DataParallel):
+    def __getattr__(self, name):
+        return getattr(self.module, name)
 
 class SCAN(object):
     """
@@ -497,8 +500,8 @@ class SCAN(object):
                                    no_txtnorm=opt.no_txtnorm)
         if torch.cuda.is_available():
             if torch.cuda.device_count() > 1:
-                self.img_enc = nn.DataParallel(self.img_enc)
-                self.txt_enc = nn.DataParallel(self.txt_enc)
+                self.img_enc = MyDataParallel(self.img_enc)
+                self.txt_enc = MyDataParallel(self.txt_enc)
             self.img_enc.cuda()
             self.txt_enc.cuda()
             cudnn.benchmark = True
