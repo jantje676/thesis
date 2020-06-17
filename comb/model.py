@@ -572,7 +572,6 @@ class SCAN(object):
         self.Eiters += 1
         self.logger.update('Eit', self.Eiters)
         self.logger.update('lr', self.optimizer.param_groups[0]['lr'])
-        print("outside model batch size is: ", images.shape)
         # compute the embeddings
         img_emb, cap_emb, cap_lens = self.forward_emb(images, captions, lengths)
 

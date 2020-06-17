@@ -61,7 +61,6 @@ class STN(nn.Module):
 
     def forward(self, x):
         # transform the input
-        print("batch size in STN: ", x.shape)
         batch_size = x.shape[0]
         x = self.stn(x)
         # check_image(x, 0, self.n_detectors)
