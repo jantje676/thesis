@@ -103,6 +103,8 @@ def calculatate_freq(captions, count):
 
 # filter the descrptions of fashion_gen to only show most frequent n-words
 def filter_freq(tokens, count, n_filter):
+    if n_filter > len(tokens):
+        return tokens
     freq = []
     for token in tokens:
         freq.append(count[token])
