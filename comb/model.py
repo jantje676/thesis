@@ -72,7 +72,6 @@ class EncoderImageAttention(nn.Module):
         self.w2 = nn.Linear(int(img_dim/2), n_attention,  bias=False)
         self.w3 = nn.Linear(img_dim, embed_size, bias=True)
 
-
         self.init_weights()
 
     def init_weights(self):
@@ -135,7 +134,6 @@ class EncoderImagePrecomp(nn.Module):
         """Extract image feature vectors."""
         # assuming that the precomputed features are already l2-normalized
         features = self.fc(images)
-
 
         # normalize in the joint embedding space
         if not self.no_imgnorm:
@@ -499,9 +497,6 @@ class SCAN(object):
                                    use_bi_gru=opt.bi_gru,
                                    no_txtnorm=opt.no_txtnorm)
         if torch.cuda.is_available():
-            if torch.cuda.device_count() > 1:
-                self.img_enc = MyDataParallel(self.img_enc)
-                self.txt_enc = MyDataParallel(self.txt_enc)
             self.img_enc.cuda()
             self.txt_enc.cuda()
             cudnn.benchmark = True
@@ -514,7 +509,7 @@ class SCAN(object):
         if opt.trans:
             params = list(self.txt_enc.parameters())
             for i in range(opt.n_detectors):
-                params += list(self.img_enc.module.conv[i].parameters())
+                params += list(self.img_enc.conv[i].parameters())
             params += list(self.img_enc.localization.parameters())
             params += list(self.img_enc.fc_loc.parameters())
         else:

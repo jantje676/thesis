@@ -80,19 +80,11 @@ def start_experiment(opt, seed):
         print(opt.model_name)
         adjust_learning_rate(opt, model.optimizer, epoch)
 
-        print("Checkpoint 1 [epoch {}]".format(epoch))
-        gpu_usage()
         # train for one epoch
         train(opt, train_loader, model, epoch, val_loader)
 
-
-        print("Checkpoint 2 [epoch {}]".format(epoch))
-        gpu_usage()
         # evaluate on validation set
         rsum = validate(opt, val_loader, model)
-
-        print("Checkpoint 3 [epoch {}]".format(epoch))
-        gpu_usage()
 
         # remember best R@ sum and save checkpoint
         is_best = rsum > best_rsum
@@ -123,7 +115,7 @@ def train(opt, train_loader, model, epoch, val_loader):
 
     end = time.time()
     for i, train_data in enumerate(train_loader):
-        
+
         # switch to train mode
         model.train_start()
 
@@ -149,9 +141,6 @@ def train(opt, train_loader, model, epoch, val_loader):
                 .format(
                     epoch, i, len(train_loader), batch_time=batch_time,
                     data_time=data_time, e_log=str(model.logger)))
-
-        if model.Eiters % 250 == 0:
-            gpu_usage()
 
         # Record logs in tensorboard
         tb_logger.log_value('epoch', epoch, step=model.Eiters)
