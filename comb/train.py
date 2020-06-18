@@ -30,7 +30,6 @@ import tb as tb_logger
 
 import numpy as np
 import random
-from GPUtil import showUtilization as gpu_usage
 
 def start_experiment(opt, seed):
     torch.manual_seed(seed)

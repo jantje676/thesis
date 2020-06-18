@@ -17,7 +17,7 @@ from PIL import Image
 import numpy as np
 import json as jsonmod
 import csv
-from utils import count_words, calculatate_freq, filter_freq
+from utils import count_words, calculatate_freq, filter_freq, cut
 import h5py
 
 
@@ -28,7 +28,7 @@ class PrecompTrans(data.Dataset):
     Possible options: f30k_precomp, coco_precomp
     """
 
-    def __init__(self, data_path, data_split, vocab, version, image_path, rectangle, data_name, filter, n_filter):
+    def __init__(self, data_path, data_split, vocab, version, image_path, rectangle, data_name, filter, n_filter, cut, n_cut):
         self.vocab = vocab
         loc = data_path + '/'
         self.captions = []
@@ -38,6 +38,8 @@ class PrecompTrans(data.Dataset):
         self.data_path = data_path
         self.filter = filter
         self.n_filter = n_filter
+        self.cut = cut
+        self.n_cut = n_cut
 
         with open('{}/data_captions_{}_{}.txt'.format(data_path, version, data_split), 'r', newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t')
@@ -98,6 +100,10 @@ class PrecompTrans(data.Dataset):
             str(caption).lower())
         if self.filter:
             tokens = filter_freq(tokens, self.count, self.n_filter)
+
+        if self.cut:
+            tokens = cut(tokens, self.n_cut)
+
         caption = []
         caption.append(vocab('<start>'))
         caption.extend([vocab(token) for token in tokens])
@@ -130,12 +136,14 @@ class PrecompDataset(data.Dataset):
     Possible options: f30k_precomp, coco_precomp
     """
 
-    def __init__(self, data_path, data_split, vocab, version, filter, n_filter):
+    def __init__(self, data_path, data_split, vocab, version, filter, n_filter, cut, n_cut):
         self.vocab = vocab
         loc = data_path + '/'
         self.captions = []
         self.filter = filter
         self.n_filter = n_filter
+        self.cut = cut
+        self.n_cut = n_cut
 
         with open('{}/data_captions_{}_{}.txt'.format(data_path, version, data_split), 'r', newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t')
@@ -174,6 +182,10 @@ class PrecompDataset(data.Dataset):
             str(caption).lower())
         if self.filter:
             tokens = filter_freq(tokens, self.count, self.n_filter)
+
+        if self.cut:
+            tokens = cut(tokens, self.n_cut)
+
         caption = []
         caption.append(vocab('<start>'))
         caption.extend([vocab(token) for token in tokens])
@@ -218,9 +230,11 @@ def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
                        shuffle=True, num_workers=2):
     """Returns torch.utils.data.DataLoader for custom coco dataset."""
     if opt.trans:
-        dset = PrecompTrans(data_path, data_split, vocab, opt.version, opt.image_path, opt.rectangle, opt.data_name, opt.filter, opt.n_filter)
+        dset = PrecompTrans(data_path, data_split, vocab, opt.version, opt.image_path,
+                            opt.rectangle, opt.data_name, opt.filter, opt.n_filter, opt.cut, opt.n_cut)
     else:
-        dset = PrecompDataset(data_path, data_split, vocab, opt.version, opt.filter, opt.n_filter)
+        dset = PrecompDataset(data_path, data_split, vocab, opt.version, opt.filter,
+                                opt.n_filter, opt.cut, opt.n_cut)
 
     data_loader = torch.utils.data.DataLoader(dataset=dset,
                                               batch_size=batch_size,

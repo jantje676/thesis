@@ -103,6 +103,17 @@ if __name__ == '__main__':
     parser.add_argument('--seed1', default=17, type=int,
                         help='first seed to change easily')
 
+    # filter options for descriptions fashion-Gn
+    parser.add_argument('--filter', action='store_true',
+                        help="filter descriptions for most frequent words")
+    parser.add_argument('--n_filter', default=8, type=int,
+                        help='filter for most n most frequent words')
+    parser.add_argument('--cut', action='store_true',
+                        help="cut descriptions after n_words")
+    parser.add_argument('--n_cut', default=5, type=int,
+                        help='cut descriptions after n words')
+
+
     # Specific for trans
     parser.add_argument('--trans', action='store_true',
                         help="use SCAN with spatial transformers")
@@ -116,9 +127,6 @@ if __name__ == '__main__':
                         help="use rectangle ratio for images")
     parser.add_argument('--shard_size', default=128, type=int,
                         help='batch size for validating')
-    parser.add_argument('--filter', action='store_true',
-                        help="filter descriptions for most frequent words")
-    parser.add_argument('--n_filter', default=8, type=int,
-                        help='filter for most n most frequent words')
+
     opt = parser.parse_args()
     main(opt)

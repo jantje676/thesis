@@ -113,6 +113,22 @@ def filter_freq(tokens, count, n_filter):
     tokens = [tokens[id] for id in ind]
     return tokens
 
+# cut descriptions after n words remove useless words
+def cut(tokens, n_cut):
+    useless = ["and", "in", "at", "with", "of", "x"]
+
+    filtered = []
+    count = 0
+    for token in tokens:
+        if token not in useless:
+            filtered.append(token)
+            count += 1
+
+        if count == n_cut:
+            break
+    print(filtered)
+    return filtered
+
 # normalize the frequency scores so every sentence canbe compared
 def normalize(freq_score):
     max_freq = max(freq_score)
