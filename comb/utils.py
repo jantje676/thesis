@@ -126,7 +126,6 @@ def cut(tokens, n_cut):
 
         if count == n_cut:
             break
-    print(filtered)
     return filtered
 
 # normalize the frequency scores so every sentence canbe compared
