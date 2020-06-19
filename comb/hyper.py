@@ -12,7 +12,7 @@ from random import Random
 def main(opt):
     nr_runs = opt.nr_runs
     seeds = 17
-    randomHyper = Random(17)
+    randomHyper = Random()
     output_folder = "tuning_hyper"
     # find run name and set to seed1
     nr_next_run = find_run_name(opt)
