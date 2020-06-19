@@ -104,7 +104,7 @@ def start_experiment(opt, seed):
                 'opt': opt,
                 'Eiters': model.Eiters,
             }, is_best, last_epoch, filename='checkpoint_{}.pth.tar'.format(epoch), prefix=opt.model_name + '/')
-
+    return best_rsum
 
 def train(opt, train_loader, model, epoch, val_loader):
     # average meters to record the training statistics

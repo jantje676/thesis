@@ -390,6 +390,8 @@ def xattn_score_i2t(images, captions, cap_lens, freqs, opt):
 
         # (n_image, n_region)
         row_sim = cosine_similarity(images, weiContext, dim=2)
+        if len(row_sim.shape) == 1:
+            row_sim = row_sim.unsqueeze(0)
 
         if opt.agg_func == 'LogSumExp':
             row_sim.mul_(opt.lambda_lse).exp_()

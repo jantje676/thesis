@@ -3,23 +3,66 @@ import argparse
 from utils import find_run_name, set_run_name
 import tb as tb_logger
 import logging
-
-
-# python exp_trans.py --version laenen_1k --batch_size 64 --n_detectors 5 --resume "runs/test0/seed1/checkpoint/model_best.pth.tar"
+import time
+import os
+import csv
+import numpy as np
+from random import Random
 
 def main(opt):
     nr_runs = opt.nr_runs
-    seeds = [26,4,17]
-
+    seeds = 17
+    randomHyper = Random(17)
+    output_folder = "tuning_hyper"
     # find run name and set to seed1
     nr_next_run = find_run_name(opt)
 
-    for i in range(nr_runs):
-        opt = set_run_name(opt, nr_next_run, i+1)
-        logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
-        tb_logger.configure(opt.logger_name, flush_secs=5)
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
 
-        start_experiment(opt, seeds[i])
+    with open('{}/results_tuning_{}.txt'.format(output_folder, time.time()), 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter='\t')
+        writer.writerow(("Run", "Margin", "word_dim", "embed_size", "n_layers", "lr",
+                        "lr_update","raw_feature_n", "agg_func", "cross_attn", "precomp",
+                        "lambda_lse", "lambda_softmax", "no_imgn", "max_vio", "no_txtn", "Score"))
+
+
+        for i in range(nr_runs):
+
+            opt = set_run_name(opt, nr_next_run, i+1)
+            opt = random_params(opt, randomHyper)
+
+
+            logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+            tb_logger.configure(opt.logger_name, flush_secs=5)
+
+            try:
+                rsum = start_experiment(opt, seeds)
+            except:
+                rsum = 0
+
+            writer.writerow((i, "%.2f" % opt.margin, opt.word_dim,opt.embed_size, opt.num_layers,
+                                opt.learning_rate, opt.lr_update, opt.raw_feature_norm, opt.agg_func, opt.cross_attn,
+                                opt.precomp_enc_type, opt.lambda_lse, opt.lambda_softmax, opt.no_imgnorm, opt.max_violation, opt.no_txtnorm,rsum))
+
+def random_params(opt, randomHyper):
+    opt.margin = randomHyper.random()
+    opt.word_dim = randomHyper.choice ([200, 300, 400])
+    opt.embed_size = randomHyper.choice ([512, 1024, 1536])
+    opt.num_layers = randomHyper.choice ([ 1,2,3])
+    opt.learning_rate= randomHyper.choice ([0.002, 0.0002, 0.00002, 0.000002])
+    opt.lr_update = randomHyper.choice ([5, 15, 25, 35])
+    opt.raw_feature_norm = randomHyper.choice (["clipped_l2norm", "l2norm", "no_norm", "softmax"])
+    opt.agg_func = randomHyper.choice (["LogSumExp","Mean","Max","Sum"])
+    opt.cross_attn = randomHyper.choice (["i2t"])
+    opt.precomp_enc_type = randomHyper.choice (["basic","weight_norm"])
+    opt.lambda_lse = float(randomHyper.randint(1,10))
+    opt.lambda_softmax = float(randomHyper.randint(1,15))
+    opt.no_imgnorm = randomHyper.choice ([True, False])
+    opt.max_violation = randomHyper.choice ([True, False])
+    opt.no_txtnorm = randomHyper.choice ([True, False])
+
+    return opt
 
 
 if __name__ == '__main__':
@@ -27,9 +70,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', default='../data',
                         help='path to datasets')
+    parser.add_argument('--clothing', default='dresses',
+                        help='which clothing item')
     parser.add_argument('--data_name', default='Fashion200K',
                         help='{coco,f30k}_precomp')
-    parser.add_argument('--vocab_path', default='../vocab/',
+    parser.add_argument('--vocab_path', default='../vocab',
                         help='Path to saved vocabulary json files.')
     parser.add_argument('--margin', default=0.2, type=float,
                         help='Rank loss margin.')
@@ -76,7 +121,7 @@ if __name__ == '__main__':
     parser.add_argument('--cross_attn', default="t2i",
                         help='t2i|i2t')
     parser.add_argument('--precomp_enc_type', default="basic",
-                        help='basic|weight_norm')
+                        help='basic|weight_norm|attention')
     parser.add_argument('--bi_gru', action='store_true',
                         help='Use bidirectional GRU.')
     parser.add_argument('--lambda_lse', default=6., type=float,
@@ -97,6 +142,25 @@ if __name__ == '__main__':
                         help='(Used for agg_func=frew) regulaizer for emphasis on non-frequent words')
     parser.add_argument('--nr_runs', default=1, type=int,
                         help='Number of experiments.')
+    parser.add_argument('--n_attention', default=7, type=int,
+                        help='Number of attention maps to create.')
+    parser.add_argument('--seed1', default=17, type=int,
+                        help='first seed to change easily')
+
+    # filter options for descriptions fashion-Gn
+    parser.add_argument('--filter', action='store_true',
+                        help="filter descriptions for most frequent words")
+    parser.add_argument('--n_filter', default=8, type=int,
+                        help='filter for most n most frequent words')
+    parser.add_argument('--cut', action='store_true',
+                        help="cut descriptions after n_words")
+    parser.add_argument('--n_cut', default=5, type=int,
+                        help='cut descriptions after n words')
+
+
+    # Specific for trans
+    parser.add_argument('--trans', action='store_true',
+                        help="use SCAN with spatial transformers")
     parser.add_argument('--image_path', default="pictures_only/pictures_only", type=str,
                         help='Number of experiments.')
     parser.add_argument('--n_detectors', default=5, type=int,
@@ -105,8 +169,6 @@ if __name__ == '__main__':
                         help="use pretrained alexnets for features extractors")
     parser.add_argument('--rectangle', action='store_true',
                         help="use rectangle ratio for images")
-    parser.add_argument('--clothing', default="dresses", type=str,
-                        help='dresses|pants.')
     parser.add_argument('--shard_size', default=128, type=int,
                         help='batch size for validating')
 
