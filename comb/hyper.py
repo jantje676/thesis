@@ -36,10 +36,8 @@ def main(opt):
             logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
             tb_logger.configure(opt.logger_name, flush_secs=5)
 
-            try:
-                rsum = start_experiment(opt, seeds)
-            except:
-                rsum = 0
+            rsum = start_experiment(opt, seeds)
+
 
             writer.writerow((i, "%.2f" % opt.margin, opt.word_dim,opt.embed_size, opt.num_layers,
                                 opt.learning_rate, opt.lr_update, opt.raw_feature_norm, opt.agg_func, opt.cross_attn,
