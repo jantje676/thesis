@@ -52,7 +52,7 @@ def random_params(opt, randomHyper):
     opt.lr_update = randomHyper.choice ([5, 15, 25, 35])
     opt.raw_feature_norm = randomHyper.choice (["clipped_l2norm", "l2norm", "no_norm", "softmax"])
     opt.agg_func = randomHyper.choice (["LogSumExp","Mean","Max","Sum"])
-    opt.cross_attn = randomHyper.choice (["i2t"])
+    opt.cross_attn = randomHyper.choice (["i2t", "t2i"])
     opt.precomp_enc_type = randomHyper.choice (["basic","weight_norm"])
     opt.lambda_lse = float(randomHyper.randint(1,10))
     opt.lambda_softmax = float(randomHyper.randint(1,15))
