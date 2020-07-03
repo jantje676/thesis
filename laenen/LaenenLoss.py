@@ -13,13 +13,13 @@ class LaenenLoss(nn.Module):
         # hyperparameters
         self.switch = 10
         self.n = 10
-        self.margin = 0.2
+        self.margin = 40
 
     def forward(self, im, s, s_l, epoch, im_id, ids, image_diag, cap_diag):
         pair, pair_id = check_pair(im_id, ids)
         c_frag_loss = self.c_frag(im, s, s_l, epoch, pair, pair_id)
         c_glob_loss = self.c_glob(im, s, s_l, image_diag, cap_diag, pair, pair_id)
-        loss =  c_glob_loss + c_frag_loss
+        loss = c_frag_loss + (0.5 * c_glob_loss)
         return loss
 
 
@@ -37,6 +37,7 @@ class LaenenLoss(nn.Module):
             cap_i = s[i, :n_word, :].contiguous()
 
             sim_cap = cap_i @ im.t()
+            sim_cap = self.relu(sim_cap)
             sim_cap = sim_cap.sum()
             temp.append(sim_cap)
 
@@ -50,6 +51,7 @@ class LaenenLoss(nn.Module):
 
         score_image = self.relu(score_image)
         score_cap = self.relu(score_cap)
+
         if pair:
             score_image[pair_id] = 0
             score_cap[pair_id] = 0
@@ -73,7 +75,7 @@ class LaenenLoss(nn.Module):
 
             # first n epochs fix the constants y_ij
             if epoch < self.switch:
-                y_i = init_y(cap_i, im, i, n_frag, batch_size, pair, pair_id)
+                y_i = init_y(cap_i, i, n_frag, batch_size, pair, pair_id)
             # after let the model optimize y_ij with the heuristic sign
             else:
                 y_i = sign(sim, i, n_frag, batch_size, n_word, pair, pair_id)
@@ -125,7 +127,7 @@ def sign(sim, i, n_frag, batch_size, n_word, pair, pair_id):
     return y
 
 # init y matrix with ones when image and word fragment are from the same pair
-def init_y(cap_i, im, i, n_frag, batch, pair, pair_id):
+def init_y(cap_i, i, n_frag, batch, pair, pair_id):
     n_word = cap_i.size(0)
 
     if pair and pair_id == i:

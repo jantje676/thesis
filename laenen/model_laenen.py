@@ -463,7 +463,7 @@ class SCAN(object):
 
         self.params = params
 
-        self.optimizer = torch.optim.Adam(params, lr=opt.learning_rate)
+        self.optimizer = torch.optim.Adam(params, lr=opt.learning_rate, weight_decay=0.25)
 
         self.Eiters = 0
 
@@ -542,7 +542,7 @@ class SCAN(object):
 
         # calculate the similairty score between the image and caption pair
         cap_diag, image_diag = self.criterion.sim_pair(img_emb_pair, cap_emb_pair)
-    
+
         # compute the embeddings
         cap_emb, cap_lens = self.forward_emb_captions(captions, cap_len)
 

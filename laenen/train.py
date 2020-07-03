@@ -140,7 +140,7 @@ def train(opt, train_loader, model, epoch, val_loader, train_cap_loader):
                     'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                     'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                     .format(
-                        epoch, i, len(train_loader), batch_time=batch_time,
+                        epoch, i + (j * len(train_cap_loader)), len(train_cap_loader) * len(train_loader), batch_time=batch_time,
                         data_time=data_time, e_log=str(model.logger)))
 
             # Record logs in tensorboard
