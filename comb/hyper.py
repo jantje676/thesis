@@ -45,19 +45,19 @@ def main(opt):
 
 def random_params(opt, randomHyper):
     opt.margin = randomHyper.random()
-    opt.word_dim = randomHyper.choice ([200, 300, 400])
-    opt.embed_size = randomHyper.choice ([512, 1024, 1536])
-    opt.num_layers = randomHyper.choice ([ 1,2,3])
-    opt.learning_rate= randomHyper.choice ([0.002, 0.0002, 0.00002, 0.000002])
-    opt.lr_update = randomHyper.choice ([5, 15, 25, 35])
+    opt.word_dim = 300
+    opt.embed_size = 1024
+    opt.num_layers = 1
+    opt.learning_rate= randomHyper.choice ([0.002, 0.0002])
+    opt.lr_update = randomHyper.choice ([25, 35])
     opt.raw_feature_norm = randomHyper.choice (["clipped_l2norm", "l2norm", "no_norm", "softmax"])
     opt.agg_func = randomHyper.choice (["LogSumExp","Mean","Max","Sum"])
-    opt.cross_attn = randomHyper.choice (["i2t", "t2i"])
+    opt.cross_attn = "t2i"
     opt.precomp_enc_type = randomHyper.choice (["basic","weight_norm"])
     opt.lambda_lse = float(randomHyper.randint(1,10))
-    opt.lambda_softmax = float(randomHyper.randint(1,15))
+    opt.lambda_softmax = float(randomHyper.randint(opt.lambda_lse,15))
     opt.no_imgnorm = randomHyper.choice ([True, False])
-    opt.max_violation = randomHyper.choice ([True, False])
+    opt.max_violation = False
     opt.no_txtnorm = randomHyper.choice ([True, False])
 
     return opt
