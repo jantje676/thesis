@@ -62,7 +62,7 @@ def deserialize_vocab(src):
     vocab.word2idx = d['word2idx']
     vocab.idx2word = d['idx2word']
     vocab.idx = d['idx']
-    vocab.count = d['count']
+    # vocab.count = d['count']
     return vocab
 
 

@@ -15,136 +15,122 @@ class LaenenLoss(nn.Module):
         self.n = 10
         self.margin = 40
 
-    def forward(self, im, s, s_l, epoch, im_id, ids, image_diag, cap_diag):
-        pair, pair_id = check_pair(im_id, ids)
-        c_frag_loss = self.c_frag(im, s, s_l, epoch, pair, pair_id)
-        c_glob_loss = self.c_glob(im, s, s_l, image_diag, cap_diag, pair, pair_id)
+    def forward(self, epoch, img_emb, cap_emb, cap_l, image_diag, cap_diag, same):
+        n_frag = img_emb.size(1)
+        batch_size = img_emb.size(0)
+        n_caption = cap_emb.size(0)
+        sims = torch.einsum('bik,ljk->blij', img_emb, cap_emb)
+
+        c_frag_loss = self.c_frag(sims, cap_l, epoch, same, n_frag, batch_size, n_caption)
+        c_glob_loss = self.c_glob(sims, cap_l, image_diag, cap_diag, same, n_frag, batch_size, n_caption)
         loss = c_frag_loss + (0.5 * c_glob_loss)
         return loss
 
 
-    def c_glob(self, im, s, s_l, image_diag, cap_diag, pair, pair_id):
+    def c_glob(self, sims, cap_l, image_diag, cap_diag, same, n_frag, batch_size, n_caption):
 
-        n_frag = im.size(1)
-        n_caption = s.size(0)
-        temp = []
-        # reshape the images
-        im = im.squeeze(0)
+        sims = sims.sum(dim=[2,3])
 
-        for i in range(n_caption):
-            # Get the i-th text description
-            n_word = s_l[i]
-            cap_i = s[i, :n_word, :].contiguous()
+        thres_image = get_thres(cap_l, self.n, n_frag).unsqueeze(0).expand(batch_size, -1)
+        thres_cap = get_thres(n_frag, self.n, cap_l).unsqueeze(0).expand(batch_size, -1)
 
-            sim_cap = cap_i @ im.t()
-            sim_cap = self.relu(sim_cap)
-            sim_cap = sim_cap.sum()
-            temp.append(sim_cap)
-
-        sims = torch.stack(temp)
-        thres_image = get_thres(s_l, self.n, n_frag)
-        thres_cap = get_thres(n_frag, self.n, s_l)
         sims_image = sims * thres_image
         sims_cap = sims * thres_cap
+
+        image_diag = image_diag.unsqueeze(1).expand(-1, n_caption)
+        cap_diag = cap_diag.unsqueeze(1).expand(-1, n_caption)
+
         score_image = sims_image - image_diag + self.margin
         score_cap = sims_cap - cap_diag + self.margin
 
         score_image = self.relu(score_image)
         score_cap = self.relu(score_cap)
 
-        if pair:
-            score_image[pair_id] = 0
-            score_cap[pair_id] = 0
+        if same:
+            score_image.fill_diagonal_(0)
+            score_cap.fill_diagonal_(0)
 
         return score_image.sum() + score_cap.sum()
 
-    def c_frag(self, im, s, s_l, epoch, pair, pair_id):
+    def c_frag(self, sims, cap_l, epoch, same, n_frag, batch_size, n_caption):
         loss = 0
-        n_frag = im.size(1)
-        batch_size = im.size(0)
-        n_caption = s.size(0)
-
-        im = im.squeeze(0)
 
         for i in range(n_caption):
             # Get the i-th text description
-            n_word = s_l[i]
-            cap_i = s[i, :n_word, :].contiguous()
+            n_word = cap_l[i]
 
-            sim = cap_i @ im.t()
+            sims_i = sims[:,i,:,:n_word]
 
             # first n epochs fix the constants y_ij
             if epoch < self.switch:
-                y_i = init_y(cap_i, i, n_frag, batch_size, pair, pair_id)
+                y_i = init_y(sims_i, same, i)
             # after let the model optimize y_ij with the heuristic sign
             else:
-                y_i = sign(sim, i, n_frag, batch_size, n_word, pair, pair_id)
+                y_i = sign(sims_i, same, i)
 
-            sim = 1 - (y_i * sim)
-            score = torch.sum(self.relu(sim))
+            sims_i = 1 - (y_i * sims_i)
+            score = torch.sum(self.relu(sims_i))
             loss += score
         return loss
 
 
-    def sim_pair(self, img_emb_pair, cap_emb_pair):
-
+    def sim_pair(self, img_emb_pair, cap_emb_pair, s_l):
         # calculate the similairty score between the image and caption pair
-        img_emb_pair = img_emb_pair.squeeze(0)
-        cap_emb_pair = cap_emb_pair.squeeze(0)
+        image_diag, cap_diag = get_sims(img_emb_pair, cap_emb_pair, s_l, self.n)
 
-        s_l = torch.tensor(cap_emb_pair.size(0))
-        n_frag = img_emb_pair.size(0)
+        return image_diag, cap_diag
 
-        sim_cap = cap_emb_pair @ img_emb_pair.t()
-        sim_cap = sim_cap.sum()
+def get_sims(img_emb, cap_emb, s_l, n):
+    batch_size = cap_emb.size(0)
+    cap_l = cap_emb.size(1)
+    n_frag = img_emb.size(1)
 
-        thres_image = get_thres(s_l, self.n, n_frag)
-        thres_cap = get_thres(n_frag, self.n, s_l)
+    # switch axes to use matmul on the 2nd and 3rd dimension
+    cap_emb = cap_emb.permute(0,2,1)
 
-        # calculate sim_pair
-        cap_diag = sim_cap * thres_cap
-        image_diag = sim_cap * thres_image
+    # calculate similarity between the two embeddings
+    sim_cap = torch.matmul(img_emb , cap_emb)
 
-        return cap_diag, image_diag
+    # sum over the dimensions
+    sim_cap = sim_cap.sum(dim=[1,2])
+
+    # find threshold values
+    thres_image = get_thres(s_l, n, n_frag)
+    thres_cap = get_thres(n_frag, n, s_l)
+
+    # calculate sim_pair
+    cap_diag = sim_cap * thres_cap
+    image_diag = sim_cap * thres_image
+
+    return image_diag, cap_diag
 
 def get_thres(a, n, b):
     thres = (a + n) * b
     thres = float(1)/thres.to(dtype=torch.float)
+
     return thres
 
-def sign(sim, i, n_frag, batch_size, n_word, pair, pair_id):
-    y = torch.sign(sim)
+def sign(sims_i, same, i):
+    y = torch.sign(sims_i)
+    n_frag = sims_i.size(1)
+    n_word = sims_i.size(2)
 
-    if pair and pair_id == i:
+    if same:
+        temp_y = y[i, :, :]
         # check if at least one in every row has positive sign
-        temp_sum = y.sum(dim=1)
+        temp_sum = temp_y.sum(dim=0)
         sign_check = temp_sum > (n_frag * -1)
         if sign_check.sum() != n_word:
             for j in range(len(sign_check)):
                 if sign_check[j] == False:
-                    i_max = torch.argmax(sim[j])
-                    y[j, i_max] = 1
+                    i_max = torch.argmax(sims_i[i,:,j])
+                    y[i, i_max, j] = 1
+
     return y
 
 # init y matrix with ones when image and word fragment are from the same pair
-def init_y(cap_i, i, n_frag, batch, pair, pair_id):
-    n_word = cap_i.size(0)
-
-    if pair and pair_id == i:
-        y =  torch.ones((n_word, n_frag * batch ), requires_grad=True)
-    else:
-        y =  torch.ones((n_word, n_frag * batch ), requires_grad=True) * -1
+def init_y(sims_i, same, i):
+    y =  torch.ones(sims_i.shape, requires_grad=True) * -1
+    if same:
+        y[i, :, :] = 1
     return y
-
-def check_pair(im_id, ids):
-    pair = False
-    pair_id = None
-
-    if im_id in ids:
-        pair = True
-
-        for i in range(len(ids)):
-            if ids[i] == im_id:
-                pair_id = i
-                break
-    return pair, pair_id

@@ -21,6 +21,7 @@ from model_laenen import SCAN, xattn_score_t2i, xattn_score_i2t
 from collections import OrderedDict
 import time
 from torch.autograd import Variable
+from torch.nn.utils.rnn import pad_sequence
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -88,7 +89,9 @@ def encode_data(model, data_loader, log_step=10, logging=print):
     val_logger = LogCollector()
 
     # switch to evaluate mode
+
     model.val_start()
+
 
     end = time.time()
 
@@ -142,6 +145,66 @@ def encode_data(model, data_loader, log_step=10, logging=print):
         del images, captions
     return img_embs, cap_embs, cap_lens
 
+def encode_data_train(model, data_loader, log_step=10, logging=print):
+    """Encode all images and captions loadable by `data_loader`
+    """
+    batch_time = AverageMeter()
+    val_logger = LogCollector()
+
+    # switch to evaluate mode
+
+    model.train_start()
+
+
+    end = time.time()
+
+    # np array to keep all the embeddings
+    temp_imgs = []
+    temp_cap = []
+    cap_lens = []
+
+    max_n_word = 0
+    for i, (images, captions, lengths, ids) in enumerate(data_loader):
+        max_n_word = max(max_n_word, max(lengths))
+
+    for i, (images, captions, lengths, ids) in enumerate(data_loader):
+        # make sure val logger is used
+        model.logger = val_logger
+
+        # compute the embeddings
+        img_emb, cap_emb, cap_len = model.forward_emb(images, captions, lengths)
+
+        # pad sequences with zeros to longest sentence
+        b = cap_emb.size(0)
+        l = cap_emb.size(1)
+        s = cap_emb.size(2)
+        out_cap = cap_emb.data.new(b, max_n_word, s).fill_(0)
+        out_cap[:, :l,:] = cap_emb
+
+        # save embeddings to stack
+        temp_imgs.append(img_emb)
+        temp_cap.append(out_cap)
+        cap_lens += cap_len
+
+        # measure accuracy and record loss, first argument is 100 for LaenenLoss
+        # model.forward_loss(100 ,img_emb, cap_emb, cap_len)
+
+        # measure elapsed time
+        batch_time.update(time.time() - end)
+        end = time.time()
+
+        if i % log_step == 0:
+            logging('Test: [{0}/{1}]\t'
+                    '{e_log}\t'
+                    'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                    .format(
+                        i, len(data_loader), batch_time=batch_time,
+                        e_log=str(model.logger)))
+        del images, captions
+
+    img_embs = torch.cat(temp_imgs, dim=0)
+    cap_embs = torch.cat(temp_cap, dim=0)
+    return img_embs, cap_embs, cap_lens
 
 def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_path="../vocab/"):
     """

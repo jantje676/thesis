@@ -45,7 +45,7 @@ def start_experiment(opt, seed):
     opt.vocab_size = len(vocab)
 
     # Load data loaders
-    train_loader, val_loader, train_cap_loader = data_ken.get_loaders(
+    pair_loader, cap_loader, val_loader = data_ken.get_loaders(
         opt.data_name, vocab, opt.batch_size, opt.workers, opt)
 
     # Construct the model
@@ -80,7 +80,7 @@ def start_experiment(opt, seed):
         adjust_learning_rate(opt, model.optimizer, epoch)
 
         # train for one epoch
-        train(opt, train_loader, model, epoch, val_loader, train_cap_loader)
+        train(opt, model, epoch, pair_loader, cap_loader, val_loader)
 
         # evaluate on validation set
         rsum = validate(opt, val_loader, model)
@@ -106,18 +106,22 @@ def start_experiment(opt, seed):
             }, is_best, last_epoch, filename='checkpoint_{}.pth.tar'.format(epoch), prefix=opt.model_name + '/')
     return best_rsum
 
-def train(opt, train_loader, model, epoch, val_loader, train_cap_loader):
+def train(opt, model, epoch, pair_loader, cap_loader, val_loader):
     # average meters to record the training statistics
     batch_time = AverageMeter()
     data_time = AverageMeter()
     train_logger = LogCollector()
 
     end = time.time()
-    for j, pair_data in enumerate(train_loader):
+    for j, pair_data in enumerate(pair_loader):
         # switch to train mode
         model.train_start()
 
-        for i, train_data in enumerate(train_cap_loader):
+        for i, cap_data in enumerate(cap_loader):
+            if j == i:
+                same = True
+            else:
+                same = False
 
             # measure data loading time
             data_time.update(time.time() - end)
@@ -126,7 +130,7 @@ def train(opt, train_loader, model, epoch, val_loader, train_cap_loader):
             model.logger = train_logger
 
             # Update the model
-            model.train_emb(epoch, pair_data, train_data)
+            model.train_emb(epoch, pair_data, cap_data, same)
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -140,7 +144,7 @@ def train(opt, train_loader, model, epoch, val_loader, train_cap_loader):
                     'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                     'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                     .format(
-                        epoch, i + (j * len(train_cap_loader)), len(train_cap_loader) * len(train_loader), batch_time=batch_time,
+                        epoch, i + (j * len(pair_loader)), len(cap_loader) * len(pair_loader), batch_time=batch_time,
                         data_time=data_time, e_log=str(model.logger)))
 
             # Record logs in tensorboard

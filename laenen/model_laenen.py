@@ -505,25 +505,25 @@ class SCAN(object):
         return img_emb, cap_emb, cap_lens
 
     def forward_emb_captions(self, captions, lengths):
-        """Compute the image and caption embeddings
+        """Compute the caption embeddings
         """
 
         if torch.cuda.is_available():
             captions = captions.cuda()
 
-
         # cap_emb (tensor), cap_lens (list)
         cap_emb, cap_lens = self.txt_enc(captions, lengths)
         return cap_emb, cap_lens
 
-    def forward_loss(self, epoch, img_emb, cap_emb, cap_lens, image_id, ids, image_diag, cap_diag):
+    def forward_loss(self, epoch, img_emb_pair, cap_emb, cap_l, image_diag, cap_diag, same):
         """Compute the loss given pairs of image and caption embeddings
         """
-        loss = self.criterion(img_emb, cap_emb, cap_lens, epoch, image_id, ids, image_diag, cap_diag)
-        self.logger.update('Le', loss.item(), img_emb.size(0))
+        loss = self.criterion(epoch, img_emb_pair, cap_emb, cap_l, image_diag, cap_diag, same)
+        self.logger.update('Le', loss.item(), img_emb_pair.size(0))
         return loss
 
-    def train_emb(self, epoch, pair_data, train_data):
+
+    def train_emb(self, epoch, pair_data, cap_data, same):
         """One training step given images and captions.
         """
         self.Eiters += 1
@@ -531,24 +531,22 @@ class SCAN(object):
         self.logger.update('lr', self.optimizer.param_groups[0]['lr'])
 
         # unpack train data
-        captions, cap_len, ids = train_data
-
+        caps, caps_len, ids_cap = cap_data
         # unpack pair data
-        image, caption, length, id = pair_data
-        image_id = id[0]
+        images, captions, lengths, ids = pair_data
 
         # retrieve embeddings from pair data
-        img_emb_pair, cap_emb_pair, _ = self.forward_emb(image, caption, length)
+        img_emb_pair, cap_emb_pair, l = self.forward_emb(images, captions, lengths)
 
         # calculate the similairty score between the image and caption pair
-        cap_diag, image_diag = self.criterion.sim_pair(img_emb_pair, cap_emb_pair)
+        image_diag, cap_diag = self.criterion.sim_pair(img_emb_pair, cap_emb_pair, l)
 
         # compute the embeddings
-        cap_emb, cap_lens = self.forward_emb_captions(captions, cap_len)
+        cap_emb, cap_lens = self.forward_emb_captions(caps, caps_len)
 
         # measure accuracy and record loss
         self.optimizer.zero_grad()
-        loss = self.forward_loss(epoch, img_emb_pair, cap_emb, cap_lens, image_id, ids, image_diag, cap_diag)
+        loss = self.forward_loss(epoch, img_emb_pair, cap_emb, cap_lens, image_diag, cap_diag, same)
 
         # compute gradient and do SGD step
         loss.backward()
