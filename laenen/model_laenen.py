@@ -523,7 +523,7 @@ class SCAN(object):
         return loss
 
 
-    def train_emb(self, epoch, pair_data, cap_data, same):
+    def train_emb(self, epoch, first_data, second_data, same):
         """One training step given images and captions.
         """
         self.Eiters += 1
@@ -531,25 +531,26 @@ class SCAN(object):
         self.logger.update('lr', self.optimizer.param_groups[0]['lr'])
 
         # unpack train data
-        caps, caps_len, ids_cap = cap_data
+        im_first, cap_first, lengths_first, ids_first = first_data
         # unpack pair data
-        images, captions, lengths, ids = pair_data
+        im_second, cap_second, lengths_second, ids_second = second_data
 
         # retrieve embeddings from pair data
-        img_emb_pair, cap_emb_pair, l = self.forward_emb(images, captions, lengths)
+        img_emb_first, cap_emb_first, l_first = self.forward_emb(im_first, cap_first, lengths_first)
+
+        img_emb_second, cap_emb_second, l_second = self.forward_emb(im_second, cap_second, lengths_second)
 
         # calculate the similairty score between the image and caption pair
-        image_diag, cap_diag = self.criterion.sim_pair(img_emb_pair, cap_emb_pair, l)
+        image_diag = self.criterion.sim_pair(img_emb_first, cap_emb_first, l_first)
 
-        # compute the embeddings
-        cap_emb, cap_lens = self.forward_emb_captions(caps, caps_len)
+        cap_diag = self.criterion.sim_pair(img_emb_second, cap_emb_second, l_second)
 
         # measure accuracy and record loss
         self.optimizer.zero_grad()
-        loss = self.forward_loss(epoch, img_emb_pair, cap_emb, cap_lens, image_diag, cap_diag, same)
+        loss = self.forward_loss(epoch, img_emb_first, cap_emb_second, l_second, image_diag, cap_diag, same)
 
         # compute gradient and do SGD step
         loss.backward()
-        if self.grad_clip > 0:
-            clip_grad_norm(self.params, self.grad_clip)
+        # if self.grad_clip > 0:
+        #     clip_grad_norm(self.params, self.grad_clip)
         self.optimizer.step()

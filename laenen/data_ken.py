@@ -175,16 +175,18 @@ def get_caption_loader(data_path, data_split, vocab, opt, batch_size=100,
 
 def get_loaders(data_name, vocab, batch_size, workers, opt):
     dpath = os.path.join(opt.data_path, data_name, opt.clothing)
-    pair_loader = get_precomp_loader(dpath, 'train', vocab, opt,
+    first_loader = get_precomp_loader(dpath, 'train', vocab, opt,
                                       batch_size, False, workers)
 
     val_loader = get_precomp_loader(dpath, 'dev', vocab, opt,
                                     batch_size, False, workers)
 
-    cap_loader = get_caption_loader(dpath, 'train', vocab, opt,
+    second_loader = get_precomp_loader(dpath, 'train', vocab, opt,
                                       batch_size, False, workers)
+    # cap_loader = get_caption_loader(dpath, 'train', vocab, opt,
+    #                                   batch_size, False, workers)
 
-    return pair_loader, cap_loader, val_loader
+    return first_loader, second_loader, val_loader
 
 
 def get_test_loader(split_name, data_name, vocab, batch_size,
