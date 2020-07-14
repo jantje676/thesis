@@ -22,7 +22,7 @@ import numpy
 import data_ken
 from vocab import Vocabulary, deserialize_vocab
 from model_laenen import SCAN
-from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data, shard_xattn_t2i, shard_xattn_i2t
+from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data, shard_xattn_t2i
 from torch.autograd import Variable
 from utils import save_hyperparameters
 import logging
@@ -169,12 +169,9 @@ def validate(opt, val_loader, model):
         start = time.time()
 
         # find the similarity between every caption and image in the validation set?
-        if opt.cross_attn == 't2i':
-            sims, _ = shard_xattn_t2i(img_embs, cap_embs, cap_lens, opt, shard_size=opt.shard_size)
-        elif opt.cross_attn == 'i2t':
-            sims, _= shard_xattn_i2t(img_embs, cap_embs, cap_lens,  opt, shard_size=opt.shard_size)
-        else:
-            raise NotImplementedError
+
+        sims = shard_xattn_t2i(model, img_embs, cap_embs, cap_lens, opt, shard_size=opt.shard_size)
+
         end = time.time()
         print("calculate similarity time:", end-start)
 

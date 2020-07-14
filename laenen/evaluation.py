@@ -239,13 +239,8 @@ def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_pat
           (img_embs.shape[0] , cap_embs.shape[0]))
 
     t2i_switch = True
-    if opt.cross_attn == 't2i':
-        sims, attn = shard_xattn_t2i(img_embs, cap_embs, cap_lens, opt, shard_size=128)
-    elif opt.cross_attn == 'i2t':
-        sims, attn = shard_xattn_i2t(img_embs, cap_embs, cap_lens, opt, shard_size=128)
-        t2i_switch = False
-    else:
-        raise NotImplementedError
+    sims, attn = shard_xattn_t2i(img_embs, cap_embs, cap_lens, opt, shard_size=128)
+
 
     # r = (r1, r2, r5, medr, meanr), rt= (ranks, top1)
     r, rt = i2t(img_embs, cap_embs, cap_lens, sims, return_ranks=True)
@@ -287,7 +282,7 @@ def softmax(X, axis):
     return p
 
 
-def shard_xattn_t2i(images, captions, caplens, opt, shard_size=128):
+def shard_xattn_t2i(model, images, captions, caplens, opt, shard_size=128):
     """
     Computer pairwise t2i image-caption distance with locality sharding
     """
@@ -297,9 +292,6 @@ def shard_xattn_t2i(images, captions, caplens, opt, shard_size=128):
     n_cap_shard = (len(captions)-1)/shard_size + 1
 
     d = np.zeros((len(images), len(captions)))
-
-    attention = []
-
 
     for i in range(int(n_im_shard)):
         im_start, im_end = shard_size*i, min(shard_size*(i+1), len(images))
@@ -313,43 +305,13 @@ def shard_xattn_t2i(images, captions, caplens, opt, shard_size=128):
                 im = Variable(torch.from_numpy(images[im_start:im_end]))
                 s = Variable(torch.from_numpy(captions[cap_start:cap_end]))
             l = caplens[cap_start:cap_end]
+            l = torch.FloatTensor(l)
 
-
-            sim, attn = xattn_score_t2i(im, s, l, opt)
+            sim = model.criterion.sim_val(im, s, l)
             d[im_start:im_end, cap_start:cap_end] = sim.data.cpu().numpy()
 
-            attention = attention + attn
     sys.stdout.write('\n')
-    return d, attention
-
-
-def shard_xattn_i2t(images, captions, caplens, opt, shard_size=128):
-    """
-    Computer pairwise i2t image-caption distance with locality sharding
-    """
-    n_im_shard = (len(images)-1)/shard_size + 1
-    n_cap_shard = (len(captions)-1)/shard_size + 1
-
-    attention = []
-    d = np.zeros((len(images), len(captions)))
-    for i in range(int(n_im_shard)):
-        im_start, im_end = shard_size*i, min(shard_size*(i+1), len(images))
-        for j in range(int(n_cap_shard)):
-            sys.stdout.write('\r>> shard_xattn_i2t batch (%d,%d)' % (i,j))
-            cap_start, cap_end = shard_size*j, min(shard_size*(j+1), len(captions))
-            if torch.cuda.is_available():
-                im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True).cuda()
-                s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True).cuda()
-            else:
-                im = Variable(torch.from_numpy(images[im_start:im_end]), volatile=True)
-                s = Variable(torch.from_numpy(captions[cap_start:cap_end]), volatile=True)
-            l = caplens[cap_start:cap_end]
-            sim, attn = xattn_score_i2t(im, s, l, opt)
-            d[im_start:im_end, cap_start:cap_end] = sim.data.cpu().numpy()
-            attention = attention + attn
-    sys.stdout.write('\n')
-    return d, attention
-
+    return d
 
 def i2t(images, captions, caplens, sims, npts=None, return_ranks=False):
     """

@@ -49,12 +49,6 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, trans, n_detectors
     if precomp_enc_type == 'basic':
         img_enc = EncoderImagePrecomp(
             img_dim, embed_size, no_imgnorm)
-    elif precomp_enc_type == 'weight_norm':
-        img_enc = EncoderImageWeightNormPrecomp(
-            img_dim, embed_size, no_imgnorm)
-    elif precomp_enc_type == "attention":
-            img_enc = EncoderImageAttention(
-                img_dim, embed_size, n_attention, no_imgnorm)
     else:
         raise ValueError("Unknown precomp_enc_type: {}".format(precomp_enc_type))
 
@@ -86,8 +80,8 @@ class EncoderImagePrecomp(nn.Module):
         features = self.fc(images)
 
         # normalize in the joint embedding space
-        if not self.no_imgnorm:
-            features = l2norm(features, dim=-1)
+        # if not self.no_imgnorm:
+        #     features = l2norm(features, dim=-1)
 
         return features
 
@@ -102,39 +96,6 @@ class EncoderImagePrecomp(nn.Module):
                 new_state[name] = param
 
         super(EncoderImagePrecomp, self).load_state_dict(new_state)
-
-
-class EncoderImageWeightNormPrecomp(nn.Module):
-
-    def __init__(self, img_dim, embed_size, no_imgnorm=False):
-        super(EncoderImageWeightNormPrecomp, self).__init__()
-        self.embed_size = embed_size
-        self.no_imgnorm = no_imgnorm
-        self.fc = weight_norm(nn.Linear(img_dim, embed_size), dim=None)
-
-    def forward(self, images):
-        """Extract image feature vectors."""
-        # assuming that the precomputed features are already l2-normalized
-
-        features = self.fc(images)
-
-        # normalize in the joint embedding space
-        if not self.no_imgnorm:
-            features = l2norm(features, dim=-1)
-
-        return features
-
-    def load_state_dict(self, state_dict):
-        """Copies parameters. overwritting the default one to
-        accept state_dict from Full model
-        """
-        own_state = self.state_dict()
-        new_state = OrderedDict()
-        for name, param in state_dict.items():
-            if name in own_state:
-                new_state[name] = param
-
-        super(EncoderImageWeightNormPrecomp, self).load_state_dict(new_state)
 
 
 # RNN Based Language Model
@@ -176,8 +137,8 @@ class EncoderText(nn.Module):
             cap_emb = (cap_emb[:,:,:cap_emb.size(2)/2] + cap_emb[:,:,cap_emb.size(2)/2:])/2
 
         # normalization in the joint embedding space
-        if not self.no_txtnorm:
-            cap_emb = l2norm(cap_emb, dim=-1)
+        # if not self.no_txtnorm:
+        #     cap_emb = l2norm(cap_emb, dim=-1)
 
         return cap_emb, cap_len
 

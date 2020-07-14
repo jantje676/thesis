@@ -36,7 +36,6 @@ class LaenenLoss(nn.Module):
 
         sims = sims * thres_image
 
-
         image_diag = image_diag.unsqueeze(1).expand(-1, n_caption)
         cap_diag = cap_diag.unsqueeze(0).expand(batch_size, -1)
 
@@ -52,31 +51,19 @@ class LaenenLoss(nn.Module):
 
         return score_cap.sum()+ score_image.sum()
 
+    def sim_val(self, img, cap, l):
+        batch_size = img.size(0)
+        sims = torch.einsum('bik,ljk->blij', img, cap)
 
-    def c_glob(self, sims, cap_l, image_diag, cap_diag, same, n_frag, batch_size, n_caption):
+        sims, _ = torch.max(sims, dim=2)
 
-        sims = self.relu(sims)
-        sims = sims.sum(dim=[2,3])
+        sims = sims.sum(dim=2)
 
-        thres_image = get_thres(cap_l, self.n, n_frag).unsqueeze(0).expand(batch_size, -1)
-        thres_cap = get_thres(n_frag, self.n, cap_l).unsqueeze(0).expand(batch_size, -1)
+        thres_image = get_thres2(l, self.n).unsqueeze(0).expand(batch_size, -1)
 
-        sims_image = sims * thres_image
-        sims_cap = sims * thres_cap
+        sims = sims * thres_image
 
-        image_diag = image_diag.unsqueeze(1).expand(-1, n_caption)
-        cap_diag = cap_diag.unsqueeze(1).expand(-1, n_caption)
-
-        score_image = sims_image - image_diag + self.margin
-        score_cap = sims_cap - cap_diag + self.margin
-
-        score_image = self.relu(score_image)
-        score_cap = self.relu(score_cap)
-
-        if same:
-            score_image.fill_diagonal_(0)
-            score_cap.fill_diagonal_(0)
-        return score_cap.sum()+ score_image.sum()
+        return sims
 
     def c_frag(self, sims, cap_l, epoch, same, n_frag, batch_size, n_caption):
         loss = 0
@@ -109,7 +96,7 @@ class LaenenLoss(nn.Module):
         cap = cap.permute(0,2,1)
 
         # calculate similarity between the two embeddings
-        sims= torch.matmul(img , cap)
+        sims = torch.matmul(img , cap)
 
         sims, _ = torch.max(sims, dim=1)
 
