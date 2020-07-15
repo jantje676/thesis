@@ -22,17 +22,17 @@ class LaenenLoss(nn.Module):
 
         sims = torch.einsum('bik,ljk->blij', img_emb, cap_emb)
 
-        # c_frag_loss = self.c_frag(sims, cap_l, epoch, same, n_frag, batch_size, n_caption)
-        c_glob_loss = self.c_glob2(sims, cap_l, image_diag, cap_diag, same, n_frag, batch_size, n_caption)
-        loss = c_glob_loss
+        c_frag_loss = self.c_frag(sims, cap_l, epoch, same, n_frag, batch_size, n_caption)
+        c_glob_loss = self.c_glob(sims, cap_l, image_diag, cap_diag, same, n_frag, batch_size, n_caption)
+        loss = 0.5 * c_glob_loss + c_frag_loss
         return loss
 
-    def c_glob2(self, sims, cap_l, image_diag, cap_diag, same, n_frag, batch_size, n_caption):
+    def c_glob(self, sims, cap_l, image_diag, cap_diag, same, n_frag, batch_size, n_caption):
         sims, _ = torch.max(sims, dim=2)
 
         sims = sims.sum(dim=2)
 
-        thres_image = get_thres2(cap_l, self.n).unsqueeze(0).expand(batch_size, -1)
+        thres_image = get_thres(cap_l, self.n).unsqueeze(0).expand(batch_size, -1)
 
         sims = sims * thres_image
 
@@ -59,7 +59,7 @@ class LaenenLoss(nn.Module):
 
         sims = sims.sum(dim=2)
 
-        thres_image = get_thres2(l, self.n).unsqueeze(0).expand(batch_size, -1)
+        thres_image = get_thres(l, self.n).unsqueeze(0).expand(batch_size, -1)
 
         sims = sims * thres_image
 
@@ -104,24 +104,19 @@ class LaenenLoss(nn.Module):
         sims = sims.sum(dim=1)
 
         # find threshold values
-        thres = get_thres2(s_l, self.n)
+        thres = get_thres(s_l, self.n)
 
         # calculate sim_pair
         diag = sims* thres
 
         return diag
 
-def get_thres2(l, n):
+def get_thres(l, n):
     thres = (l + n)
     thres = float(1)/thres.to(dtype=torch.float)
 
     return thres
 
-def get_thres(a, n, b):
-    thres = (a + n) * b
-    thres = float(1)/thres.to(dtype=torch.float)
-
-    return thres
 
 def sign(sims_i, same, i):
     y = torch.sign(sims_i)
