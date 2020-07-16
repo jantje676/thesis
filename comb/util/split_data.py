@@ -33,7 +33,7 @@ def main(args):
         exit()
 
     with open('{}/{}/data_captions_{}_train.txt'.format(data_path, clothing, VERSION_out), 'w', newline='') as file:
-        for id in rnd_trains:
+        for id in rnd_train:
             file.write(captions[id])
 
 
