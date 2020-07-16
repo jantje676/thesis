@@ -13,11 +13,9 @@ from PIL import Image
 import torch.nn as nn
 import torch
 sys.path.append('../../')
-sys.path.append('../../Beta-VAE')
 from segment_dresses import segment_dresses, segment_dresses_tile, segment_dresses_tile_nine
-from simCLR.models.resnet_simclr import ResNetSimCLR
-from SimCLR_pre.modules.simclr import SimCLR
-from model import BetaVAE_B
+# from simCLR.models.resnet_simclr import ResNetSimCLR
+# from SimCLR_pre.modules.simclr import SimCLR
 from layers_model import LayersModel
 
 FIELDNAMES = ['image_id', 'image_w','image_h','num_boxes', 'boxes', 'features']
@@ -87,14 +85,12 @@ def get_features(img, net, img_idx, transform, segments, bboxes, device ):
         stacked_segs = stack_segments(segments, transform)
         stacked_segs = stacked_segs.to(device)
 
-        if args.network == "beta":
-            features = net.encode_z(stacked_segs).to("cpu")
-        else:
-            features = net(stacked_segs).to("cpu")
-        if args.network == "alex" or args.network == "beta":
+        features = net(stacked_segs).to("cpu")
+
+        if args.network == "alex":
             features = features.squeeze()
-        elif args.network == "simCLR" or args.network == "simCLR_pre":
-            features = features[0].squeeze()
+        # elif args.network == "simCLR" or args.network == "simCLR_pre":
+        #     features = features[0].squeeze()
 
     features = features.detach().numpy()
 
@@ -162,33 +158,23 @@ def get_model(args, device):
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                   std=[0.229, 0.224, 0.225])])
 
-    elif args.network == "simCLR":
-        net = ResNetSimCLR("resnet18", args.output_dim)
-        net.load_state_dict(torch.load("../../simCLR/runs_simCLR/{}/checkpoints/model.pth".format(args.name_run), map_location=torch.device(device)))
-        net.eval()
-        # to transformations here
-        transform = transforms.Compose([
-            transforms.RandomResizedCrop(size=(args.input_shape_height, args.input_shape_width)),
-            transforms.ToTensor()])
-
-    elif args.network == "beta":
-        net = BetaVAE_B(args.z_dim, 3, args.image_width, args.image_height)
-        checkpoint = torch.load("{}/{}/last".format(args.checkpoint_dir_beta, args.run_beta), map_location=torch.device(device))
-        net.load_state_dict(checkpoint['model_states']['net'])
-        net.eval()
-
-        transform = transforms.Compose([
-                        transforms.Resize((args.image_width * 2, args.image_width)),
-                        transforms.ToTensor(),])
-
-    elif args.network == "simCLR_pre":
-        net = SimCLR(args)
-        net.load_state_dict(torch.load(args.checkpoint_simCLR_pre, map_location=torch.device(device)))
-        net.eval()
-
-        transform = transforms.Compose([
-            transforms.RandomResizedCrop(size=(224, 224)),
-            transforms.ToTensor()])
+    # elif args.network == "simCLR":
+    #     net = ResNetSimCLR("resnet18", args.output_dim)
+    #     net.load_state_dict(torch.load("../../simCLR/runs_simCLR/{}/checkpoints/model.pth".format(args.name_run), map_location=torch.device(device)))
+    #     net.eval()
+    #     # to transformations here
+    #     transform = transforms.Compose([
+    #         transforms.RandomResizedCrop(size=(args.input_shape_height, args.input_shape_width)),
+    #         transforms.ToTensor()])
+    #
+    # elif args.network == "simCLR_pre":
+    #     net = SimCLR(args)
+    #     net.load_state_dict(torch.load(args.checkpoint_simCLR_pre, map_location=torch.device(device)))
+    #     net.eval()
+    #
+    #     transform = transforms.Compose([
+    #         transforms.RandomResizedCrop(size=(224, 224)),
+    #         transforms.ToTensor()])
 
     net = net.to(device)
 
@@ -276,7 +262,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Generate features from image')
     parser.add_argument('--early_stop',help='take lower number of samples for testing purpose', default=None, type=int)
     parser.add_argument('--version',help='add version', default=None, type=str)
-    parser.add_argument('--network',help='alex|simCLR|simCLR_pre|beta|layers|sixth', default="alex", type=str)
+    parser.add_argument('--network',help='alex|simCLR|simCLR_pre|layers|sixth', default="alex", type=str)
     parser.add_argument('--data_dir',help='location data directory', default="../../data/Fashion200K", type=str)
     parser.add_argument('--data_out',help='location of data out', default="../../data/Fashion200K/all", type=str)
     parser.add_argument('--tile', action='store_true', help="use basic tile segmentation")
@@ -296,12 +282,6 @@ def parse_args():
     parser.add_argument('--projection_dim',help='size of projection dim', default=64, type=int)
     parser.add_argument('--checkpoint_simCLR_pre',help='location pretrained model', default="../../SimCLR_pre/checkpoint_100.tar", type=str)
 
-    # WHEN Beta-VAE IS USED
-    parser.add_argument('--z_dim',help='z_dim', default=10, type=int)
-    parser.add_argument('--image_height',help='height', default=256, type=int)
-    parser.add_argument('--image_width',help='width', default=128, type=int)
-    parser.add_argument('--checkpoint_dir_beta',help='dir to checkpoints', default="../../Beta-VAE/checkpoints", type=str)
-    parser.add_argument('--run_beta',help='which run', default="5run", type=str)
 
     args = parser.parse_args()
 
