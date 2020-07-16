@@ -32,7 +32,7 @@ if __name__ == '__main__':
                         help='{coco,f30k}_precomp')
     parser.add_argument('--vocab_path', default='../vocab',
                         help='Path to saved vocabulary json files.')
-    parser.add_argument('--margin', default=0.2, type=float,
+    parser.add_argument('--margin', default=0.79, type=float,
                         help='Rank loss margin.')
     parser.add_argument('--num_epochs', default=30, type=int,
                         help='Number of training epochs.')
@@ -48,7 +48,7 @@ if __name__ == '__main__':
                         help='Number of GRU layers.')
     parser.add_argument('--learning_rate', default=.0002, type=float,
                         help='Initial learning rate.')
-    parser.add_argument('--lr_update', default=15, type=int,
+    parser.add_argument('--lr_update', default=35, type=int,
                         help='Number of epochs to update the learning rate.')
     parser.add_argument('--workers', default=10, type=int,
                         help='Number of data loader workers.')
@@ -70,19 +70,19 @@ if __name__ == '__main__':
                         help='Do not normalize the image embeddings.')
     parser.add_argument('--no_txtnorm', action='store_true',
                         help='Do not normalize the text embeddings.')
-    parser.add_argument('--raw_feature_norm', default="clipped_l2norm",
+    parser.add_argument('--raw_feature_norm', default="softmax",
                         help='clipped_l2norm|l2norm|clipped_l1norm|l1norm|no_norm|softmax')
-    parser.add_argument('--agg_func', default="LogSumExp",
+    parser.add_argument('--agg_func', default="Sum",
                         help='LogSumExp|Mean|Max|Sum|Freq')
     parser.add_argument('--cross_attn', default="t2i",
                         help='t2i|i2t')
-    parser.add_argument('--precomp_enc_type', default="basic",
+    parser.add_argument('--precomp_enc_type', default="weight_norm",
                         help='basic|weight_norm|attention')
     parser.add_argument('--bi_gru', action='store_true',
                         help='Use bidirectional GRU.')
-    parser.add_argument('--lambda_lse', default=6., type=float,
+    parser.add_argument('--lambda_lse', default=4., type=float,
                         help='LogSumExp temp.')
-    parser.add_argument('--lambda_softmax', default=9., type=float,
+    parser.add_argument('--lambda_softmax', default=13., type=float,
                         help='Attention softmax temperature.')
     parser.add_argument('--version', default="laenen", type=str,
                         help='version.')
