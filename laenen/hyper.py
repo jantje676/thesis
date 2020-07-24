@@ -3,22 +3,51 @@ import argparse
 from utils import find_run_name, set_run_name
 import tb as tb_logger
 import logging
+import time
+import os
+import csv
+import numpy as np
+from random import Random
 
 def main(opt):
     nr_runs = opt.nr_runs
-    seeds = [opt.seed1, 4, 26]
-
+    seeds = 17
+    randomHyper = Random()
+    output_folder = "tuning_hyper_laenen"
     # find run name and set to seed1
     nr_next_run = find_run_name(opt)
 
-    for i in range(nr_runs):
-        opt = set_run_name(opt, nr_next_run, i+1)
-        logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
-        tb_logger.configure(opt.logger_name, flush_secs=5)
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+
+    with open('{}/results_tuning_{}.txt'.format(output_folder, time.time()), 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter='\t')
+        writer.writerow(("Run", "Margin", "n", "switch", "learning_rate", "alpha", "beta", "Score"))
 
 
-        start_experiment(opt, seeds[i])
+        for i in range(nr_runs):
 
+            opt = set_run_name(opt, nr_next_run, i+1)
+            opt = random_params(opt, randomHyper)
+
+
+            logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+            tb_logger.configure(opt.logger_name, flush_secs=5)
+
+            rsum = start_experiment(opt, seeds)
+
+
+            writer.writerow((i, "%.2f" % opt.margin, opt.n, opt.switch, opt.switch, opt.learning_rate, "%.2f" % opt.alpha, "%.2f" % opt.beta, rsum))
+
+def random_params(opt, randomHyper):
+    opt.margin = randomHyper.choice ([10,20,30,40,50,60])
+    opt.n = randomHyper.choice ([5, 10, 15])
+    opt.switch = randomHyper.choice ([2,4,6,8])
+    opt.learning_rate= randomHyper.choice ([0.0001, 0.00001, 0.000001])
+    opt.alpha = randomHyper.random()
+    opt.beta = randomHyper.random()
+
+    return opt
 
 
 if __name__ == '__main__':
@@ -37,8 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_epochs', default=20, type=int, help='Number of training epochs.')
     parser.add_argument('--n', default=10, type=int, help='smoothing term')
     parser.add_argument('--switch', default=15, type=int, help='switch objective function after n-epochs')
-    parser.add_argument('--batch_size', default=128, type=int,
-                        help='Size of a training mini-batch.')
+    parser.add_argument('--batch_size', default=128, type=int,help='Size of a training mini-batch.')
     parser.add_argument('--word_dim', default=300, type=int,
                         help='Dimensionality of the word embedding.')
     parser.add_argument('--embed_size', default=1024, type=int,
@@ -70,7 +98,7 @@ if __name__ == '__main__':
                         help='Dimensionality of the image embedding.')
     parser.add_argument('--bi_gru', action='store_true',
                         help='Use bidirectional GRU.')
-    parser.add_argument('--version', default="laenen", type=str,
+    parser.add_argument('--version', default="laenen_1k", type=str,
                         help='version.')
     parser.add_argument('--nr_runs', default=1, type=int,
                         help='Number of experiments.')
@@ -78,10 +106,6 @@ if __name__ == '__main__':
                         help='first seed to change easily')
     parser.add_argument('--shard_size', default=128, type=int,
                         help='shard size')
-
-
-
-
 
     opt = parser.parse_args()
     main(opt)

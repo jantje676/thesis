@@ -5,15 +5,16 @@ class LaenenLoss(nn.Module):
     """
     Compute contrastive loss
     """
-    def __init__(self):
+    def __init__(self, margin, n, switch, beta, gamma):
         super(LaenenLoss, self).__init__()
         self.relu = nn.ReLU()
-
+        self.beta = beta
+        self.gamma = gamma
 
         # hyperparameters
-        self.switch = 10
-        self.n = 10
-        self.margin = 40
+        self.switch = switch
+        self.n = n
+        self.margin = margin
 
     def forward(self, epoch, img_emb, cap_emb, cap_l, image_diag, cap_diag, same):
         n_frag = img_emb.size(1)

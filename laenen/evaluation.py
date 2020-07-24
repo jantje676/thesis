@@ -17,7 +17,7 @@ import time
 import numpy as np
 from vocab import Vocabulary, deserialize_vocab  # NOQA
 import torch
-from model_laenen import SCAN, xattn_score_t2i, xattn_score_i2t
+from model_laenen import SCAN
 from collections import OrderedDict
 import time
 from torch.autograd import Variable
@@ -239,7 +239,7 @@ def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_pat
           (img_embs.shape[0] , cap_embs.shape[0]))
 
     t2i_switch = True
-    sims, attn = shard_xattn_t2i(img_embs, cap_embs, cap_lens, opt, shard_size=128)
+    sims = shard_xattn_t2i(model, img_embs, cap_embs, cap_lens, opt, shard_size=128)
 
 
     # r = (r1, r2, r5, medr, meanr), rt= (ranks, top1)
@@ -254,16 +254,15 @@ def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_pat
     print("Average t2i Recall: %.1f" % ari)
     print("Text to image: %.1f %.1f %.1f %.1f %.1f" % ri)
 
-    if opt.trans:
-        save_dir = "plots_trans"
-    else:
-        save_dir = "plots_scan"
+
+
+    save_dir = "plots_laenen"
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    torch.save({'rt': rt, 'rti': rti, "attn": attn, "t2i_switch": t2i_switch }, '{}/ranks_{}_{}.pth.tar'.format(save_dir,run, opt.version))
-    return rt, rti, attn, r, ri
+    torch.save({'rt': rt, 'rti': rti, "t2i_switch": t2i_switch }, '{}/ranks_{}_{}.pth.tar'.format(save_dir,run, opt.version))
+    return rt, rti, r, ri
 
 
 def softmax(X, axis):

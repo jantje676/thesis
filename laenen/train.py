@@ -29,6 +29,7 @@ import logging
 import tb as tb_logger
 import numpy as np
 import random
+from sklearn.cluster import MiniBatchKMeans
 
 def start_experiment(opt, seed):
     torch.manual_seed(seed)
@@ -76,7 +77,6 @@ def start_experiment(opt, seed):
     for epoch in range(start_epoch, opt.num_epochs):
         print(opt.logger_name)
         print(opt.model_name)
-        adjust_learning_rate(opt, model.optimizer, epoch)
 
         # train for one epoch
         train(opt, model, epoch, first_loader, second_loader, val_loader)
@@ -112,6 +112,14 @@ def train(opt, model, epoch, first_loader, second_loader, val_loader):
     train_logger = LogCollector()
 
     end = time.time()
+
+    # img_embs, cap_embs, cap_lens = encode_data(model, first_loader)
+    # img_embs = np.reshape(img_embs, (-1,1024))
+    #
+    # kmeans = MiniBatchKMeans(n_clusters=10000,random_state=0,batch_size=128).fit(img_embs)
+
+
+
     for j, first_data in enumerate(first_loader):
         # switch to train mode
         model.train_start()
@@ -223,13 +231,6 @@ def save_checkpoint(state, is_best, last_epoch, filename='checkpoint.pth.tar', p
         if not tries:
             raise error
 
-
-def adjust_learning_rate(opt, optimizer, epoch):
-    """Sets the learning rate to the initial LR
-       decayed by 10 every 30 epochs"""
-    lr = opt.learning_rate * (0.1 ** (epoch // opt.lr_update))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
 
 
 def accuracy(output, target, topk=(1,)):

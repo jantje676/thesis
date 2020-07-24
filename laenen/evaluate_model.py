@@ -14,7 +14,7 @@ Evaluate the trained model on the test set
 """
 
 
-# python evaluate_model.py --model_path "runs/" --run run59 --vocab_path "../vocab/" --data_path "../data/"
+# python evaluate_model.py --model_path "runs/" --run run31 --vocab_path "../vocab/" --data_path "../data/"
 
 def main(args):
     run = args.run
@@ -40,7 +40,7 @@ def main(args):
         print("Evaluating seed{}".format(str(i+1)))
         model_path = "{}{}/seed{}/checkpoint/{}".format(args.model_path, run, i+1, checkpoint )
         # plot_path = "{}{}/seed{}checkpoint/".format(args.plot_path,  run)
-        rt, rti, attn, r, ri = evaluation.evalrank(model_path, run, data_path=args.data_path, split="test", vocab_path=args.vocab_path)
+        rt, rti, r, ri = evaluation.evalrank(model_path, run, data_path=args.data_path, split="test", vocab_path=args.vocab_path)
         r1 += r[0]
         r5 += r[1]
         r10 += r[2]
