@@ -23,7 +23,6 @@ from collections import OrderedDict
 from utils import adap_margin
 from stn import STN
 
-
 def l1norm(X, dim, eps=1e-8):
     """L1-normalize columns of X
     """
@@ -426,7 +425,7 @@ class ContrastiveLoss(nn.Module):
         self.max_violation = max_violation
 
 
-    def forward(self, im, s, s_l, freq_score, freqs):
+    def forward(self, im, s, s_l, freq_score, freqs, epoch):
         # compute image-sentence score matrix
         if self.opt.cross_attn == 't2i':
             scores, _ = xattn_score_t2i(im, s, s_l, freqs, self.opt)
@@ -478,9 +477,7 @@ class ContrastiveLoss(nn.Module):
 
         return cost_s.sum() + cost_im.sum()
 
-class MyDataParallel(nn.DataParallel):
-    def __getattr__(self, name):
-        return getattr(self.module, name)
+
 
 class SCAN(object):
     """
@@ -504,7 +501,7 @@ class SCAN(object):
             cudnn.benchmark = True
             cudnn.enabled = True
 
-        # Loss and Optimizer
+
         self.criterion = ContrastiveLoss(opt=opt,
                                          margin=opt.margin,
                                          max_violation=opt.max_violation)
@@ -512,8 +509,10 @@ class SCAN(object):
             params = list(self.txt_enc.parameters())
             for i in range(opt.n_detectors):
                 params += list(self.img_enc.conv[i].parameters())
-            params += list(self.img_enc.localization.parameters())
-            params += list(self.img_enc.fc_loc.parameters())
+            # only add learning of spatial transformation when needed
+            if not opt.basic:
+                params += list(self.img_enc.localization.parameters())
+                params += list(self.img_enc.fc_loc.parameters())
         else:
             params = list(self.txt_enc.parameters())
             params += list(self.img_enc.parameters())
@@ -561,14 +560,14 @@ class SCAN(object):
         cap_emb, cap_lens = self.txt_enc(captions, lengths)
         return img_emb, cap_emb, cap_lens
 
-    def forward_loss(self, img_emb, cap_emb, cap_len, freq_score, freqs, **kwargs):
+    def forward_loss(self, epoch, img_emb, cap_emb, cap_len, freq_score, freqs, **kwargs):
         """Compute the loss given pairs of image and caption embeddings
         """
-        loss = self.criterion(img_emb, cap_emb, cap_len, freq_score, freqs)
+        loss = self.criterion(img_emb, cap_emb, cap_len, freq_score, freqs, epoch)
         self.logger.update('Le', loss.item(), img_emb.size(0))
         return loss
 
-    def train_emb(self, images, captions, lengths, ids=None, freq_score=None,freqs=None, *args):
+    def train_emb(self, epoch, images, captions, lengths, ids=None, freq_score=None, freqs=None, *args):
         """One training step given images and captions.
         """
         self.Eiters += 1
@@ -579,8 +578,7 @@ class SCAN(object):
 
         # measure accuracy and record loss
         self.optimizer.zero_grad()
-
-        loss = self.forward_loss(img_emb, cap_emb, cap_lens, freq_score, freqs)
+        loss = self.forward_loss(epoch, img_emb, cap_emb, cap_lens, freq_score, freqs)
 
         # compute gradient and do SGD step
         loss.backward()

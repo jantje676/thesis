@@ -127,8 +127,8 @@ def encode_data(model, data_loader, log_step=10, logging=print):
             cap_lens[nid] = cap_len[j]
             freqs_new[nid] = freqs[j]
 
-        # measure accuracy and record loss
-        model.forward_loss(img_emb, cap_emb, cap_len, freq_score, freqs)
+        # measure accuracy and record loss, first argument is 100 for LaenenLoss
+        model.forward_loss(100 ,img_emb, cap_emb, cap_len, freq_score, freqs)
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -143,6 +143,7 @@ def encode_data(model, data_loader, log_step=10, logging=print):
                         e_log=str(model.logger)))
         del images, captions
     return img_embs, cap_embs, cap_lens, freqs_new
+
 
 
 def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_path="../vocab/"):

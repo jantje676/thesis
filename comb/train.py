@@ -123,8 +123,9 @@ def train(opt, train_loader, model, epoch, val_loader):
 
         # make sure train logger is used
         model.logger = train_logger
+
         # Update the model
-        model.train_emb(*train_data)
+        model.train_emb(epoch, *train_data)
 
         # measure elapsed time
         batch_time.update(time.time() - end)

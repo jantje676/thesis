@@ -119,6 +119,8 @@ if __name__ == '__main__':
                         help="use SCAN with spatial transformers")
     parser.add_argument('--image_path', default="pictures_only/pictures_only", type=str,
                         help='Number of experiments.')
+    parser.add_argument('--basic', action='store_true',
+                        help="use basic trans network without learning specific transformations, just the feature networks")
     parser.add_argument('--n_detectors', default=5, type=int,
                         help='How many localizers to use for spatial transformers')
     parser.add_argument('--pretrained_alex', action='store_true',

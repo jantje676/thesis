@@ -21,6 +21,7 @@ class STN(nn.Module):
 
         # Spatial transformer localization-network
         self.localization = models.alexnet()
+    
         self.localization = self.localization.features
 
         # create n transformation parameters according to n_detectors
