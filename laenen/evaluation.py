@@ -17,11 +17,11 @@ import time
 import numpy as np
 from vocab import Vocabulary, deserialize_vocab  # NOQA
 import torch
-from model_laenen import SCAN
 from collections import OrderedDict
 import time
 from torch.autograd import Variable
 from torch.nn.utils.rnn import pad_sequence
+from model_laenen import SCAN
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -205,6 +205,26 @@ def encode_data_train(model, data_loader, log_step=10, logging=print):
     img_embs = torch.cat(temp_imgs, dim=0)
     cap_embs = torch.cat(temp_cap, dim=0)
     return img_embs, cap_embs, cap_lens
+
+
+def retrieve_features(data_loader):
+    """
+    Retrieve all the features in one numpy array for k-means use
+    """
+
+    # np array to keep all the embeddings
+    img_embs = None
+    for i, (images, captions, lengths, ids) in enumerate(data_loader):
+
+        if img_embs is None:
+            if images.dim() == 3:
+                img_embs = np.zeros((len(data_loader.dataset), images.size(1), images.size(2)))
+            else:
+                img_embs = np.zeros((len(data_loader.dataset), images.size(1)))
+        ids = list(ids)
+        img_embs[ids] = images.data.cpu().numpy().copy()
+    return img_embs
+
 
 def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_path="../vocab/"):
     """

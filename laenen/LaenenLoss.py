@@ -1,5 +1,7 @@
 import torch.nn as nn
 import torch
+from sklearn import preprocessing
+import numpy as np
 
 class LaenenLoss(nn.Module):
     """
@@ -16,7 +18,7 @@ class LaenenLoss(nn.Module):
         self.n = n
         self.margin = margin
 
-    def forward(self, epoch, img_emb, cap_emb, cap_l, image_diag, cap_diag, same):
+    def forward(self, epoch, img_emb, cap_emb, cap_l, image_diag, cap_diag, same, kmeans_features, kmeans_emb, features, cluster_loss):
         n_frag = img_emb.size(1)
         batch_size = img_emb.size(0)
         n_caption = cap_emb.size(0)
@@ -25,7 +27,25 @@ class LaenenLoss(nn.Module):
 
         c_frag_loss = self.c_frag(sims, cap_l, epoch, same, n_frag, batch_size, n_caption)
         c_glob_loss = self.c_glob(sims, cap_l, image_diag, cap_diag, same, n_frag, batch_size, n_caption)
-        loss = 0.5 * c_glob_loss + c_frag_loss
+        loss = self.beta * c_glob_loss + c_frag_loss
+
+        if cluster_loss:
+            c_cluster = self.c_cluster(kmeans_features, kmeans_emb, sims, img_emb, cap_emb, cap_l, features)
+            loss += self.gamma * c_cluster
+        return loss
+
+    def c_cluster(self, kmeans_features, kmeans_emb, sims, img_emb, cap_emb, cap_l, features):
+        batch_size = cap_emb.size(0)
+        max_l = cap_emb.size(1)
+        part1 = cluster1(features, kmeans_features)
+        part2 = cluster2(img_emb, kmeans_emb, sims, cap_emb)
+
+        part1 = part1.unsqueeze(1).expand(-1, batch_size, -1)
+        part1 = part1.unsqueeze(3).expand(-1, -1, -1,max_l )
+
+        loss = part1 * part2
+        loss = torch.sum(loss)
+
         return loss
 
     def c_glob(self, sims, cap_l, image_diag, cap_diag, same, n_frag, batch_size, n_caption):
@@ -112,10 +132,65 @@ class LaenenLoss(nn.Module):
 
         return diag
 
+def cluster1(features, kmeans_features):
+    dim = features.size(2)
+    batch_size = features.size(0)
+    n_frag = features.size(1)
+
+    # reshape for sklearn
+    im_norm = np.reshape(features, (-1, dim))
+
+    im_norm = preprocessing.normalize(im_norm)
+
+    # find labels of the clusters
+    center_labels = kmeans_features.predict(im_norm)
+
+    # retrieve nearest center vector
+    centers = kmeans_features.cluster_centers_[center_labels]
+
+    centers = np.reshape(centers, (batch_size, n_frag, dim ))
+    im_norm = np.reshape(im_norm, (batch_size, n_frag, dim ))
+
+    centers = torch.from_numpy(centers).float()
+    im_norm = torch.from_numpy(im_norm).float()
+
+    cos = cosine_similarity(im_norm, centers, dim=2)
+    loss1 = 1 - cos
+    return loss1
+
+
+
+def cluster2(img_emb, kmeans_emb, sims, cap_emb):
+    batch_size = img_emb.size(0)
+    n_frag = img_emb.size(1)
+    dim_emb = img_emb.size(2)
+
+    # reshape for sklearn
+    im_norm = np.reshape(img_emb.detach().numpy(), (-1, dim_emb))
+
+    # bring to norm? > check if this is correct
+    im_norm = preprocessing.normalize(im_norm)
+
+    # find labels of the clusters
+    center_labels = kmeans_emb.predict(im_norm)
+
+    # retrieve nearest center vector
+    centers = kmeans_emb.cluster_centers_[center_labels]
+
+    centers = np.reshape(centers, (batch_size, n_frag, dim_emb ))
+    centers = torch.from_numpy(centers).float()
+
+    sims_center = torch.einsum('bik,ljk->blij', centers, cap_emb)
+
+    loss2 = torch.abs(sims - sims_center)
+    return loss2
+
 def get_thres(l, n):
     thres = (l + n)
     thres = float(1)/thres.to(dtype=torch.float)
-
+    
+    if torch.cuda.is_available():
+        thres = thres.cuda()
     return thres
 
 
@@ -135,6 +210,8 @@ def sign(sims_i, same, i):
                     i_max = torch.argmax(sims_i[i,:,j])
                     y[i, i_max, j] = 1
 
+    if torch.cuda.is_available():
+        y = y.cuda()
     return y
 
 # init y matrix with ones when image and word fragment are from the same pair
@@ -142,4 +219,16 @@ def init_y(sims_i, same, i):
     y =  torch.ones(sims_i.shape, requires_grad=True) * -1
     if same:
         y[i, :, :] = 1
+
+    if torch.cuda.is_available():
+        y = y.cuda()
     return y
+
+def cosine_similarity(x1, x2, dim=1, eps=1e-8):
+    """Returns cosine similarity between x1 and x2, computed along dim."""
+    w12 = torch.sum(x1 * x2, dim)
+    w1 = torch.norm(x1, 2, dim)
+    w2 = torch.norm(x2, 2, dim)
+    temp = (w12 / (w1 * w2).clamp(min=eps))
+
+    return temp.squeeze()

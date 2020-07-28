@@ -30,6 +30,8 @@ import tb as tb_logger
 import numpy as np
 import random
 from sklearn.cluster import MiniBatchKMeans
+from sklearn import preprocessing
+from evaluation import encode_data, retrieve_features
 
 def start_experiment(opt, seed):
     torch.manual_seed(seed)
@@ -111,18 +113,25 @@ def train(opt, model, epoch, first_loader, second_loader, val_loader):
     data_time = AverageMeter()
     train_logger = LogCollector()
 
+    kmeans_features = None
+    kmeans_emb = None
+
     end = time.time()
 
-    # img_embs, cap_embs, cap_lens = encode_data(model, first_loader)
-    # img_embs = np.reshape(img_embs, (-1,1024))
-    #
-    # kmeans = MiniBatchKMeans(n_clusters=10000,random_state=0,batch_size=128).fit(img_embs)
+    if opt.cluster_loss:
+        features = retrieve_features(first_loader)
+        kmeans_features = get_centers(features, opt.n_clusters)
 
-
+    # https://stats.stackexchange.com/questions/299013/cosine-distance-as-similarity-measure-in-kmeans
+    # normalizing and euclidian distance is linear correlated with cosine distance
 
     for j, first_data in enumerate(first_loader):
         # switch to train mode
         model.train_start()
+
+        if opt.cluster_loss:
+            img_embs, _ , _ = encode_data(model, first_loader)
+            kmeans_emb = get_centers(img_embs, opt.n_clusters)
 
         for i, second_data in enumerate(second_loader):
             if j == i:
@@ -137,7 +146,7 @@ def train(opt, model, epoch, first_loader, second_loader, val_loader):
             model.logger = train_logger
 
             # Update the model
-            model.train_emb(epoch, first_data, second_data, same)
+            model.train_emb(epoch, first_data, second_data, same, opt.cluster_loss, kmeans_features, kmeans_emb)
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -247,3 +256,13 @@ def accuracy(output, target, topk=(1,)):
         correct_k = correct[:k].view(-1).float().sum(0)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
+
+def get_centers(emb, n_clusters):
+    """
+    Run kmeans to retrieve the clusters
+    """
+    dim = emb.shape[2]
+    img_embs = np.reshape(emb, (-1,dim))
+    im_norm = preprocessing.normalize(img_embs)
+    kmeans = MiniBatchKMeans(n_clusters=n_clusters,random_state=0,batch_size=128).fit(im_norm)
+    return kmeans

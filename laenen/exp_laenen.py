@@ -78,7 +78,10 @@ if __name__ == '__main__':
                         help='first seed to change easily')
     parser.add_argument('--shard_size', default=128, type=int,
                         help='shard size')
-
+    parser.add_argument('--n_clusters', default=5000, type=int,
+                        help='number of clusters for kmeans')
+    parser.add_argument('--cluster_loss', action='store_true',
+                        help='use of third loss component: image cluster loss')
 
 
 

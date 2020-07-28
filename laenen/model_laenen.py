@@ -216,15 +216,15 @@ class SCAN(object):
         cap_emb, cap_lens = self.txt_enc(captions, lengths)
         return cap_emb, cap_lens
 
-    def forward_loss(self, epoch, img_emb_pair, cap_emb, cap_l, image_diag, cap_diag, same):
+    def forward_loss(self, epoch, img_emb_pair, cap_emb, cap_l, image_diag, cap_diag, same, kmeans_features, kmeans_emb, features, cluster_loss):
         """Compute the loss given pairs of image and caption embeddings
         """
-        loss = self.criterion(epoch, img_emb_pair, cap_emb, cap_l, image_diag, cap_diag, same)
+        loss = self.criterion(epoch, img_emb_pair, cap_emb, cap_l, image_diag, cap_diag, same, kmeans_features, kmeans_emb, features, cluster_loss)
         self.logger.update('Le', loss.item(), img_emb_pair.size(0))
         return loss
 
 
-    def train_emb(self, epoch, first_data, second_data, same):
+    def train_emb(self, epoch, first_data, second_data, same, cluster_loss, kmeans_features, kmeans_emb):
         """One training step given images and captions.
         """
         self.Eiters += 1
@@ -235,8 +235,6 @@ class SCAN(object):
         im_first, cap_first, lengths_first, ids_first = first_data
         # unpack pair data
         im_second, cap_second, lengths_second, ids_second = second_data
-
-
 
         # retrieve embeddings from pair data
         img_emb_first, cap_emb_first, l_first = self.forward_emb(im_first, cap_first, lengths_first)
@@ -250,7 +248,9 @@ class SCAN(object):
 
         # measure accuracy and record loss
         self.optimizer.zero_grad()
-        loss = self.forward_loss(epoch, img_emb_first, cap_emb_second, l_second, image_diag, cap_diag, same)
+        loss = self.forward_loss(epoch, img_emb_first, cap_emb_second, l_second,
+                                image_diag, cap_diag, same, kmeans_features,
+                                kmeans_emb, im_first, cluster_loss)
 
         # compute gradient and do SGD step
         loss.backward()
