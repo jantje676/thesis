@@ -126,14 +126,14 @@ def train(opt, model, epoch, first_loader, second_loader, val_loader):
     # normalizing and euclidian distance is linear correlated with cosine distance
 
     for j, first_data in enumerate(first_loader):
-        # switch to train mode
-        model.train_start()
 
         if opt.cluster_loss:
             img_embs, _ , _ = encode_data(model, first_loader)
             kmeans_emb = get_centers(img_embs, opt.n_clusters)
 
         for i, second_data in enumerate(second_loader):
+            # switch to train mode
+            model.train_start()
             if j == i:
                 same = True
             else:
