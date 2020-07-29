@@ -63,10 +63,14 @@ if __name__ == '__main__':
                         help='Path to saved vocabulary json files.')
     parser.add_argument('--margin', default=40., type=float,
                         help='Rank loss margin.')
-    parser.add_argument('--num_epochs', default=20, type=int, help='Number of training epochs.')
-    parser.add_argument('--n', default=10, type=int, help='smoothing term')
-    parser.add_argument('--switch', default=15, type=int, help='switch objective function after n-epochs')
-    parser.add_argument('--batch_size', default=128, type=int,help='Size of a training mini-batch.')
+    parser.add_argument('--num_epochs', default=20, type=int,
+                        help='Number of training epochs.')
+    parser.add_argument('--n', default=10, type=int,
+                        help='smoothing term')
+    parser.add_argument('--switch', default=15, type=int,
+                        help='switch objective function after n-epochs')
+    parser.add_argument('--batch_size', default=128, type=int,
+                        help='Size of a training mini-batch.')
     parser.add_argument('--word_dim', default=300, type=int,
                         help='Dimensionality of the word embedding.')
     parser.add_argument('--embed_size', default=1024, type=int,
@@ -106,6 +110,9 @@ if __name__ == '__main__':
                         help='first seed to change easily')
     parser.add_argument('--shard_size', default=128, type=int,
                         help='shard size')
+    parser.add_argument('--cluster_loss', action='store_true',
+                        help='use of third loss component: image cluster loss')
+
 
     opt = parser.parse_args()
     main(opt)
