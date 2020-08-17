@@ -42,11 +42,16 @@ def main(opt):
 def random_params(opt, randomHyper):
     opt.margin = randomHyper.choice ([10,20,30,40,50,60])
     opt.n = randomHyper.choice ([5, 10, 15])
-    opt.switch = randomHyper.choice ([2,4,6,8])
+    opt.switch = randomHyper.choice ([12,14,16,18])
     opt.learning_rate= randomHyper.choice ([0.0001, 0.00001, 0.000001])
     opt.alpha = randomHyper.random()
     opt.beta = randomHyper.random()
-
+    # opt.margin = 40
+    # opt.n = 10
+    # opt.switch = 15
+    # opt.learning_rate= 0.00001
+    # opt.alpha = 0.25
+    # opt.beta = 0.5
     return opt
 
 
