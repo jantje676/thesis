@@ -92,7 +92,7 @@ def get_features(img, net, img_idx, transform, segments, bboxes, device ):
         # elif args.network == "simCLR" or args.network == "simCLR_pre":
         #     features = features[0].squeeze()
 
-    features = features.detach().numpy()
+        features = features.detach().numpy()
 
     return {
         "image_id": int(img_idx),
