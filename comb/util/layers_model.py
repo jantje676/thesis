@@ -64,14 +64,14 @@ class LayersModel(nn.Module):
         x = x.view(1 ,-1)
         x = self.k(x) #
 
-        y = x.squeeze(0).detach().numpy()
+        y = x.squeeze(0).detach().cpu().numpy()
         temp.append(y)
 
         x = self.relu(x)
         x = self.l(x)
         x = self.m(x) #
 
-        y = x.squeeze(0).detach().numpy()
+        y = x.squeeze(0).detach().cpu().numpy()
         temp.append(y)
 
         features = np.stack(temp, axis=0)
@@ -81,7 +81,7 @@ def flat(x):
     pool = nn.AvgPool2d((dim, dim))
     x = pool(x)
     x = x.view(-1)
-    x = x.detach().numpy()
+    x = x.detach().cpu().numpy()
 
     n = 4096 - x.shape[0]
     x = np.pad(x, (0, n), 'constant')
