@@ -77,8 +77,8 @@ def get_features(img, net, img_idx, transform, segments, bboxes, device ):
 
     if args.network == "layers":
         img = Image.fromarray(img)
-        img_transformed = transform(img).unsqueeze(0)
-        features = net.forward(img_transformed)
+        img_transformed = transform(img).unsqueeze(0).to(device)
+        features = net.forward(img_transformed).to("cpu")
 
     else:
         # stack segments to push through net
