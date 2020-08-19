@@ -30,7 +30,7 @@ def main(opt):
     freq_score = calculatate_freq(captions, count)
 
     # upsample images
-    captions_up, caption_ids_up, images_up = upsample(freq_score, captions, caption_ids, images)
+    captions_up, caption_ids_up, images_up = upsample(freq_score, captions, caption_ids, images, threshold)
 
     # concat captions and images
     captions_up = captions + captions_up
@@ -63,7 +63,7 @@ def main(opt):
     shutil.copy( "{}/data_ims_{}_test.npy".format(data_path, version), "{}/data_ims_{}_up_test.npy".format(data_path, version))
     shutil.copy( "{}/data_ims_{}_dev.npy".format(data_path, version), "{}/data_ims_{}_up_dev.npy".format(data_path, version))
 
-def upsample(freq_score, captions, caption_ids, images):
+def upsample(freq_score, captions, caption_ids, images, threshold):
     freq_score = np.asarray(freq_score)
     temp = np.where(freq_score < threshold)
 
