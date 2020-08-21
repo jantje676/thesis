@@ -32,11 +32,11 @@ if __name__ == '__main__':
                         help='{coco,f30k}_precomp')
     parser.add_argument('--vocab_path', default='../vocab',
                         help='Path to saved vocabulary json files.')
-    parser.add_argument('--margin', default=40., type=float,
+    parser.add_argument('--margin', default=20., type=float,
                         help='Rank loss margin.')
     parser.add_argument('--num_epochs', default=20, type=int, help='Number of training epochs.')
-    parser.add_argument('--n', default=10, type=int, help='smoothing term')
-    parser.add_argument('--switch', default=15, type=int, help='switch objective function after n-epochs')
+    parser.add_argument('--n', default=5, type=int, help='smoothing term')
+    parser.add_argument('--switch', default=4, type=int, help='switch objective function after n-epochs')
     parser.add_argument('--batch_size', default=128, type=int,
                         help='Size of a training mini-batch.')
     parser.add_argument('--word_dim', default=300, type=int,
@@ -45,12 +45,12 @@ if __name__ == '__main__':
                         help='Dimensionality of the joint embedding.')
     parser.add_argument('--num_layers', default=1, type=int,
                         help='Number of GRU layers.')
-    parser.add_argument('--learning_rate', default=.00001, type=float,
+    parser.add_argument('--learning_rate', default=.000001, type=float,
                         help='Initial learning rate.')
 
-    parser.add_argument('--alpha', default=.25, type=float,
+    parser.add_argument('--alpha', default=.4, type=float,
                         help='alpha weight decay')
-    parser.add_argument('--beta', default=.5, type=float,
+    parser.add_argument('--beta', default=.52, type=float,
                         help='beta global weight')
     parser.add_argument('--gamma', default=.5, type=float,
                         help='gamma weight for k-means objective')
