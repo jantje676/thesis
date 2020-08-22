@@ -76,8 +76,6 @@ if __name__ == '__main__':
                         help='LogSumExp|Mean|Max|Sum|Freq')
     parser.add_argument('--cross_attn', default="t2i",
                         help='t2i|i2t')
-    parser.add_argument('--precomp_enc_type', default="weight_norm",
-                        help='basic|weight_norm|attention')
     parser.add_argument('--bi_gru', action='store_true',
                         help='Use bidirectional GRU.')
     parser.add_argument('--lambda_lse', default=4., type=float,
@@ -86,20 +84,31 @@ if __name__ == '__main__':
                         help='Attention softmax temperature.')
     parser.add_argument('--version', default="laenen", type=str,
                         help='version.')
+
+    # adaptive margin
     parser.add_argument('--adap_margin', action='store_true',
                         help="use adaptive margin")
+
+    # poly attention
+    parser.add_argument('--n_attention', default=7, type=int,
+                        help='Number of attention maps to create.')
+    parser.add_argument('--precomp_enc_type', default="weight_norm",
+                        help='basic|weight_norm|attention')
+
+    # cost
     parser.add_argument('--add_cost', action='store_true',
                         help="use extra cost for low frequency sentences")
     parser.add_argument('--cost_thres', default=0.4, type=float,
                         help='threhold use for cost function')
     parser.add_argument('--gamma', default=0.8, type=float,
                         help='(Used for add_cost) fraction of normal similarity used for sentences that have low frequency')
+
+    # freq
     parser.add_argument('--epsilon', default=1.0, type=float,
-                        help='(Used for agg_func=frew) regulaizer for emphasis on non-frequent words')
+                        help='(Used for agg_func=freq) regulaizer for emphasis on non-frequent words')
+
     parser.add_argument('--nr_runs', default=1, type=int,
                         help='Number of experiments.')
-    parser.add_argument('--n_attention', default=7, type=int,
-                        help='Number of attention maps to create.')
     parser.add_argument('--seed1', default=17, type=int,
                         help='first seed to change easily')
 
@@ -112,7 +121,6 @@ if __name__ == '__main__':
                         help="cut descriptions after n_words")
     parser.add_argument('--n_cut', default=5, type=int,
                         help='cut descriptions after n words')
-
 
     # Specific for trans
     parser.add_argument('--trans', action='store_true',

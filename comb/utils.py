@@ -145,7 +145,7 @@ def normalize(freq_score):
 def adap_margin(freq_score, scores, margin):
     freq = list(freq_score)
     freq = torch.FloatTensor(freq)
-    freq = 0.2 + ( (1- freq) * 0.1)
+    freq = margin + ( (1 - freq) * 0.2)
 
     margin1 = freq.expand_as(scores)
 
