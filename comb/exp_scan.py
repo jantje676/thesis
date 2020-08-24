@@ -93,7 +93,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_attention', default=7, type=int,
                         help='Number of attention maps to create.')
     parser.add_argument('--precomp_enc_type', default="weight_norm",
-                        help='basic|weight_norm|attention')
+                        help='basic|weight_norm|attention|layers|layers_attention')
 
     # cost
     parser.add_argument('--add_cost', action='store_true',

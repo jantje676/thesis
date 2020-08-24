@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import numpy as np
 from matplotlib import pyplot as plt
 import math
+import torchvision.transforms as transforms
 
 """
 Spatial transformer module that can be used in the SCAN model to learn automatic region extraction
@@ -21,7 +22,7 @@ class STN(nn.Module):
 
         # Spatial transformer localization-network
         self.localization = models.alexnet()
-    
+
         self.localization = self.localization.features
 
         # create n transformation parameters according to n_detectors
@@ -156,12 +157,13 @@ def check_image(x, indx, n_detectors):
     batch = int(x.shape[0]/n_detectors)
     images = []
 
+
     # find images
     for i in range(n_detectors):
         images.append(x[indx + i * batch].data.numpy().transpose(1,2,0))
 
     # plot images
     for i in range(n_detectors):
-        axarr[i].imshow(images[i],  interpolation='nearest')
+        axarr[i].imshow(images[i])
 
     plt.show()

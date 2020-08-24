@@ -22,6 +22,7 @@ import numpy as np
 from collections import OrderedDict
 from utils import adap_margin
 from stn import STN
+from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
 
 def l1norm(X, dim, eps=1e-8):
     """L1-normalize columns of X
@@ -53,63 +54,18 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, trans, n_detectors
         img_enc = EncoderImageWeightNormPrecomp(
             img_dim, embed_size, no_imgnorm)
     elif precomp_enc_type == "attention":
-            img_enc = EncoderImageAttention(
-                img_dim, embed_size, n_attention, no_imgnorm)
+        img_enc = EncoderImageAttention(
+            img_dim, embed_size, n_attention, no_imgnorm)
+    elif precomp_enc_type == "layers":
+        img_enc = LayersModel(img_dim, embed_size)
+    elif precomp_enc_type == "layers_attention":
+        img_enc = LayerAttention(img_dim, embed_size, n_attention, no_imgnorm)
     else:
         raise ValueError("Unknown precomp_enc_type: {}".format(precomp_enc_type))
 
     return img_enc
 
 
-class EncoderImageAttention(nn.Module):
-
-    def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False):
-        super(EncoderImageAttention, self).__init__()
-        self.embed_size = embed_size
-        self.no_imgnorm = no_imgnorm
-        self.w1 = nn.Linear(img_dim, int(img_dim/2),bias=False)
-        self.w2 = nn.Linear(int(img_dim/2), n_attention,  bias=False)
-        self.w3 = nn.Linear(img_dim, embed_size, bias=True)
-
-        self.init_weights()
-
-    def init_weights(self):
-        """Xavier initialization for the fully connected layer
-        """
-        nn.init.xavier_uniform_(self.w1.weight)
-        nn.init.xavier_uniform_(self.w2.weight)
-        nn.init.xavier_uniform_(self.w3.weight)
-
-
-    def forward(self, images):
-        """Extract image feature vectors."""
-        # assuming that the precomputed features are already l2-normalized
-        attention = self.w1(images)
-        attention = F.tanh(attention)
-        attention = self.w2(attention)
-        attention = F.softmax(attention, dim=1)
-        attention = attention.transpose(1,2)
-
-        features = torch.bmm(attention, images)
-        features = self.w3(features)
-
-        # normalize in the joint embedding space
-        if not self.no_imgnorm:
-            features = l2norm(features, dim=-1)
-
-        return features
-
-    def load_state_dict(self, state_dict):
-        """Copies parameters. overwritting the default one to
-        accept state_dict from Full model
-        """
-        own_state = self.state_dict()
-        new_state = OrderedDict()
-        for name, param in state_dict.items():
-            if name in own_state:
-                new_state[name] = param
-
-        super(EncoderImageAttention, self).load_state_dict(new_state)
 
 class EncoderImagePrecomp(nn.Module):
 
@@ -516,7 +472,9 @@ class SCAN(object):
         else:
             params = list(self.txt_enc.parameters())
             params += list(self.img_enc.parameters())
-
+        for p in params:
+            print(p.shape)
+        exit()
         self.params = params
 
         self.optimizer = torch.optim.Adam(params, lr=opt.learning_rate)

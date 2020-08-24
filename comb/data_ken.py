@@ -89,7 +89,6 @@ class PrecompTrans(data.Dataset):
 
         image = transform(image)
 
-
         caption = self.captions[index]
         vocab = self.vocab
         freq_score = self.freq_score[index]
@@ -229,7 +228,7 @@ def collate_fn(data):
 def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
                        shuffle=True, num_workers=2):
     """Returns torch.utils.data.DataLoader for custom coco dataset."""
-    if opt.trans:
+    if opt.trans or opt.precomp_enc_type == "layers" or opt.precomp_enc_type == "layers_attention":
         dset = PrecompTrans(data_path, data_split, vocab, opt.version, opt.image_path,
                             opt.rectangle, opt.data_name, opt.filter, opt.n_filter, opt.cut, opt.n_cut)
     else:

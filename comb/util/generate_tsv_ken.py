@@ -78,7 +78,7 @@ def get_features(img, net, img_idx, transform, segments, bboxes, device ):
     if args.network == "layers":
         img = Image.fromarray(img)
         img_transformed = transform(img).unsqueeze(0).to(device)
-        features = net.forward(img_transformed)
+        features = net.forward1(img_transformed).to("cpu")
 
     else:
         # stack segments to push through net
@@ -92,7 +92,7 @@ def get_features(img, net, img_idx, transform, segments, bboxes, device ):
         # elif args.network == "simCLR" or args.network == "simCLR_pre":
         #     features = features[0].squeeze()
 
-        features = features.detach().numpy()
+    features = features.detach().numpy()
 
     return {
         "image_id": int(img_idx),
