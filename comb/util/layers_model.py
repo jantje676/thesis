@@ -116,6 +116,8 @@ def flat(x):
     x = x.view(batch, -1)
     n = 4096 - n_channel
     pad = torch.zeros((batch, n))
+    if torch.cuda.is_available():
+        pad = pad.cuda()
     x = torch.cat((x, pad), dim=1)
     return x
 
