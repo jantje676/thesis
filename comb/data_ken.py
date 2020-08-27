@@ -76,6 +76,8 @@ class PrecompTrans(data.Dataset):
         if self.data_name == "Fashion200K":
             # load image
             image = Image.open("{}/{}/{}_0.jpeg".format(self.data_path, self.image_path, img_id))
+        elif self.data_name == "Fashion200K_multi":
+            image = Image.open("{}/{}".format(self.data_path,img_id))
         elif self.data_name == "Fashion_gen":
             image = self.h5_images[int(img_id)]
             image = Image.fromarray(image)
