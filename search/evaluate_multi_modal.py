@@ -1,7 +1,6 @@
 import sys
 sys.path.append("../comb")
 sys.path.append("/home/kgoei/thesis/comb")
-print(sys.path)
 import os
 import csv
 import torch
@@ -40,7 +39,7 @@ def main(args):
     # load vocabulary used by the model
     vocab = deserialize_vocab("{}/{}/{}_vocab_{}.json".format(args.vocab_path, opt.clothing, opt.data_name, opt.version))
     opt.vocab_size = len(vocab)
-
+    opt.clothing = "multi"
     # construct model
     model = SCAN(opt)
 
@@ -50,7 +49,7 @@ def main(args):
     img_embs = get_test_emb(opt, vocab, model, device, args.run, args.path_out)
 
     # load queries
-    all_queries = load_queries(opt.data_path, opt.clothing)
+    all_queries = load_queries(opt.data_path, opt.clothing, opt.data_name)
 
     # select random 3167 queries
     queries = random.sample(all_queries, args.nr_queries)
@@ -98,8 +97,8 @@ def check_match(sims, target_id, query_image_id):
         r50 = True
     return r1, r10, r50
 
-def load_queries(data_path, clothing):
-    dpath = "{}/{}/{}/queries_laenen_1k_test.txt".format(data_path, "Fashion200K_multi", clothing)
+def load_queries(data_path, clothing, data_name):
+    dpath = "{}/{}/{}/queries_laenen_1k_test.txt".format(data_path, data_name, clothing)
     queries = []
     with open(dpath, newline = '') as file:
         caption_reader = csv.reader(file, delimiter='\t')
@@ -118,9 +117,11 @@ def get_test_emb(opt, vocab, model, device, run, path_out):
 
         if opt.trans:
             dpath = "{}/{}/{}".format(opt.data_path, opt.data_name, opt.clothing)
-        else:
-            dpath = "{}/{}/{}".format(opt.data_path, "Fashion200K_multi", opt.clothing)
+            # dpath = "{}/{}/{}".format(opt.data_path, "Fashion200K_multi", opt.clothing)
 
+        else:
+            dpath = "{}/{}/{}".format(opt.data_path, opt.data_name, opt.clothing)
+            #dpath = "{}/{}/{}".format(opt.data_path, "Fashion200K_multi", opt.clothing)
         # get testloader
         test_loader = get_precomp_loader(dpath, "test", vocab, opt,
                             opt.batch_size, False, opt.workers)

@@ -28,7 +28,7 @@ class PrecompTrans(data.Dataset):
     Possible options: f30k_precomp, coco_precomp
     """
 
-    def __init__(self, data_path, data_split, vocab, version, image_path, rectangle, data_name, filter, n_filter, cut, n_cut):
+    def __init__(self, data_path, data_split, vocab, version, image_path, rectangle, data_name, filter, n_filter, cut, n_cut, clothing):
         self.vocab = vocab
         loc = data_path + '/'
         self.captions = []
@@ -40,6 +40,7 @@ class PrecompTrans(data.Dataset):
         self.n_filter = n_filter
         self.cut = cut
         self.n_cut = n_cut
+        self.clothing = clothing
 
         with open('{}/data_captions_{}_{}.txt'.format(data_path, version, data_split), 'r', newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t')
@@ -73,11 +74,13 @@ class PrecompTrans(data.Dataset):
         img_id = int(index/self.im_div)
         img_id = self.images[img_id]
 
-        if self.data_name == "Fashion200K":
+        if self.clothing == "multi":
+            # work around to get multi away from the path
+            new_path = self.data_path[:-6]
+            image = Image.open("{}/{}".format(new_path, img_id))
+        elif self.data_name == "Fashion200K":
             # load image
             image = Image.open("{}/{}/{}_0.jpeg".format(self.data_path, self.image_path, img_id))
-        elif self.data_name == "Fashion200K_multi":
-            image = Image.open("{}/{}".format(self.data_path,img_id))
         elif self.data_name == "Fashion_gen":
             image = self.h5_images[int(img_id)]
             image = Image.fromarray(image)
@@ -232,7 +235,7 @@ def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
     """Returns torch.utils.data.DataLoader for custom coco dataset."""
     if opt.trans or opt.precomp_enc_type == "layers" or opt.precomp_enc_type == "layers_attention":
         dset = PrecompTrans(data_path, data_split, vocab, opt.version, opt.image_path,
-                            opt.rectangle, opt.data_name, opt.filter, opt.n_filter, opt.cut, opt.n_cut)
+                            opt.rectangle, opt.data_name, opt.filter, opt.n_filter, opt.cut, opt.n_cut, opt.clothing)
     else:
         dset = PrecompDataset(data_path, data_split, vocab, opt.version, opt.filter,
                                 opt.n_filter, opt.cut, opt.n_cut)
