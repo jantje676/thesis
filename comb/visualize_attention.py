@@ -22,6 +22,7 @@ from utils import get_random_indx, str2bool, print_result_subset, calculate_r
 import re
 import sys
 sys.path.append('../visualize')
+sys.path.append("/home/kgoei/thesis/visualize")
 from viz_utils import show_plots, get_matches_t2i, get_matches_i2t, check_caption_length, get_target_id, prepare_embeddings, get_indx_subset, get_id
 
 """
