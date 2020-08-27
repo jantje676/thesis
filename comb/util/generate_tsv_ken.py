@@ -72,10 +72,10 @@ def get_captions(args):
     return data_captions, image_ids_captions
 
 # segment in seven parts and push through net
-def get_features(img, net, img_idx, transform, segments, bboxes, device ):
+def get_features(img, net, img_idx, transform, segments, bboxes, device, network ):
     W, H, C = img.shape
 
-    if args.network == "layers":
+    if network == "layers":
         img = Image.fromarray(img)
         img_transformed = transform(img).unsqueeze(0).to(device)
         features = net.forward1(img_transformed).to("cpu")
@@ -87,7 +87,7 @@ def get_features(img, net, img_idx, transform, segments, bboxes, device ):
 
         features = net(stacked_segs).to("cpu")
 
-        if args.network == "alex":
+        if network == "alex":
             features = features.squeeze()
         # elif args.network == "simCLR" or args.network == "simCLR_pre":
         #     features = features[0].squeeze()
@@ -266,6 +266,7 @@ def parse_args():
     parser.add_argument('--data_dir',help='location data directory', default="../../data/Fashion200K", type=str)
     parser.add_argument('--data_out',help='location of data out', default="../../data/Fashion200K/all", type=str)
     parser.add_argument('--tile', action='store_true', help="use basic tile segmentation")
+    parser.add_argument('--multi', action='store_true', help="use to create features for multi-modal evaluation")
     parser.add_argument('--clothing',help='clothing item', default="dresses", type=str)
     parser.add_argument("--list_clothing", nargs="+", default=["dresses"])
 
@@ -296,7 +297,8 @@ if __name__ == '__main__':
     print('Called with args:')
     print(args)
 
-    # get the ids and the captions from the text file
+
+    # get the ids and the captions from the text file for normal cross-modal training
     data_captions, image_ids = get_captions(args)
 
     # retrieve requiered model with correct transfrom
