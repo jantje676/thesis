@@ -1,6 +1,6 @@
 import sys
-# sys.path.append("../comb")
-# sys.path.append("/$HOME/thesis/comb")
+sys.path.append("../comb")
+sys.path.append("/home/kgoei/thesis/comb")
 print(sys.path)
 import os
 import csv
