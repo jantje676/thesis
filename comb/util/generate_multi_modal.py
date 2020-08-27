@@ -36,7 +36,7 @@ def main(args):
 def generate_data(data_dir, data_out, tile, network, version, net, device, transform):
     count_stop = 0
     data = []
-    data_path = "{}/Fashion200K_multi/dresses/data_captions_laenen_1k_test.txt".format(data_dir)
+    data_path = "{}/Fashion200K/multi/data_captions_laenen_1k_test.txt".format(data_dir)
     with open(data_path, newline = '') as file:
         caption_reader = csv.reader(file, delimiter='\t')
 
@@ -76,7 +76,7 @@ def parse_args():
     parser.add_argument('--version',help='add version', default=None, type=str)
     parser.add_argument('--network',help='alex|simCLR|simCLR_pre|layers|sixth', default="alex", type=str)
     parser.add_argument('--data_dir',help='location data directory', default="../../data", type=str)
-    parser.add_argument('--data_out',help='location of data out', default="../../data/Fashion200K_multi/dresses", type=str)
+    parser.add_argument('--data_out',help='location of data out', default="../../data/Fashion200K/multi", type=str)
     parser.add_argument('--tile', action='store_true', help="use basic tile segmentation")
     parser.add_argument('--clothing',help='clothing item', default="dresses", type=str)
     args = parser.parse_args()
