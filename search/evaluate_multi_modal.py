@@ -1,6 +1,7 @@
 import sys
 sys.path.append("../comb")
 sys.path.append("/$HOME/thesis/comb")
+print(sys.path)
 import os
 import csv
 import torch
@@ -89,15 +90,12 @@ def check_match(sims, target_id, query_image_id):
 
     if target_id in inds[:1]:
         r1 = True
-        print("epic")
 
     if target_id in inds[:10]:
         r10 = True
-        print("jo")
 
     if target_id in inds[:50]:
         r50 = True
-        print("yes")
     return r1, r10, r50
 
 def load_queries(data_path, clothing):
