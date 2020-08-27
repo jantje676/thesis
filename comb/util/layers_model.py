@@ -4,6 +4,8 @@ import torch
 import numpy as np
 import torch.nn.init
 import torch.nn.functional as F
+from collections import OrderedDict
+
 
 class LayersModel(nn.Module):
     def __init__(self, img_dim=4096, embed_size=1024):
