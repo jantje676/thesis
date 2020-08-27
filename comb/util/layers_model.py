@@ -136,6 +136,18 @@ class LayerAttention(nn.Module):
         features = self.attention(layer_features)
         return features
 
+    def load_state_dict(self, state_dict):
+        """Copies parameters. overwritting the default one to
+        accept state_dict from Full model
+        """
+        own_state = self.state_dict()
+        new_state = OrderedDict()
+        for name, param in state_dict.items():
+            if name in own_state:
+                new_state[name] = param
+
+        super(LayerAttention, self).load_state_dict(new_state)
+
 
 
 
