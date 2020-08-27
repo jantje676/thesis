@@ -296,7 +296,12 @@ def get_txt_emb(text_query, vocab, model):
     target = Variable(target, volatile=False)
     target = target.unsqueeze(0)
 
-    cap_emb, cap_lens = model.txt_enc(target, [int(len(caption))])
+    cap_l = [int(len(caption))]
+
+    if torch.cuda.is_available():
+        target = target.cuda()
+        cap_l = target.cuda()
+    cap_emb, cap_lens = model.txt_enc(target, cap_l)
 
     return cap_emb, cap_lens
 
