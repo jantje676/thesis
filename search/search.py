@@ -3,6 +3,7 @@ import sys
 
 matplotlib.use('Agg')
 sys.path.append("../comb")
+sys.path.append("/home/kgoei/thesis/comb")
 
 import matplotlib.image as mpimg
 import numpy as np
