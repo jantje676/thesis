@@ -18,7 +18,7 @@ import random
 evaluate multi-modal search according to papers
 """
 
-def main(args):
+def start_evaluation(args):
 
     random.seed(17)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -54,6 +54,10 @@ def main(args):
     # select random 3167 queries
     queries = random.sample(all_queries, args.nr_queries)
 
+    tot_r1 = 0
+    tot_r10 = 0
+    tot_r50 = 0
+
     for query in tqdm(queries):
         query_image_id = int(query[0])
         query_text = query[1]
@@ -73,7 +77,11 @@ def main(args):
         sims = (args.alpha * s_i2i) + ((1 - args.alpha) * s_t2i)
 
         r1, r10, r50 = check_match(sims, target_id, query_image_id)
+        tot_r1 += r1
+        tot_r10 += r10
+        tot_r50 += r50
 
+    return tot_r1/len(queries), tot_r10/len(queries), tot_r50/len(queries)
 
 # find the best matches according to similarity score
 def check_match(sims, target_id, query_image_id):
@@ -83,18 +91,18 @@ def check_match(sims, target_id, query_image_id):
     # sort array
     inds = np.argsort(sims)[::-1]
 
-    r1 = False
-    r10 = False
-    r50 = False
+    r1 = 0
+    r10 = 0
+    r50 = 0
 
     if target_id in inds[:1]:
-        r1 = True
+        r1 = 1
 
     if target_id in inds[:10]:
-        r10 = True
+        r10 = 1
 
     if target_id in inds[:50]:
-        r50 = True
+        r50 = 1
     return r1, r10, r50
 
 def load_queries(data_path, clothing, data_name):
@@ -135,21 +143,3 @@ def get_test_emb(opt, vocab, model, device, run, path_out):
         print("Saved embeddings")
 
     return img_embs
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Multimodal search')
-    parser.add_argument('--run', default="fscan2", type=str, help='name of run')
-    parser.add_argument('--path_out', default="out_multi_eval", type=str, help='path to plots_scan')
-    parser.add_argument('--vocab_path', default="../vocab", type=str, help='path to vocab')
-    parser.add_argument('--data_path', default="../data", type=str, help='path to data')
-    parser.add_argument('--search', default="multi", type=str, help='What kind of search to perform')
-    parser.add_argument('--alpha', default=0.45, type=float, help='How much emphasis on i2i search for multimodal search')
-    parser.add_argument('--similarity', default="sum", type=str, help='sum|max|laenen for t2i and i2i')
-    parser.add_argument('--scan_sim', default=False, action='store_true', help='For t2i use scan similarity measure of cosine similarity')
-    parser.add_argument('--model_folder', default="../comb", type=str, help='path to folder where models are stored')
-    parser.add_argument('--nr_queries', default=3167, type=int, help='nr of queries to evaluate')
-
-
-    args = parser.parse_args()
-    main(args)

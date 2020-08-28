@@ -134,7 +134,8 @@ def sims_t2i(query_text_cap, query_text_cap_len, img_embs, opt, similarity, scan
     query_text_cap_len = [int(query_text_cap_len.double().item())]
 
     if scan_sim:
-        sims, _ = shard_xattn_t2i(img_embs, query_text_cap, query_text_cap_len, opt, shard_size=128)
+        freqs = torch.zeros(len(query_text_cap_len))
+        sims, _ = shard_xattn_t2i(np.double(img_embs), np.double(query_text_cap), query_text_cap_len, freqs, opt, shard_size=128)
         sims = np.squeeze(sims)
 
         #find where similarity score is below zero, remove because it can influence the multi search
@@ -300,7 +301,7 @@ def get_txt_emb(text_query, vocab, model):
 
     if torch.cuda.is_available():
         target = target.cuda()
-    
+
     cap_emb, cap_lens = model.txt_enc(target, cap_l)
 
     return cap_emb, cap_lens
