@@ -300,7 +300,7 @@ def get_txt_emb(text_query, vocab, model):
 
     if torch.cuda.is_available():
         target = target.cuda()
-        cap_l = target.cuda()
+    
     cap_emb, cap_lens = model.txt_enc(target, cap_l)
 
     return cap_emb, cap_lens
