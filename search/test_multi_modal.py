@@ -31,7 +31,7 @@ def get_params():
     return combinations
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Multimodal search')
-    parser.add_argument('--run', default="fscan2", type=str, help='name of run')
+    parser.add_argument('--run', default="fscan3", type=str, help='name of run')
     parser.add_argument('--path_out', default="out_multi_eval", type=str, help='path to plots_scan')
     parser.add_argument('--vocab_path', default="../vocab", type=str, help='path to vocab')
     parser.add_argument('--data_path', default="../data", type=str, help='path to data')

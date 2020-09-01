@@ -148,6 +148,23 @@ def get_model(args, device):
         net = models.alexnet(pretrained=True)
         # take aways the last layers
         net.classifier = nn.Sequential(*[net.classifier[i] for i in range(2)])
+
+        # set to evaluation
+        net.eval()
+
+        transform = transforms.Compose([
+            transforms.Resize((300, 300)),
+            transforms.CenterCrop((256, 256)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                  std=[0.229, 0.224, 0.225])])
+    elif args.network == "vilbert":
+        # choose model
+        net = models.alexnet(pretrained=True)
+        # take aways the last layers
+        net.classifier = nn.Sequential(*[net.classifier[i] for i in range(2)])
+        net.classifier[1] = nn.Linear(9216, 2048)
+
         # set to evaluation
         net.eval()
 
@@ -202,7 +219,7 @@ def generate_data(image_ids, args, net, transform, device):
             segments, bboxes = segment_dresses(img)
 
         # create features from segmentations
-        seg = get_features(img, net, img_idx, transform, segments, bboxes, device)
+        seg = get_features(img, net, img_idx, transform, segments, bboxes, device, args.network)
 
         temp = np.frombuffer( base64.b64decode(seg["features"]), dtype=np.float32)
         temp = temp.reshape((seg["num_boxes"],-1))
@@ -262,9 +279,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Generate features from image')
     parser.add_argument('--early_stop',help='take lower number of samples for testing purpose', default=None, type=int)
     parser.add_argument('--version',help='add version', default=None, type=str)
-    parser.add_argument('--network',help='alex|simCLR|simCLR_pre|layers|sixth', default="alex", type=str)
+    parser.add_argument('--network',help='alex|simCLR|simCLR_pre|layers|sixth|vilbert', default="alex", type=str)
     parser.add_argument('--data_dir',help='location data directory', default="../../data/Fashion200K", type=str)
-    parser.add_argument('--data_out',help='location of data out', default="../../data/Fashion200K/all", type=str)
+    parser.add_argument('--data_out',help='location of data out', default="../../data/Fashion200K/vilbert", type=str)
     parser.add_argument('--tile', action='store_true', help="use basic tile segmentation")
     parser.add_argument('--multi', action='store_true', help="use to create features for multi-modal evaluation")
     parser.add_argument('--clothing',help='clothing item', default="dresses", type=str)

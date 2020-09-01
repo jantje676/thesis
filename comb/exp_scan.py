@@ -15,7 +15,7 @@ def main(opt):
         opt = set_run_name(opt, nr_next_run, i+1)
         logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
         tb_logger.configure(opt.logger_name, flush_secs=5)
-
+        print(opt.logger_name)
 
         start_experiment(opt, seeds[i])
 

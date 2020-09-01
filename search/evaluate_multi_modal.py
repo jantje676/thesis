@@ -59,6 +59,7 @@ def start_evaluation(args):
     tot_r50 = 0
 
     for query in tqdm(queries):
+
         query_image_id = int(query[0])
         query_text = query[1]
         target_id = int(query[2])
@@ -103,6 +104,7 @@ def check_match(sims, target_id, query_image_id):
 
     if target_id in inds[:50]:
         r50 = 1
+
     return r1, r10, r50
 
 def load_queries(data_path, clothing, data_name):
@@ -117,7 +119,7 @@ def load_queries(data_path, clothing, data_name):
 # get test emebdding
 def get_test_emb(opt, vocab, model, device, run, path_out):
     try:
-        embs = torch.load("{}/embs/embs_{}.pth.tar".format(path_out, run), map_location=(device))
+        embs = torch.load("{}/embs/embs_{}.pth.tar".format(path_out, run))
         print("loading embeddings")
         img_embs = embs["img_embs"]
     except:

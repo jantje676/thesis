@@ -55,11 +55,11 @@ TASK3:
   type: VL-logit
   loss: CrossEntropyLoss
   task_id: 9
-  dataroot: data/flickr30k
-  features_h5path1: data/flickr30k/flickr30k_test_resnet101_faster_rcnn_genome.lmdb
+  dataroot: data/Fashion200K
+  features_h5path1: data/Fashion200K/Fashion200K.lmdb
   features_h5path2: ''
   train_annotations_jsonpath: data/flickr30k/all_data_final_train_2014.jsonline
-  val_annotations_jsonpath: data/flickr30k/all_data_final_test_set0_2014.jsonline
+  val_annotations_jsonpath: data/Fashion200K/Fashion200K_test_short.jsonline
   max_seq_length: 30
   max_region_num: 100
   batch_size: 64

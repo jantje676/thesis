@@ -472,7 +472,7 @@ class SCAN(object):
         else:
             params = list(self.txt_enc.parameters())
             params += list(self.img_enc.parameters())
-    
+
         self.params = params
 
         self.optimizer = torch.optim.Adam(params, lr=opt.learning_rate)
