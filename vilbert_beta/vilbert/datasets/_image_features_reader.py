@@ -42,14 +42,14 @@ class ImageFeaturesH5Reader(object):
         self.env = lmdb.open(self.features_path, max_readers=1, readonly=True,
                             lock=False, readahead=False, meminit=False)
 
-        with self.env.begin(write=False) as txn: 
+        with self.env.begin(write=False) as txn:
             self._image_ids = pickle.loads(txn.get('keys'.encode()))
 
         self.features = [None] * len(self._image_ids)
         self.num_boxes = [None] * len(self._image_ids)
         self.boxes = [None] * len(self._image_ids)
         self.boxes_ori = [None] * len(self._image_ids)
-    
+
     def __len__(self):
         return len(self._image_ids)
 
@@ -74,7 +74,7 @@ class ImageFeaturesH5Reader(object):
 
                     features = np.frombuffer(base64.b64decode(item["features"]), dtype=np.float32).reshape(num_boxes, 2048)
                     boxes = np.frombuffer(base64.b64decode(item['boxes']), dtype=np.float32).reshape(num_boxes, 4)
-                    
+
                     g_feat = np.sum(features, axis=0) / num_boxes
                     num_boxes = num_boxes + 1
 
@@ -99,9 +99,9 @@ class ImageFeaturesH5Reader(object):
                     g_location_ori = np.array([0,0,image_w,image_h,image_w*image_h])
                     image_location_ori = np.concatenate([np.expand_dims(g_location_ori, axis=0), image_location_ori], axis=0)
                     self.boxes_ori[index] = image_location_ori
-                    self.num_boxes[index] = num_boxes               
+                    self.num_boxes[index] = num_boxes
         else:
-            # Read chunk from file everytime if not loaded in memory.    
+            # Read chunk from file everytime if not loaded in memory.
             with self.env.begin(write=False) as txn:
                 item = pickle.loads(txn.get(image_id))
                 image_id = item['image_id']
@@ -110,11 +110,15 @@ class ImageFeaturesH5Reader(object):
                 num_boxes = int(item['num_boxes'])
 
                 features = np.frombuffer(base64.b64decode(item["features"]), dtype=np.float32).reshape(num_boxes, 2048)
-                boxes = np.frombuffer(base64.b64decode(item['boxes']), dtype=np.float32).reshape(num_boxes, 4)
+                print(features.shape)
+                temp = np.frombuffer(base64.b64decode(item['boxes']), dtype=np.float32)
+                print(boxes)
+                print(boxes.shape)
+                boxes = temp.reshape(num_boxes, 4)
                 g_feat = np.sum(features, axis=0) / num_boxes
                 num_boxes = num_boxes + 1
                 features = np.concatenate([np.expand_dims(g_feat, axis=0), features], axis=0)
-                
+
                 image_location = np.zeros((boxes.shape[0], 5), dtype=np.float32)
                 image_location[:,:4] = boxes
                 image_location[:,4] = (image_location[:,3] - image_location[:,1]) * (image_location[:,2] - image_location[:,0]) / (float(image_w) * float(image_h))
@@ -135,4 +139,3 @@ class ImageFeaturesH5Reader(object):
 
     def keys(self) -> List[int]:
         return self._image_ids
-
