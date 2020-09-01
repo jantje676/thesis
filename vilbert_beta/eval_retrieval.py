@@ -93,7 +93,7 @@ def main():
         "--save_name",
         default='',
         type=str,
-        help="save name for training.", 
+        help="save name for training.",
     )
     parser.add_argument(
         "--tasks", default='', type=str, help="1-2-3... training task separate by -"
@@ -145,20 +145,22 @@ def main():
 
     if args.local_rank == -1 or args.no_cuda:
         device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
-        n_gpu = torch.cuda.device_count()
+        # changed so it runs on gpu short
+        n_gpu = 1
+        # n_gpu = torch.cuda.device_count()
     else:
         torch.cuda.set_device(args.local_rank)
         device = torch.device("cuda", args.local_rank)
         n_gpu = 1
         # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         torch.distributed.init_process_group(backend="nccl")
-    
+
     logger.info(
         "device: {} n_gpu: {}, distributed training: {}, 16-bits training: {}".format(
             device, n_gpu, bool(args.local_rank != -1), args.fp16
         )
     )
-    
+
     default_gpu = False
     if dist.is_available() and args.local_rank != -1:
         rank = dist.get_rank()
@@ -200,10 +202,10 @@ def main():
     no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
 
     print("  Num Iters: ", task_num_iters)
-    print("  Batch size: ", task_batch_size)    
+    print("  Batch size: ", task_batch_size)
 
     model.eval()
-    # when run evaluate, we run each task sequentially. 
+    # when run evaluate, we run each task sequentially.
     for task_id in task_ids:
         results = []
         others = []
@@ -229,7 +231,7 @@ def main():
 
                     score_matrix[caption_idx, image_idx*500:(image_idx+1)*500] = torch.softmax(vil_logit, dim=1)[:,0].view(-1).cpu().numpy()
                     target_matrix[caption_idx, image_idx*500:(image_idx+1)*500] = target.view(-1).float().cpu().numpy()
-                    
+
                 else:
                     _, vil_logit, _, _, _, _, _ = model(question, features, spatials, segment_ids, input_mask, image_mask)
                     score_matrix[caption_idx, image_idx*500:(image_idx+1)*500] = vil_logit.view(-1).cpu().numpy()
@@ -240,7 +242,7 @@ def main():
                     rank_matrix[caption_idx] = rank
 
                     rank_matrix_tmp = rank_matrix[:caption_idx+1]
-                    r1 = 100.0 * np.sum(rank_matrix_tmp < 1) / len(rank_matrix_tmp)  
+                    r1 = 100.0 * np.sum(rank_matrix_tmp < 1) / len(rank_matrix_tmp)
                     r5 = 100.0 * np.sum(rank_matrix_tmp < 5) / len(rank_matrix_tmp)
                     r10 = 100.0 * np.sum(rank_matrix_tmp < 10) / len(rank_matrix_tmp)
 
@@ -264,9 +266,9 @@ def main():
         print("************************************************")
 
         if args.split:
-            json_path = os.path.join(savePath, args.split)           
+            json_path = os.path.join(savePath, args.split)
         else:
-            json_path = os.path.join(savePath, task_cfg[task_id]['val_split'])   
+            json_path = os.path.join(savePath, task_cfg[task_id]['val_split'])
         json.dump(results, open(json_path+ '_result.json', 'w'))
         json.dump(others, open(json_path+ '_others.json', 'w'))
 
