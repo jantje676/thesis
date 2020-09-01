@@ -28,4 +28,7 @@ Beta-VAE/outputs/*
 SCAN/runs/*
 Beta-VAE/checkpoints/*
 vocab/*
-
+vilbert_beta/data/*
+vilbert_beta/apex/*
+vilbert_beta/fig/*
+vilbert_beta/save/*
