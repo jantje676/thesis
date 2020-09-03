@@ -57,6 +57,7 @@ class RetreivalDataset(Dataset):
         # All the keys in `self._entries` would be present in `self._image_features_reader`
 
         self._entries, self.imgid2entry = _load_annotations(annotations_jsonpath, task)
+
         self.image_id_list = [*self.imgid2entry]
 
         self._image_features_reader = image_features_reader
@@ -131,7 +132,7 @@ class RetreivalDataset(Dataset):
         image_id = entry["image_id"]
 
         features, num_boxes, boxes, _ = self._image_features_reader[image_id]
-        
+
         mix_num_boxes = min(int(num_boxes), self._max_region_num)
         mix_boxes_pad = np.zeros((self._max_region_num, 5))
         mix_features_pad = np.zeros((self._max_region_num, 2048))
@@ -152,7 +153,7 @@ class RetreivalDataset(Dataset):
         segment_ids1 = entry["segment_ids"]
         # negative samples.
         # 1: correct one, 2: random caption wrong, 3: random image wrong. 4: hard image wrong.
-        
+
         while True:
             # sample a random image:
             img_id2 = random.choice(self.image_id_list)
@@ -165,13 +166,13 @@ class RetreivalDataset(Dataset):
         spatials2 = spatials1
         caption2 = entry2["token"]
         input_mask2 = entry2["input_mask"]
-        segment_ids2 = entry2["segment_ids"]        
+        segment_ids2 = entry2["segment_ids"]
 
         # random image wrong
         while True:
             # sample a random image:
             img_id3 = random.choice(self.image_id_list)
-            if img_id3 != image_id: break        
+            if img_id3 != image_id: break
 
         features3, num_boxes3, boxes3, _ = self._image_features_reader[img_id3]
         image_mask3 = [1] * (int(num_boxes3))
@@ -181,7 +182,7 @@ class RetreivalDataset(Dataset):
         mix_features_pad3 = np.zeros((self._max_region_num, 2048))
 
         while len(image_mask3) < self._max_region_num:
-            image_mask3.append(0)        
+            image_mask3.append(0)
 
 
         mix_boxes_pad[:mix_num_boxes3] = boxes3[:mix_num_boxes3]
@@ -198,7 +199,8 @@ class RetreivalDataset(Dataset):
 
         if self._split == 'train':
             # random hard caption.
-            rand_img_id_pool = self.train_hard_pool[self.train_imgId2pool[image_id]]
+            temp = self.train_imgId2pool[image_id]
+            rand_img_id_pool = self.train_hard_pool[temp]
             pool_img_idx = int(rand_img_id_pool[np.random.randint(1, len(rand_img_id_pool))])
             img_id4 = self.train_image_list[pool_img_idx]
         else:
@@ -270,6 +272,7 @@ class RetreivalDatasetVal(Dataset):
         # All the keys in `self._entries` would be present in `self._image_features_reader`
 
         self._image_entries, self._caption_entries = _load_annotationsVal(annotations_jsonpath, task)
+
         self._image_features_reader = image_features_reader
         self._tokenizer = tokenizer
 
@@ -288,7 +291,7 @@ class RetreivalDatasetVal(Dataset):
         # else:
             # print('loading entries from %s' %(cap_cache_path))
             # self._entries = cPickle.load(open(cap_cache_path, "rb"))
-# 
+#
         self.features_all = np.zeros((1000, self._max_region_num, 2048))
         self.spatials_all = np.zeros((1000, self._max_region_num, 5))
         self.image_mask_all = np.zeros((1000, self._max_region_num))
