@@ -79,14 +79,21 @@ def get_features(img, net, img_idx, transform, segments, bboxes, device, network
         img = Image.fromarray(img)
         img_transformed = transform(img).unsqueeze(0).to(device)
         features = net.forward1(img_transformed).to("cpu")
+    elif network == "vilbert":
+        stacked_segs = stack_segments(segments, transform)
+        stacked_segs = stacked_segs.to(device)
 
+        dict = net(stacked_segs)
+        hidden_features = dict["out"]
+        dim = hidden_features.shape[2]
+        pool = nn.AvgPool2d((dim, dim))
+        features = pool(hidden_features).to("cpu").squeeze()
     else:
         # stack segments to push through net
         stacked_segs = stack_segments(segments, transform)
         stacked_segs = stacked_segs.to(device)
 
         features = net(stacked_segs).to("cpu")
-
         if network == "alex":
             features = features.squeeze()
         # elif args.network == "simCLR" or args.network == "simCLR_pre":
@@ -160,10 +167,8 @@ def get_model(args, device):
                                   std=[0.229, 0.224, 0.225])])
     elif args.network == "vilbert":
         # choose model
-        net = models.alexnet(pretrained=True)
-        # take aways the last layers
-        net.classifier = nn.Sequential(*[net.classifier[i] for i in range(2)])
-        net.classifier[1] = nn.Linear(9216, 2048)
+        net = torch.hub.load('pytorch/vision:v0.6.0', 'fcn_resnet101', pretrained=True)
+        net = net.backbone
 
         # set to evaluation
         net.eval()
