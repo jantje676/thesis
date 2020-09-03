@@ -198,10 +198,9 @@ class RetreivalDataset(Dataset):
 
 
         if self._split == 'train':
-            print(self.train_imgId2pool)
+
             # random hard caption.
-            temp = self.train_imgId2pool[image_id]
-            rand_img_id_pool = self.train_hard_pool[temp]
+            rand_img_id_pool = self.train_hard_pool[self.train_imgId2pool[image_id]]
             pool_img_idx = int(rand_img_id_pool[np.random.randint(1, len(rand_img_id_pool))])
             img_id4 = self.train_image_list[pool_img_idx]
         else:
