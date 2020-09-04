@@ -113,7 +113,8 @@ def save_lmdb(data_path_out, captions, features):
                               [0,0,W,floor(0.2*H)],[0,0,floor(0.5*W),floor(0.5*H)],[floor(0.5*W),0,W,floor(0.5*H)],
                               [floor(0.5*W),0,W,floor(0.5*H)]], dtype=np.float32)
 
-            feature = features[i]
+            feature = np.float16(features[i])
+
             item = {
                 "image_id": int(img_id),
                 "image_h": int(256),
@@ -123,6 +124,7 @@ def save_lmdb(data_path_out, captions, features):
                 "features": base64.b64encode(feature),
                 "cls_prob" : 0.5
             }
+
             txn.put(img_id, pickle.dumps(item))
             if count % 1000 == 0:
                 print(count)
@@ -149,8 +151,8 @@ if __name__ == '__main__':
     parser.add_argument('--data_path_out', default="../data/Fashion200K", help='path to data out folder.')
     parser.add_argument('--seed', default=17, type=int, help='seed')
     parser.add_argument('--clothing', default="dresses", type=str, help='clothing item')
-    parser.add_argument('--nr_test', default=1000, type=int, help='size of test set')
-    parser.add_argument('--n_hard', default=100, type=int, help='size of test set')
+    parser.add_argument('--nr_test', default=10, type=int, help='size of test set')
+    parser.add_argument('--n_hard', default=4, type=int, help='size of test set')
 
     args = parser.parse_args()
     main(args)
