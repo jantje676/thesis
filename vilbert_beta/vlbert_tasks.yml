@@ -58,8 +58,8 @@ TASK3:
   dataroot: data/Fashion200K
   features_h5path1: data/Fashion200K/Fashion200K.lmdb # data/flickr30k/flickr30k_test_resnet101_faster_rcnn_genome.lmdb
   features_h5path2: ''
-  train_annotations_jsonpath: data/Fashion200K/Fashion200K_train_vilbert.jsonline
-  val_annotations_jsonpath: data/Fashion200K/Fashion200K_test_vilbert.jsonline # data/flickr30k/all_data_final_test_set0_2014.jsonline
+  train_annotations_jsonpath: data/Fashion200K/Fashion200K_train_short.jsonline
+  val_annotations_jsonpath: data/Fashion200K/Fashion200K_test_short.jsonline # data/flickr30k/all_data_final_test_set0_2014.jsonline
   max_seq_length: 30
   max_region_num: 8
   batch_size: 64
