@@ -55,6 +55,7 @@ class ImageFeaturesH5Reader(object):
 
     def __getitem__(self, image_id):
         image_id = str(image_id).encode()
+
         index = self._image_ids.index(image_id)
         if self._in_memory:
             # Load features during first epoch, all not loaded together as it
@@ -74,7 +75,6 @@ class ImageFeaturesH5Reader(object):
 
                     features = np.frombuffer(base64.b64decode(item["features"]), dtype=np.float32).reshape(num_boxes, 2048)
                     boxes = np.frombuffer(base64.b64decode(item['boxes']), dtype=np.float32).reshape(num_boxes, 4)
-
                     g_feat = np.sum(features, axis=0) / num_boxes
                     num_boxes = num_boxes + 1
 
@@ -108,7 +108,9 @@ class ImageFeaturesH5Reader(object):
                 image_h = int(item['image_h'])
                 image_w = int(item['image_w'])
                 num_boxes = int(item['num_boxes'])
-
+                # print(num_boxes)
+                # temp = np.frombuffer(base64.b64decode(item["features"]), dtype=np.float32)
+                # print(temp.shape)
                 features = np.frombuffer(base64.b64decode(item["features"]), dtype=np.float32).reshape(num_boxes, 2048)
                 boxes = np.frombuffer(base64.b64decode(item['boxes']), dtype=np.float32).reshape(num_boxes, 4)
 

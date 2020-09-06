@@ -31,7 +31,11 @@ def _load_annotations(annotations_jsonpath, task):
                 image_id = annotation['id']
             elif task == 'RetrievalFlickr30k':
                 image_id = int(annotation['img_path'].split('.')[0])
+            elif task == 'Fashion200K':
+                image_id = int(annotation['img_path'].split('.')[0])
             imgid2entry[image_id] = []
+
+
             for sentences in annotation['sentences']:
                 entries.append({"caption": sentences, 'image_id':image_id})
                 imgid2entry[image_id].append(count)
@@ -132,7 +136,6 @@ class RetreivalDataset(Dataset):
         image_id = entry["image_id"]
 
         features, num_boxes, boxes, _ = self._image_features_reader[image_id]
-
         mix_num_boxes = min(int(num_boxes), self._max_region_num)
         mix_boxes_pad = np.zeros((self._max_region_num, 5))
         mix_features_pad = np.zeros((self._max_region_num, 2048))
@@ -217,7 +220,6 @@ class RetreivalDataset(Dataset):
         caption4 = entry4["token"]
         input_mask4 = entry4["input_mask"]
         segment_ids4 = entry4["segment_ids"]
-
         features = torch.stack([features1, features2, features3, features4], dim=0)
         spatials = torch.stack([spatials1, spatials2, spatials3, spatials4], dim=0)
         image_mask = torch.stack([image_mask1, image_mask2, image_mask3, image_mask4], dim=0)
@@ -226,7 +228,6 @@ class RetreivalDataset(Dataset):
         segment_ids = torch.stack([segment_ids1, segment_ids2, segment_ids3, segment_ids4], dim=0)
         co_attention_mask = torch.zeros((4, self._max_region_num, self._max_seq_length))
         target = 0
-
         return features, spatials, image_mask, caption, target, input_mask, segment_ids, co_attention_mask, image_id
 
     def __len__(self):
@@ -243,7 +244,7 @@ def _load_annotationsVal(annotations_jsonpath, task):
         for annotation in reader:
             if task == 'RetrievalCOCO':
                 image_id = annotation['id']
-            elif task == 'RetrievalFlickr30k':
+            elif task == 'RetrievalFlickr30k' or "Fashion200K":
                 image_id = int(annotation['img_path'].split('.')[0])
 
             image_entries[image_id] = 1
@@ -267,7 +268,7 @@ class RetreivalDatasetVal(Dataset):
         tokenizer: BertTokenizer,
         padding_index: int = 0,
         max_seq_length: int = 20,
-        max_region_num: int = 101,
+        max_region_num: int = 10,
     ):
         # All the keys in `self._entries` would be present in `self._image_features_reader`
 
@@ -365,7 +366,7 @@ class RetreivalDatasetVal(Dataset):
     def __getitem__(self, index):
 
         # we iterate through every caption here.
-        caption_idx = int(index / 2)
+        caption_idx = int(index / 2)     # rond naar beneden af
         image_idx = index % 2
 
         if image_idx == 0:

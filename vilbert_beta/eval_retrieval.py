@@ -210,13 +210,14 @@ def main():
         results = []
         others = []
 
-        score_matrix = np.zeros((5000, 1000))
-        target_matrix = np.zeros((5000, 1000))
-        rank_matrix = np.ones((5000)) * 1000
+        score_matrix = np.zeros((1000, 1000))
+        target_matrix = np.zeros((1000, 1000))
+        rank_matrix = np.ones((1000)) * 1000
         count = 0
 
         for i, batch in enumerate(task_dataloader_val[task_id]):
-            batch = tuple(t.cuda(device=device, non_blocking=True) for t in batch)
+            if torch.cuda.is_available():
+                batch = tuple(t.cuda(device=device, non_blocking=True) for t in batch)
             features, spatials, image_mask, question, input_mask, segment_ids, target, caption_idx, image_idx = batch
 
             if task_id in ['TASK3']:

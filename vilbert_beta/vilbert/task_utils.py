@@ -22,16 +22,21 @@ LossMap = {'BCEWithLogitLoss': nn.BCEWithLogitsLoss(reduction='mean'),
             }
 
 def ForwardModelsVal(args, task_cfg, device, task_id, batch, model, task_losses):
-    batch = tuple(t.cuda(device=device, non_blocking=True) for t in batch)
+    if torch.cuda.is_available():
+        batch = tuple(t.cuda(device=device, non_blocking=True) for t in batch)
     features, spatials, image_mask, question, target, input_mask, segment_ids, co_attention_mask, question_id = batch
     batch_size = features.size(0)
 
     if task_id in ['TASK2', 'TASK3', 'TASK5', 'TASK6', 'TASK7']:
-        max_num_bbox = features.size(1)
+        max_num_bbox = features.size(2)
         num_options = question.size(1)
-        features = features.unsqueeze(1).expand(batch_size, num_options, max_num_bbox, 2048).contiguous().view(-1, max_num_bbox, 2048)
-        spatials = spatials.unsqueeze(1).expand(batch_size, num_options, max_num_bbox, 5).contiguous().view(-1, max_num_bbox, 5)
-        image_mask = image_mask.unsqueeze(1).expand(batch_size, num_options, max_num_bbox).contiguous().view(-1, max_num_bbox)
+        # features = features.unsqueeze(1).expand(batch_size, num_options, max_num_bbox, 2048).contiguous().view(-1, max_num_bbox, 2048)
+        # spatials = spatials.unsqueeze(1).expand(batch_size, num_options, max_num_bbox, 5).contiguous().view(-1, max_num_bbox, 5)
+        # image_mask = image_mask.unsqueeze(1).expand(batch_size, num_options, max_num_bbox).contiguous().view(-1, max_num_bbox)
+        features = features.expand(batch_size, num_options, max_num_bbox, 2048).contiguous().view(-1, max_num_bbox, 2048)
+        spatials = spatials.expand(batch_size, num_options, max_num_bbox, 5).contiguous().view(-1, max_num_bbox, 5)
+        image_mask = image_mask.expand(batch_size, num_options, max_num_bbox).contiguous().view(-1, max_num_bbox)
+
         question = question.view(-1, question.size(2))
         input_mask = input_mask.view(-1, input_mask.size(2))
         segment_ids = segment_ids.view(-1, segment_ids.size(2))
@@ -82,18 +87,24 @@ def ForwardModelsTrain(args, task_cfg, device, task_id, task_count, task_iter_tr
     task_count[task_id] += 1
     # get the batch
     batch = task_iter_train[task_id].next()
-    batch = tuple(t.cuda(device=device, non_blocking=True) for t in batch)
+
+    if torch.cuda.is_available():
+        batch = tuple(t.cuda(device=device, non_blocking=True) for t in batch)
     features, spatials, image_mask, question, target, input_mask, segment_ids, co_attention_mask, question_id = batch
     batch_size = features.size(0)
 
     if task_id in ['TASK2', 'TASK3', 'TASK5', 'TASK6', 'TASK7']:
-        max_num_bbox = features.size(1)
+        max_num_bbox = features.size(2)
         num_options = question.size(1)
-        print(features.shape)
-        print(question.shape)
-        features = features.unsqueeze(1).expand(batch_size, num_options, max_num_bbox, 2048).contiguous().view(-1, max_num_bbox, 2048)
-        spatials = spatials.unsqueeze(1).expand(batch_size, num_options, max_num_bbox, 5).contiguous().view(-1, max_num_bbox, 5)
-        image_mask = image_mask.unsqueeze(1).expand(batch_size, num_options, max_num_bbox).contiguous().view(-1, max_num_bbox)
+        # features = features.unsqueeze(1).expand(batch_size, num_options, max_num_bbox, 2048).contiguous().view(-1, max_num_bbox, 2048)
+        # spatials = spatials.unsqueeze(1).expand(batch_size, num_options, max_num_bbox, 5).contiguous().view(-1, max_num_bbox, 5)
+        # image_mask = image_mask.unsqueeze(1).expand(batch_size, num_options, max_num_bbox).contiguous().view(-1, max_num_bbox)
+
+        features = features.expand(batch_size, num_options, max_num_bbox, 2048).contiguous().view(-1, max_num_bbox, 2048)
+        spatials = spatials.expand(batch_size, num_options, max_num_bbox, 5).contiguous().view(-1, max_num_bbox, 5)
+        image_mask = image_mask.expand(batch_size, num_options, max_num_bbox).contiguous().view(-1, max_num_bbox)
+
+
         question = question.view(-1, question.size(2))
         input_mask = input_mask.view(-1, input_mask.size(2))
         segment_ids = segment_ids.view(-1, segment_ids.size(2))

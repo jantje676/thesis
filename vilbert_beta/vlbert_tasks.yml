@@ -51,17 +51,17 @@ TASK2:
   lr: 0.00002
   num_epoch: 20
 TASK3:
-  name: RetrievalFlickr30k
+  name: Fashion200K
   type: VL-logit
   loss: CrossEntropyLoss
   task_id: 9
   dataroot: data/Fashion200K
-  features_h5path1: data/Fashion200K/Fashion200K.lmdb
+  features_h5path1: data/Fashion200K/Fashion200K.lmdb # data/flickr30k/flickr30k_test_resnet101_faster_rcnn_genome.lmdb
   features_h5path2: ''
   train_annotations_jsonpath: data/Fashion200K/Fashion200K_train_short.jsonline
-  val_annotations_jsonpath: data/Fashion200K/Fashion200K_test_short.jsonline
+  val_annotations_jsonpath: data/Fashion200K/Fashion200K_test_short.jsonline # data/flickr30k/all_data_final_test_set0_2014.jsonline
   max_seq_length: 30
-  max_region_num: 100
+  max_region_num: 8
   batch_size: 64
   train_split: train
   val_split: val
