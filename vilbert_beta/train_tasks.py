@@ -70,7 +70,7 @@ def main():
     )
     parser.add_argument(
         "--num_train_epochs",
-        default=2,
+        default=20,
         type=int,
         help="Total number of training epochs to perform.",
     )
@@ -156,7 +156,9 @@ def main():
     args = parser.parse_args()
     with open('vlbert_tasks.yml', 'r') as f:
         task_cfg = edict(yaml.load(f))
-
+    n_gpu = torch.cuda.device_count()
+    print(">>>>>>>N-GPU":, n_gpu)
+    
     # random.seed(args.seed)
     # np.random.seed(args.seed)
     # torch.manual_seed(args.seed)
