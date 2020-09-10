@@ -157,8 +157,8 @@ def main():
     with open('vlbert_tasks.yml', 'r') as f:
         task_cfg = edict(yaml.load(f))
     n_gpu = torch.cuda.device_count()
-    print(">>>>>>>N-GPU":, n_gpu)
-    
+    print(">>>>>>>N-GPU:", n_gpu)
+
     # random.seed(args.seed)
     # np.random.seed(args.seed)
     # torch.manual_seed(args.seed)
