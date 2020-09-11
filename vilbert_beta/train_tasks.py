@@ -373,7 +373,6 @@ def main():
         print("  Num steps: %d" %num_train_optimization_steps)
 
     startIterID = 0
-    best_score = 0
     # initialize the data iteration.
     task_iter_train = {name:None for name in task_ids}
     task_count = {name:0 for name in task_ids}
@@ -420,7 +419,7 @@ def main():
 
         if default_gpu:
             # Save a trained model
-            if score > best_score:
+            if epochId % 2 == 0:
                 logger.info("** ** * Saving fine - tuned model on " + timeStamp + "** ** * ")
                 model_to_save = (
                     model.module if hasattr(model, "module") else model
@@ -429,7 +428,7 @@ def main():
                 if not os.path.exists(savePath):
                     os.makedirs(savePath)
                 # output_model_file = os.path.join(savePath, "pytorch_model_" + str(epochId) + ".bin")
-                output_model_file = os.path.join(savePath, "pytorch_model_best.bin")
+                output_model_file = os.path.join(savePath, "pytorch_model_" + str(epochId) + ".bin")
                 torch.save(model_to_save.state_dict(), output_model_file)
                 best_score = score
 
