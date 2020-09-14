@@ -419,7 +419,7 @@ def main():
 
         if default_gpu:
             # Save a trained model
-            if epochId % 2 == 0:
+            if epochId % 3 == 0:
                 logger.info("** ** * Saving fine - tuned model on " + timeStamp + "** ** * ")
                 model_to_save = (
                     model.module if hasattr(model, "module") else model
