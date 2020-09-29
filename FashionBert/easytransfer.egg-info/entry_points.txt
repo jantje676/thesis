@@ -1,0 +1,4 @@
+[console_scripts]
+easy_transfer_app = easytransfer.app_zoo_cli:main
+ez_bert_feat = easytransfer.feat_ext_cli:main
+
