@@ -10,10 +10,8 @@ import argparse
 import datetime
 
 def main(args):
-    attributes = ["white", "black"]
-    data_path = "Fashion200K/dresses"
+    data_path = args.data_path
     test_percentage = 0.1
-
     attributes = (args.attr1, args.attr2)
     min_l = args.min_l
 
