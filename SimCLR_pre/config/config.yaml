@@ -5,7 +5,7 @@ workers: 16
 start_epoch: 0
 epochs: 100
 dataset: "Fashion200K"
-root: "../data/Fashion200K/all/pictures_only"
+root: "/$HOME/thesis/data/Fashion200K/all/pictures_only"
 
 # model options
 resnet: "resnet50"
