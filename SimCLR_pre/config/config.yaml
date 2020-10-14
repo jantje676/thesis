@@ -1,11 +1,11 @@
 # train options
 seed: 42
-batch_size: 124
+batch_size: 64
 workers: 16
 start_epoch: 0
 epochs: 100
 dataset: "Fashion200K"
-root: "/$HOME/thesis/data/Fashion200K/all/pictures_only"
+root: "../data/Fashion200K/all/pictures_only"
 
 # model options
 resnet: "resnet50"

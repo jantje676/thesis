@@ -74,9 +74,11 @@ def main(_run, _log):
             root, download=True, transform=TransformsSimCLR()
         )
     elif args.dataset == "Fashion200K":
+        print("loading dataset")
         train_dataset = ImageFolder(root, transform= TransformsSimCLR())
     else:
         raise NotImplementedError
+    print("finished loading dataset")
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
@@ -99,6 +101,7 @@ def main(_run, _log):
     args.global_step = 0
     args.current_epoch = 0
     for epoch in range(args.start_epoch, args.epochs):
+        print("start running experiment")
         lr = optimizer.param_groups[0]['lr']
         loss_epoch = train(args, train_loader, model, criterion, optimizer, writer)
 
