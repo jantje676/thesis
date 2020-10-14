@@ -1,7 +1,7 @@
 # train options
 seed: 42
 batch_size: 124
-workers: 0
+workers: 16
 start_epoch: 0
 epochs: 100
 dataset: "Fashion200K"
