@@ -1,6 +1,6 @@
 # train options
 seed: 42
-batch_size: 64
+batch_size: 128
 workers: 16
 start_epoch: 0
 epochs: 100
