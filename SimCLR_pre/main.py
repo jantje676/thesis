@@ -2,7 +2,7 @@ import os
 import torch
 import torchvision
 import argparse
-
+from torchvision.datasets import ImageFolder
 from torch.utils.tensorboard import SummaryWriter
 
 apex = False
@@ -61,7 +61,7 @@ def main(_run, _log):
 
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    root = "./datasets"
+    root = args.root
 
     train_sampler = None
 
@@ -73,6 +73,8 @@ def main(_run, _log):
         train_dataset = torchvision.datasets.CIFAR10(
             root, download=True, transform=TransformsSimCLR()
         )
+    elif args.dataset == "Fashion200K":
+        train_dataset = ImageFolder(root, transform= TransformsSimCLR())
     else:
         raise NotImplementedError
 
