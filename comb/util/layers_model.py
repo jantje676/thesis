@@ -11,8 +11,7 @@ class LayersModel(nn.Module):
     def __init__(self, img_dim=4096, embed_size=1024):
         super(LayersModel, self).__init__()
         net = models.alexnet(pretrained=True)
-        print(net)
-        exit()
+
         self.relu = nn.ReLU(inplace=False)
         self.a = net.features[0]
         self.b = net.features[2]
