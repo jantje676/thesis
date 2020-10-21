@@ -104,7 +104,6 @@ def get_features(img, net, img_idx, transform, segments, bboxes, device, network
         #     features = features[0].squeeze()
 
     features = features.detach().numpy()
-    print(features.shape)
     return {
         "image_id": int(img_idx),
         "image_h": int(H),
