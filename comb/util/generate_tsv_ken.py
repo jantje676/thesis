@@ -15,8 +15,9 @@ import torch
 sys.path.append('../../')
 from segment_dresses import segment_dresses, segment_dresses_tile, segment_dresses_tile_nine
 # from simCLR.models.resnet_simclr import ResNetSimCLR
-# from SimCLR_pre.modules.simclr import SimCLR
+from Layers_simCLR_pre import Layers_simCLR_pre
 from layers_model import LayersModel
+from Layers_resnest import Layers_resnest
 
 FIELDNAMES = ['image_id', 'image_w','image_h','num_boxes', 'boxes', 'features']
 
@@ -78,7 +79,11 @@ def get_features(img, net, img_idx, transform, segments, bboxes, device, network
     if network == "layers":
         img = Image.fromarray(img)
         img_transformed = transform(img).unsqueeze(0).to(device)
-        features = net.forward1(img_transformed).to("cpu")
+        features = net.forward1(img_transformed).to("cpu").squeeze()
+    elif network == "layers_resnest" or network == "layers_simCLR":
+        img = Image.fromarray(img)
+        img_transformed = transform(img).unsqueeze(0).to(device)
+        features = net.forward(img_transformed).to("cpu")
     elif network == "vilbert":
         stacked_segs = stack_segments(segments, transform)
         stacked_segs = stacked_segs.to(device)
@@ -92,7 +97,6 @@ def get_features(img, net, img_idx, transform, segments, bboxes, device, network
         # stack segments to push through net
         stacked_segs = stack_segments(segments, transform)
         stacked_segs = stacked_segs.to(device)
-
         features = net(stacked_segs).to("cpu")
         if network == "alex":
             features = features.squeeze()
@@ -100,7 +104,7 @@ def get_features(img, net, img_idx, transform, segments, bboxes, device, network
         #     features = features[0].squeeze()
 
     features = features.detach().numpy()
-
+    print(features.shape)
     return {
         "image_id": int(img_idx),
         "image_h": int(H),
@@ -150,6 +154,18 @@ def get_model(args, device):
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                   std=[0.229, 0.224, 0.225])])
+    elif args.network == "layers_resnest":
+        # choose model
+        net = Layers_resnest(feature_dim=2048)
+
+        # set to evaluation
+        net.eval()
+
+        transform = transforms.Compose([
+            transforms.CenterCrop((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                  std=[0.229, 0.224, 0.225])])
     elif args.network == "sixth":
         # choose model
         net = models.alexnet(pretrained=True)
@@ -179,16 +195,15 @@ def get_model(args, device):
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                   std=[0.229, 0.224, 0.225])])
+    elif args.network == "layers_simCLR":
+        net = Layers_simCLR_pre(args, device, feature_dim=2048)
+        net.eval()
 
-    # elif args.network == "simCLR":
-    #     net = ResNetSimCLR("resnet18", args.output_dim)
-    #     net.load_state_dict(torch.load("../../simCLR/runs_simCLR/{}/checkpoints/model.pth".format(args.name_run), map_location=torch.device(device)))
-    #     net.eval()
-    #     # to transformations here
-    #     transform = transforms.Compose([
-    #         transforms.RandomResizedCrop(size=(args.input_shape_height, args.input_shape_width)),
-    #         transforms.ToTensor()])
-    #
+        transform = transforms.Compose([
+            transforms.RandomResizedCrop(size=(224, 224)),
+            transforms.ToTensor()])
+
+
     # elif args.network == "simCLR_pre":
     #     net = SimCLR(args)
     #     net.load_state_dict(torch.load(args.checkpoint_simCLR_pre, map_location=torch.device(device)))
@@ -197,7 +212,7 @@ def get_model(args, device):
     #     transform = transforms.Compose([
     #         transforms.RandomResizedCrop(size=(224, 224)),
     #         transforms.ToTensor()])
-
+    #
     net = net.to(device)
 
     return net, transform
@@ -286,7 +301,7 @@ def parse_args():
     parser.add_argument('--version',help='add version', default=None, type=str)
     parser.add_argument('--network',help='alex|simCLR|simCLR_pre|layers|sixth|vilbert', default="alex", type=str)
     parser.add_argument('--data_dir',help='location data directory', default="../../data/Fashion200K", type=str)
-    parser.add_argument('--data_out',help='location of data out', default="../../data/Fashion200K/vilbert", type=str)
+    parser.add_argument('--data_out',help='location of data out', default="../../data/Fashion200K/dresses", type=str)
     parser.add_argument('--tile', action='store_true', help="use basic tile segmentation")
     parser.add_argument('--multi', action='store_true', help="use to create features for multi-modal evaluation")
     parser.add_argument('--clothing',help='clothing item', default="dresses", type=str)

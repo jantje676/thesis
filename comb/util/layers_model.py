@@ -122,6 +122,8 @@ def flat(x):
     if torch.cuda.is_available():
         pad = pad.cuda()
     x = torch.cat((x, pad), dim=1)
+
+
     return x
 
 
