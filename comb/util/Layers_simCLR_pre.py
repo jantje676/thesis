@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from collections import OrderedDict
 import sys
 sys.path.append('../../')
+sys.path.append('/home/kgoei/thesis')
 
 from SimCLR_pre.modules.simclr import SimCLR
 
