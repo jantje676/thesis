@@ -14,7 +14,9 @@
 
 # folder I don't need anymore
 simCLR/*
+simCLR/
 simCLR_adap/*
+simCLR_adap/
 
 
 # data
