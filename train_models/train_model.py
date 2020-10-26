@@ -28,6 +28,7 @@ def main(args):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+    print("find run name")
     args = find_run_name(args)
 
     batch_size = args.batch_size
@@ -37,7 +38,9 @@ def main(args):
     lr = args.lr
     net = args.net
 
+    print("create logger")
     tb_logger.configure(args.logger_name, flush_secs=5)
+    print("save hyperparameters")
     save_hyperparameters(args.logger_name, args)
     transform = get_transform(args.net)
 
@@ -227,7 +230,7 @@ if __name__ == '__main__':
     parser.add_argument('--net', default='alex',help='alex|resnet')
     parser.add_argument('--image_root', default='../data/Fashion200K/women',help='path to root images')
     parser.add_argument('--train_split', default=0.9, type=float ,help='percentage to take for training')
-    parser.add_argument('--num_epochs', default=1, type=int ,help='num epochs')
+    parser.add_argument('--num_epochs', default=5, type=int ,help='num epochs')
     parser.add_argument('--lr', default=0.001, type=float ,help='num epochs')
     parser.add_argument('--pretrained_net', action="store_true" ,help='use pretrained net')
     parser.add_argument('--batch_size', default=4, type=int,help='batch size')
