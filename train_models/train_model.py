@@ -72,7 +72,7 @@ def main(args):
     best_loss = np.inf
     epochs_no_improve = 0
 
-    for epoch in  tqdm(range(num_epochs)):
+    for epoch in range(num_epochs):
         epochs_no_improve += 1
         print("start training: epoch {}".format(epoch))
         train_loss = train(args, trainloader, net, optimizer, criterion, epoch, device)
