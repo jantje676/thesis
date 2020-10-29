@@ -8,9 +8,16 @@ from collections import OrderedDict
 
 
 class LayersModel(nn.Module):
-    def __init__(self, img_dim=4096, embed_size=1024):
+    def __init__(self, img_dim=4096, embed_size=1024, trained_dresses=False, checkpoint_path=None):
         super(LayersModel, self).__init__()
         net = models.alexnet(pretrained=True)
+        if trained_dresses:
+            print("Loading pretrained model on dresses")
+            checkpoint = torch.load(checkpoint_path)
+            weights = checkpoint["model"]
+            del weights['classifier.6.weight']
+            del weights['classifier.6.bias']
+            net.load_state_dict(checkpoint["model"], strict=False)
 
         self.relu = nn.ReLU(inplace=False)
         self.a = net.features[0]
@@ -113,8 +120,8 @@ def flat(x):
     batch = x.shape[0]
     n_channel = x.shape[1]
     dim = x.shape[2]
-    # pool = nn.AvgPool2d((dim, dim))
-    pool = nn.MaxPool2d((dim, dim))
+    pool = nn.AvgPool2d((dim, dim))
+    # pool = nn.MaxPool2d((dim, dim))
     x = pool(x)
     x = x.view(batch, -1)
     n = 4096 - n_channel
@@ -127,6 +134,7 @@ def flat(x):
     return x
 
 
+# class based on poly-paper
 class LayerAttention(nn.Module):
 
     def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False):
