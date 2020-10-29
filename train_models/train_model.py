@@ -223,6 +223,7 @@ def find_run_name(args):
     nr_next_run = len(runs) + 1
     args.model_name = './{}/run{}/checkpoint'.format(folder,nr_next_run)
     args.logger_name = './{}/run{}/log'.format(folder, nr_next_run)
+    print(args.model_name)
     return args
 
 if __name__ == '__main__':
@@ -230,7 +231,7 @@ if __name__ == '__main__':
     parser.add_argument('--net', default='alex',help='alex|resnet')
     parser.add_argument('--image_root', default='../data/Fashion200K/women',help='path to root images')
     parser.add_argument('--train_split', default=0.9, type=float ,help='percentage to take for training')
-    parser.add_argument('--num_epochs', default=5, type=int ,help='num epochs')
+    parser.add_argument('--num_epochs', default=10, type=int ,help='num epochs')
     parser.add_argument('--lr', default=0.001, type=float ,help='num epochs')
     parser.add_argument('--pretrained_net', action="store_true" ,help='use pretrained net')
     parser.add_argument('--batch_size', default=4, type=int,help='batch size')
