@@ -27,7 +27,6 @@ def set_run_name(opt, nr_next_run, seed):
     opt.model_name = './runs/run{}/seed{}/checkpoint'.format(nr_next_run, seed)
     opt.logger_name = './runs/run{}/seed{}/log'.format(nr_next_run, seed)
     os.mkdir("./runs/run{}".format(nr_next_run))
-    print(nr_next_run)
     return opt
 
 

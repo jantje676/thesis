@@ -128,7 +128,7 @@ def stack_segments(segments, transform):
 
 def get_model(args, device):
     if args.network == "layers":
-        net = LayersModel()
+        net = LayersModel(trained_dresses=args.trained_dresses, checkpoint_path=args.checkpoint)
         net.eval()
 
         transform = transforms.Compose([
@@ -141,6 +141,7 @@ def get_model(args, device):
     elif args.network == "alex":
         # choose model
         net = models.alexnet(pretrained=True)
+
         # take aways the last layers
         net.classifier = nn.Sequential(*[net.classifier[i] for i in range(5)])
 
@@ -155,7 +156,9 @@ def get_model(args, device):
                                   std=[0.229, 0.224, 0.225])])
     elif args.network == "layers_resnest":
         # choose model
-        net = Layers_resnest(feature_dim=2048)
+        net = Layers_resnest(feature_dim=2048, trained_dresses=args.trained_dresses, checkpoint_path=args.checkpoint)
+
+
 
         # set to evaluation
         net.eval()
@@ -305,6 +308,10 @@ def parse_args():
     parser.add_argument('--multi', action='store_true', help="use to create features for multi-modal evaluation")
     parser.add_argument('--clothing',help='clothing item', default="dresses", type=str)
     parser.add_argument("--list_clothing", nargs="+", default=["dresses"])
+
+    # TO load pretrained dresses model
+    parser.add_argument('--trained_dresses', action='store_true', help="load models trained on dresses")
+    parser.add_argument('--checkpoint',help='path to saved model', default="../../train_models/runRes/run4/checkpoint/model_best.pth.tar", type=str)
 
 
     # WHEN PRETRAINED simCLR IS USED

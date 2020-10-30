@@ -8,10 +8,15 @@ from collections import OrderedDict
 
 
 class Layers_resnest(nn.Module):
-    def __init__(self, feature_dim=4096):
+    def __init__(self, feature_dim=4096, trained_dresses=False, checkpoint_path=None):
         super(Layers_resnest, self).__init__()
         self.feature_dim = feature_dim
         net = torch.hub.load('zhanghang1989/ResNeSt', 'resnest50', pretrained=True)
+        if trained_dresses:
+            print("Loading pretrained model on dresses")
+            checkpoint = torch.load(checkpoint_path)
+            weights = checkpoint["model"]
+            net.load_state_dict(checkpoint["model"], strict=False)
         self.a = nn.Sequential(net.conv1, net.bn1, net.relu, net.maxpool)
         self.b = net.layer1 #f1
         self.c = net.layer2 #f2

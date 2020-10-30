@@ -84,6 +84,8 @@ if __name__ == '__main__':
                         help='Attention softmax temperature.')
     parser.add_argument('--version', default="laenen", type=str,
                         help='version.')
+    parser.add_argument('--txt_enc', default="basic", type=str,
+                        help='use different text encoding basic|bert|word2vec')
 
     # adaptive margin
     parser.add_argument('--adap_margin', action='store_true',
@@ -102,7 +104,10 @@ if __name__ == '__main__':
                         help='threhold use for cost function')
     parser.add_argument('--gamma', default=0.8, type=float,
                         help='(Used for add_cost) fraction of normal similarity used for sentences that have low frequency')
-
+    parser.add_argument('--diversity_loss', action='store_true',
+                        help="add extra loss component to force diversity of features")
+    parser.add_argument('--theta', default=0.4, type=float,
+                        help='hyperparameter balancing standard loss and diversity loss')
     # freq
     parser.add_argument('--epsilon', default=1.0, type=float,
                         help='(Used for agg_func=freq) regulaizer for emphasis on non-frequent words')

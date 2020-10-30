@@ -19,6 +19,7 @@ import json as jsonmod
 import csv
 from utils import count_words, calculatate_freq, filter_freq, cut
 import h5py
+from transformers import BertTokenizer
 
 
 
@@ -52,21 +53,15 @@ class PrecompTrans(data.Dataset):
 
         self.length = len(self.captions)
 
-        # rkiros data has redundancy in images, we divide by 5, 10crop doesn't
-        if len(self.images) != self.length:
-            self.im_div = 5
-        else:
-            self.im_div = 1
+
+        self.im_div = 1
 
         self.count  = vocab.count
         freq_score, freqs = calculatate_freq(self.captions, self.count)
         self.freq_score = freq_score
         self.freqs = freqs
+        self.height = 512 if rectangle else 256
 
-        if rectangle:
-            self.height = 512
-        else:
-            self.height = 256
 
 
     def __getitem__(self, index):
@@ -114,10 +109,15 @@ class PrecompTrans(data.Dataset):
         caption.append(vocab('<end>'))
         target = torch.Tensor(caption)
 
+        if self.bert:
+            self.bert_tokenize(caption)
+        else:
+            self.normal_tokenize(caption)
         return image, target, index, img_id, freq_score, freqs
 
     def __len__(self):
         return self.length
+
 
 #
 def get_h5_images(data_name, data_split, data_path):
@@ -140,7 +140,8 @@ class PrecompDataset(data.Dataset):
     Possible options: f30k_precomp, coco_precomp
     """
 
-    def __init__(self, data_path, data_split, vocab, version, filter, n_filter, cut, n_cut):
+    def __init__(self, data_path, data_split, vocab, version, filter, n_filter, cut, n_cut, txt_enc):
+        self.bert = True if txt_enc == "bert" else False
         self.vocab = vocab
         loc = data_path + '/'
         self.captions = []
@@ -157,12 +158,7 @@ class PrecompDataset(data.Dataset):
         # Image features
         self.images = np.load("{}/data_ims_{}_{}.npy".format(data_path, version, data_split))
         self.length = len(self.captions)
-
-        # rkiros data has redundancy in images, we divide by 5, 10crop doesn't
-        if self.images.shape[0] != self.length:
-            self.im_div = 5
-        else:
-            self.im_div = 1
+        self.im_div = 1
 
 
         self.count = vocab.count
@@ -170,7 +166,10 @@ class PrecompDataset(data.Dataset):
         self.freq_score = freq_score
         self.freqs = freqs
 
-
+        if self.bert == True:
+            self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        else:
+            self.tokenizer = nltk.tokenize
 
     def __getitem__(self, index):
         # handle the image redundancy
@@ -181,25 +180,39 @@ class PrecompDataset(data.Dataset):
         freq_score = self.freq_score[index]
         freqs = self.freqs[index]
 
-        # Convert caption (string) to word ids.
-        tokens = nltk.tokenize.word_tokenize(
-            str(caption).lower())
-        if self.filter:
-            tokens = filter_freq(tokens, self.count, self.n_filter)
+        if self.bert:
+            target = self.bert_tokenize(caption)
+        else:
+            target = self.normal_tokenize(caption)
 
-        if self.cut:
-            tokens = cut(tokens, self.n_cut)
 
-        caption = []
-        caption.append(vocab('<start>'))
-        caption.extend([vocab(token) for token in tokens])
-        caption.append(vocab('<end>'))
-        target = torch.Tensor(caption)
         return image, target, index, img_id, freq_score, freqs
 
     def __len__(self):
         return self.length
 
+
+    def bert_tokenize(self, caption):
+        tokenized_cap = self.tokenizer.encode(caption, add_special_tokens=True)
+        target = torch.Tensor(tokenized_cap)
+        return target
+
+    def normal_tokenize(self,caption):
+        # Convert caption (string) to word ids.
+        tokens = self.tokenizer.word_tokenize(
+            str(caption).lower())
+
+        if self.filter:
+            tokens = filter_freq(tokens, self.count, self.n_filter)
+
+        if self.cut:
+            tokens = cut(tokens, self.n_cut)
+        caption = []
+        caption.append(self.vocab('<start>'))
+        caption.extend([self.vocab(token) for token in tokens])
+        caption.append(self.vocab('<end>'))
+        target = torch.Tensor(caption)
+        return target
 
 def collate_fn(data):
     """Build mini-batch tensors from a list of (image, caption) tuples.
@@ -235,10 +248,11 @@ def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
     """Returns torch.utils.data.DataLoader for custom coco dataset."""
     if opt.trans or opt.precomp_enc_type == "layers" or opt.precomp_enc_type == "layers_attention":
         dset = PrecompTrans(data_path, data_split, vocab, opt.version, opt.image_path,
-                            opt.rectangle, opt.data_name, opt.filter, opt.n_filter, opt.cut, opt.n_cut, opt.clothing)
+                            opt.rectangle, opt.data_name, opt.filter, opt.n_filter,
+                            opt.cut, opt.n_cut, opt.clothing)
     else:
         dset = PrecompDataset(data_path, data_split, vocab, opt.version, opt.filter,
-                                opt.n_filter, opt.cut, opt.n_cut)
+                                opt.n_filter, opt.cut, opt.n_cut, opt.txt_enc)
 
     data_loader = torch.utils.data.DataLoader(dataset=dset,
                                               batch_size=batch_size,

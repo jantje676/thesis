@@ -23,6 +23,7 @@ from collections import OrderedDict
 from utils import adap_margin
 from stn import STN
 from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
+from transformers import BertModel
 
 def l1norm(X, dim, eps=1e-8):
     """L1-normalize columns of X
@@ -65,6 +66,79 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, trans, n_detectors
 
     return img_enc
 
+
+def get_EncoderText(vocab_size, word_dim, embed_size, num_layers, bi_gru, no_txtnorm, txt_enc, vocab_path):
+    if txt_enc == "basic":
+        text_encoder = EncoderText(vocab_size, word_dim,
+                                   embed_size, num_layers,
+                                   use_bi_gru=bi_gru,
+                                   no_txtnorm=no_txtnorm)
+    elif txt_enc == "word2vec":
+        text_encoder = Word2vec(vocab_path, no_txtnorm=no_txtnorm)
+    elif txt_enc == "bert":
+        text_encoder = Bert(no_txtnorm=no_txtnorm)
+
+    return text_encoder
+
+
+class Bert(nn.Module):
+
+    def __init__(self,no_txtnorm=False ):
+        super(Bert, self).__init__()
+        self.model = BertModel.from_pretrained('bert-base-uncased',
+                                  output_hidden_states = True)
+        self.no_txtnorm = no_txtnorm
+
+    def forward(self, x, lengths):
+        """Handles variable size captions
+        """
+        batch_size = x.shape[0]
+        max_length = x.shape[1]
+
+        segments_ids = self.create_segment_ids(lengths, batch_size, max_length)
+        outputs = self.model(x, segments_ids)
+        hidden_states = outputs[2]
+        token_embeddings = torch.stack(hidden_states, dim=0)
+        cap_emb = torch.sum(token_embeddings[-4:], dim=0)
+
+
+        # normalization in the joint embedding space
+        if not self.no_txtnorm:
+            cap_emb = l2norm(cap_emb, dim=-1)
+
+        cap_len = torch.tensor(lengths, dtype=torch.int)
+
+        return cap_emb, cap_len
+
+    def create_segment_ids(self, lengths, batch_size, max_length):
+        segment_ids = torch.zeros((batch_size, max_length))
+        for i in range(len(lengths)):
+            segment_ids[i, : lengths[i]] = 1
+        return segment_ids
+
+class Word2vec(nn.Module):
+
+    def __init__(self, vocab_path, no_txtnorm=False ):
+        super(Word2vec, self).__init__()
+        weight = torch.load("{}/word2vec.pt".format(vocab_path))
+        # word embedding
+        self.embed = nn.Embedding.from_pretrained(weight)
+        self.no_txtnorm = no_txtnorm
+
+    def forward(self, x, lengths):
+        """Handles variable size captions
+        """
+        # Embed word ids to vectors
+        cap_emb = self.embed(x)
+
+        cap_len = torch.tensor(lengths, dtype=torch.int)
+
+
+        # normalization in the joint embedding space
+        if not self.no_txtnorm:
+            cap_emb = l2norm(cap_emb, dim=-1)
+
+        return cap_emb, cap_len
 
 
 class EncoderImagePrecomp(nn.Module):
@@ -426,12 +500,33 @@ class ContrastiveLoss(nn.Module):
         cost_s = cost_s.masked_fill_(I, 0)
         cost_im = cost_im.masked_fill_(I, 0)
 
+        standard_loss = cost_s.sum() + cost_im.sum()
         # keep the maximum violating negative for each query
         if self.max_violation:
             cost_s = cost_s.max(1)[0]
             cost_im = cost_im.max(0)[0]
 
-        return cost_s.sum() + cost_im.sum()
+        # add extra loss function
+        if self.opt.diversity_loss:
+            num = torch.bmm(im, im.permute(0,2,1))
+            norm = torch.norm(im, dim =2).unsqueeze(dim=2)
+            denom = torch.bmm(norm, norm.permute(0,2,1))
+            sim_im = (num / (denom).clamp(min=1e-08))
+            loss_div = torch.triu(sim_im, diagonal=1)
+            loss_div = loss_div.sum() #* self.opt.theta
+            total_loss = standard_loss + loss_div
+            diversity_loss = loss_div.item()
+            print("div", loss_div)
+            print("stand", standard_loss)
+            exit()
+        else:
+            diversity_loss = 0
+            total_loss =  standard_loss
+
+
+
+        return total_loss, standard_loss.item(), diversity_loss
+
 
 
 
@@ -447,10 +542,9 @@ class SCAN(object):
                                     precomp_enc_type=opt.precomp_enc_type,
                                     no_imgnorm=opt.no_imgnorm)
 
-        self.txt_enc = EncoderText(opt.vocab_size, opt.word_dim,
+        self.txt_enc = get_EncoderText(opt.vocab_size, opt.word_dim,
                                    opt.embed_size, opt.num_layers,
-                                   use_bi_gru=opt.bi_gru,
-                                   no_txtnorm=opt.no_txtnorm)
+                                   opt.bi_gru, opt.no_txtnorm, opt.txt_enc, opt.vocab_path)
         if torch.cuda.is_available():
             self.img_enc.cuda()
             self.txt_enc.cuda()
@@ -469,6 +563,8 @@ class SCAN(object):
             if not opt.basic:
                 params += list(self.img_enc.localization.parameters())
                 params += list(self.img_enc.fc_loc.parameters())
+        elif opt.txt_enc == "bert":
+            params =  list(self.img_enc.parameters())
         else:
             params = list(self.txt_enc.parameters())
             params += list(self.img_enc.parameters())
@@ -519,9 +615,13 @@ class SCAN(object):
     def forward_loss(self, epoch, img_emb, cap_emb, cap_len, freq_score, freqs, **kwargs):
         """Compute the loss given pairs of image and caption embeddings
         """
-        loss = self.criterion(img_emb, cap_emb, cap_len, freq_score, freqs, epoch)
-        self.logger.update('Le', loss.item(), img_emb.size(0))
-        return loss
+        total_loss, standard_loss, loss_div = self.criterion(img_emb, cap_emb, cap_len, freq_score, freqs, epoch)
+
+        self.logger.update('tot_Le', total_loss.item(), img_emb.size(0))
+        self.logger.update('stand_Le', standard_loss, img_emb.size(0))
+        self.logger.update('div_loss_Le', loss_div, img_emb.size(0))
+
+        return total_loss
 
     def train_emb(self, epoch, images, captions, lengths, ids=None, freq_score=None, freqs=None, *args):
         """One training step given images and captions.
