@@ -16,6 +16,8 @@ class Layers_resnest(nn.Module):
             print("Loading pretrained model on dresses")
             checkpoint = torch.load(checkpoint_path)
             weights = checkpoint["model"]
+            del weights['fc.weight']
+            del weights['fc.bias']
             net.load_state_dict(checkpoint["model"], strict=False)
         self.a = nn.Sequential(net.conv1, net.bn1, net.relu, net.maxpool)
         self.b = net.layer1 #f1
