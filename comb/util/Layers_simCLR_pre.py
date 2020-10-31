@@ -16,8 +16,7 @@ class Layers_simCLR_pre(nn.Module):
     def __init__(self, args, device, feature_dim=4096):
         super(Layers_simCLR_pre, self).__init__()
         net = SimCLR(args)
-        print(net)
-        exit()
+
         net.load_state_dict(torch.load(args.checkpoint_simCLR_pre, map_location=torch.device(device)))
 
         self.feature_dim = feature_dim
