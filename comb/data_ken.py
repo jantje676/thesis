@@ -29,7 +29,8 @@ class PrecompTrans(data.Dataset):
     Possible options: f30k_precomp, coco_precomp
     """
 
-    def __init__(self, data_path, data_split, vocab, version, image_path, rectangle, data_name, filter, n_filter, cut, n_cut, clothing):
+    def __init__(self, data_path, data_split, vocab, version, image_path, rectangle, data_name, filter, n_filter, cut, n_cut, clothing, txt_enc):
+        self.bert = True if txt_enc == "bert" else False
         self.vocab = vocab
         loc = data_path + '/'
         self.captions = []
@@ -61,6 +62,11 @@ class PrecompTrans(data.Dataset):
         self.freq_score = freq_score
         self.freqs = freqs
         self.height = 512 if rectangle else 256
+
+        if self.bert == True:
+            self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        else:
+            self.tokenizer = nltk.tokenize
 
 
 
@@ -117,6 +123,29 @@ class PrecompTrans(data.Dataset):
 
     def __len__(self):
         return self.length
+
+    def bert_tokenize(self, caption):
+        tokenized_cap = self.tokenizer.encode(caption, add_special_tokens=True)
+        target = torch.Tensor(tokenized_cap)
+        return target
+
+    def normal_tokenize(self,caption):
+        # Convert caption (string) to word ids.
+        tokens = self.tokenizer.word_tokenize(
+            str(caption).lower())
+
+        if self.filter:
+            tokens = filter_freq(tokens, self.count, self.n_filter)
+
+        if self.cut:
+            tokens = cut(tokens, self.n_cut)
+        caption = []
+        caption.append(self.vocab('<start>'))
+        caption.extend([self.vocab(token) for token in tokens])
+        caption.append(self.vocab('<end>'))
+        target = torch.Tensor(caption)
+        return target
+
 
 
 #
@@ -246,10 +275,10 @@ def collate_fn(data):
 def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
                        shuffle=True, num_workers=2):
     """Returns torch.utils.data.DataLoader for custom coco dataset."""
-    if opt.trans or opt.precomp_enc_type == "layers" or opt.precomp_enc_type == "layers_attention":
+    if opt.precomp_enc_type == "trans" or opt.precomp_enc_type == "layers" or opt.precomp_enc_type == "layers_attention" or opt.precomp_enc_type == "cnn_layers":
         dset = PrecompTrans(data_path, data_split, vocab, opt.version, opt.image_path,
                             opt.rectangle, opt.data_name, opt.filter, opt.n_filter,
-                            opt.cut, opt.n_cut, opt.clothing)
+                            opt.cut, opt.n_cut, opt.clothing, opt.txt_enc)
     else:
         dset = PrecompDataset(data_path, data_split, vocab, opt.version, opt.filter,
                                 opt.n_filter, opt.cut, opt.n_cut, opt.txt_enc)

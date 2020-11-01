@@ -36,7 +36,7 @@ if __name__ == '__main__':
                         help='Rank loss margin.')
     parser.add_argument('--num_epochs', default=30, type=int,
                         help='Number of training epochs.')
-    parser.add_argument('--batch_size', default=128, type=int,
+    parser.add_argument('--batch_size', default=2, type=int,
                         help='Size of a training mini-batch.')
     parser.add_argument('--word_dim', default=300, type=int,
                         help='Dimensionality of the word embedding.')
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_attention', default=7, type=int,
                         help='Number of attention maps to create.')
     parser.add_argument('--precomp_enc_type', default="weight_norm",
-                        help='basic|weight_norm|attention|layers|layers_attention')
+                        help='basic|weight_norm|attention|layers|layers_attention|trans|cnn_layers')
 
     # cost
     parser.add_argument('--add_cost', action='store_true',
@@ -104,10 +104,15 @@ if __name__ == '__main__':
                         help='threhold use for cost function')
     parser.add_argument('--gamma', default=0.8, type=float,
                         help='(Used for add_cost) fraction of normal similarity used for sentences that have low frequency')
+
+    # use for cnn-layers with diversity_loss
     parser.add_argument('--diversity_loss', action='store_true',
                         help="add extra loss component to force diversity of features")
     parser.add_argument('--theta', default=0.4, type=float,
                         help='hyperparameter balancing standard loss and diversity loss')
+    parser.add_argument('--net', default="alex", type=str,
+                        help='which network to use')
+
     # freq
     parser.add_argument('--epsilon', default=1.0, type=float,
                         help='(Used for agg_func=freq) regulaizer for emphasis on non-frequent words')

@@ -24,6 +24,7 @@ from utils import adap_margin
 from stn import STN
 from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
 from transformers import BertModel
+from cnn_layers import CNN_layers
 
 def l1norm(X, dim, eps=1e-8):
     """L1-normalize columns of X
@@ -41,12 +42,13 @@ def l2norm(X, dim, eps=1e-8):
     return X
 
 
-def EncoderImage(data_name, img_dim, embed_size, n_attention, trans, n_detectors, pretrained_alex, rectangle, precomp_enc_type='basic',
-                 no_imgnorm=False):
+def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretrained_alex, rectangle, precomp_enc_type='basic',
+                 no_imgnorm=False, net="alex"):
     """A wrapper to image encoders. Chooses between an different encoders
     that uses precomputed image features.
     """
-    if trans:
+
+    if precomp_enc_type == "trans":
         img_enc = STN(n_detectors, embed_size, pretrained_alex, rectangle)
     elif precomp_enc_type == 'basic':
         img_enc = EncoderImagePrecomp(
@@ -61,6 +63,8 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, trans, n_detectors
         img_enc = LayersModel(img_dim, embed_size)
     elif precomp_enc_type == "layers_attention":
         img_enc = LayerAttention(img_dim, embed_size, n_attention, no_imgnorm)
+    elif precomp_enc_type == "cnn_layers":
+        img_enc = CNN_layers(n_detectors, embed_size, pretrained_alex, net)
     else:
         raise ValueError("Unknown precomp_enc_type: {}".format(precomp_enc_type))
 
@@ -538,9 +542,9 @@ class SCAN(object):
         # Build Models
         self.grad_clip = opt.grad_clip
         self.img_enc = EncoderImage(opt.data_name, opt.img_dim, opt.embed_size, opt.n_attention,
-                                    opt.trans, opt.n_detectors, opt.pretrained_alex, opt.rectangle,
+                                    opt.n_detectors, opt.pretrained_alex, opt.rectangle,
                                     precomp_enc_type=opt.precomp_enc_type,
-                                    no_imgnorm=opt.no_imgnorm)
+                                    no_imgnorm=opt.no_imgnorm, net=opt.net)
 
         self.txt_enc = get_EncoderText(opt.vocab_size, opt.word_dim,
                                    opt.embed_size, opt.num_layers,
@@ -555,7 +559,9 @@ class SCAN(object):
         self.criterion = ContrastiveLoss(opt=opt,
                                          margin=opt.margin,
                                          max_violation=opt.max_violation)
-        if opt.trans:
+
+
+        if opt.precomp_enc_type == "trans":
             params = list(self.txt_enc.parameters())
             for i in range(opt.n_detectors):
                 params += list(self.img_enc.conv[i].parameters())
@@ -563,6 +569,10 @@ class SCAN(object):
             if not opt.basic:
                 params += list(self.img_enc.localization.parameters())
                 params += list(self.img_enc.fc_loc.parameters())
+        elif opt.precomp_enc_type == "cnn_layers":
+            params = list(self.txt_enc.parameters())
+            for i in range(opt.n_detectors):
+                params += list(self.img_enc.conv[i].parameters())
         elif opt.txt_enc == "bert":
             params =  list(self.img_enc.parameters())
         else:

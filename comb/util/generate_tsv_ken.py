@@ -311,8 +311,7 @@ def parse_args():
 
     # TO load pretrained dresses model
     parser.add_argument('--trained_dresses', action='store_true', help="load models trained on dresses")
-    parser.add_argument('--checkpoint',help='path to saved model', default="../../train_models/runRes/run4/checkpoint/model_best.pth.tar", type=str)
-
+    parser.add_argument('--checkpoint',help='path to saved model', default="../../train_models/runRes/train1/checkpoint/model_best.pth.tar", type=str)
 
     # WHEN PRETRAINED simCLR IS USED
     parser.add_argument('--output_dim',help='if simCLR is used, size of output dim', default=256, type=int)
