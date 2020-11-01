@@ -519,10 +519,6 @@ class ContrastiveLoss(nn.Module):
             loss_div = torch.triu(sim_im, diagonal=1)
             loss_div = loss_div.sum() #* self.opt.theta
             total_loss = standard_loss + loss_div
-            diversity_loss = loss_div.item()
-            print("div", loss_div)
-            print("stand", standard_loss)
-            exit()
         else:
             diversity_loss = 0
             total_loss =  standard_loss
