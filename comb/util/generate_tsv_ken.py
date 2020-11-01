@@ -83,7 +83,8 @@ def get_features(img, net, img_idx, transform, segments, bboxes, device, network
     elif network == "layers_resnest" or network == "layers_simCLR":
         img = Image.fromarray(img)
         img_transformed = transform(img).unsqueeze(0).to(device)
-        features = net.forward(img_transformed).to("cpu")
+        features = net.forward(img_transformed).to("cpu").squeeze()
+
     elif network == "vilbert":
         stacked_segs = stack_segments(segments, transform)
         stacked_segs = stacked_segs.to(device)
@@ -245,6 +246,7 @@ def generate_data(image_ids, args, net, transform, device):
 
         temp = np.frombuffer( base64.b64decode(seg["features"]), dtype=np.float32)
         temp = temp.reshape((seg["num_boxes"],-1))
+
         data[img_idx] = temp
         count_stop +=1
         if count_stop == args.early_stop:
