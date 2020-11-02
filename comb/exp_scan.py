@@ -36,7 +36,7 @@ if __name__ == '__main__':
                         help='Rank loss margin.')
     parser.add_argument('--num_epochs', default=30, type=int,
                         help='Number of training epochs.')
-    parser.add_argument('--batch_size', default=2, type=int,
+    parser.add_argument('--batch_size', default=3, type=int,
                         help='Size of a training mini-batch.')
     parser.add_argument('--word_dim', default=300, type=int,
                         help='Dimensionality of the word embedding.')

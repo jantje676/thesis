@@ -237,6 +237,7 @@ class PrecompDataset(data.Dataset):
         if self.cut:
             tokens = cut(tokens, self.n_cut)
         caption = []
+    
         caption.append(self.vocab('<start>'))
         caption.extend([self.vocab(token) for token in tokens])
         caption.append(self.vocab('<end>'))

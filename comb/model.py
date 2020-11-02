@@ -125,6 +125,7 @@ class Word2vec(nn.Module):
     def __init__(self, vocab_path, no_txtnorm=False ):
         super(Word2vec, self).__init__()
         weight = torch.load("{}/word2vec.pt".format(vocab_path))
+
         # word embedding
         self.embed = nn.Embedding.from_pretrained(weight)
         self.no_txtnorm = no_txtnorm
@@ -133,6 +134,7 @@ class Word2vec(nn.Module):
         """Handles variable size captions
         """
         # Embed word ids to vectors
+
         x = self.embed(x)
         packed = pack_padded_sequence(x, lengths, batch_first=True)
 
@@ -143,7 +145,7 @@ class Word2vec(nn.Module):
         # normalization in the joint embedding space
         if not self.no_txtnorm:
             cap_emb = l2norm(cap_emb, dim=-1)
-    
+
         return cap_emb, cap_len
 
 
@@ -263,9 +265,7 @@ class EncoderText(nn.Module):
         # normalization in the joint embedding space
         if not self.no_txtnorm:
             cap_emb = l2norm(cap_emb, dim=-1)
-        print(cap_emb.shape)
-        print(cap_len)
-        exit()
+
         return cap_emb, cap_len
 
 
