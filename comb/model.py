@@ -520,6 +520,7 @@ class ContrastiveLoss(nn.Module):
             norm = torch.norm(im, dim =2).unsqueeze(dim=2)
             denom = torch.bmm(norm, norm.permute(0,2,1))
             sim_im = (num / (denom).clamp(min=1e-08))
+            sim_im = 1 + sim_im
             loss_div = torch.triu(sim_im, diagonal=1)
             loss_div = loss_div.sum() * self.opt.theta
             total_loss = standard_loss + loss_div
