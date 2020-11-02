@@ -122,6 +122,7 @@ def encode_data(model, data_loader, log_step=10, logging=print):
         ids = list(ids)
         print(ids)
         print(img_embs.shape)
+        print(img_emb.shape)
         img_embs[ids] = img_emb.data.cpu().numpy().copy()
         cap_embs[ids,:max(lengths),:] = cap_emb.data.cpu().numpy().copy()
         for j, nid in enumerate(ids):
