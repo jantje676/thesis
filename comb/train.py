@@ -80,7 +80,7 @@ def start_experiment(opt, seed):
         adjust_learning_rate(opt, model.optimizer, epoch)
 
         # train for one epoch
-        train(opt, train_loader, model, epoch, val_loader)
+        # train(opt, train_loader, model, epoch, val_loader)
 
         # evaluate on validation set
         rsum = validate(opt, val_loader, model)
