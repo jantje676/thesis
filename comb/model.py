@@ -100,6 +100,10 @@ class Bert(nn.Module):
         max_length = x.shape[1]
 
         segments_ids = self.create_segment_ids(lengths, batch_size, max_length)
+        
+        if torch.cuda.is_available():
+            segments_ids = segments_ids.cuda()
+
         outputs = self.model(x, segments_ids)
         hidden_states = outputs[2]
         token_embeddings = torch.stack(hidden_states, dim=0)
