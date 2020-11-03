@@ -575,8 +575,6 @@ class SCAN(object):
             params = list(self.txt_enc.parameters())
             for i in range(opt.n_detectors):
                 params += list(self.img_enc.conv[i].parameters())
-        elif opt.txt_enc == "bert":
-            params =  list(self.img_enc.parameters())
         else:
             params = list(self.txt_enc.parameters())
             params += list(self.img_enc.parameters())
