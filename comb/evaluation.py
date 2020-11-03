@@ -120,7 +120,7 @@ def encode_data(model, data_loader, log_step=10, logging=print):
         # cache embeddings
         # changes ids tuple to list
         ids = list(ids)
-        
+
         img_embs[ids] = img_emb.data.cpu().numpy().copy()
         cap_embs[ids,:max(lengths),:] = cap_emb.data.cpu().numpy().copy()
         for j, nid in enumerate(ids):
@@ -146,7 +146,7 @@ def encode_data(model, data_loader, log_step=10, logging=print):
 
 
 
-def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_path="../vocab/"):
+def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_path="../vocab/", change=False):
     """
     Evaluate a trained model on either dev or test. If `fold5=True`, 5 fold
     cross-validation is done (only for MSCOCO). Otherwise, the full data is
@@ -169,6 +169,9 @@ def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_pat
     # load model state
     model.load_state_dict(checkpoint['model'])
 
+    if change:
+        opt.clothing = "dresses"
+        
     print('Loading dataset')
     data_loader = get_test_loader(split, opt.data_name, vocab,
                                   opt.batch_size, opt.workers, opt)

@@ -40,7 +40,7 @@ def main(args):
         print("Evaluating seed{}".format(str(i+1)))
         model_path = "{}{}/seed{}/checkpoint/{}".format(args.model_path, run, i+1, checkpoint )
         # plot_path = "{}{}/seed{}checkpoint/".format(args.plot_path,  run)
-        rt, rti, attn, r, ri = evaluation.evalrank(model_path, run, data_path=args.data_path, split="test", vocab_path=args.vocab_path)
+        rt, rti, attn, r, ri = evaluation.evalrank(model_path, run, data_path=args.data_path, split="test", vocab_path=args.vocab_path, change=args.change)
         r1 += r[0]
         r5 += r[1]
         r10 += r[2]
@@ -77,6 +77,6 @@ if __name__ == "__main__":
     parser.add_argument('--data_path', default="/$TMPDIR/thesis/data/", type=str, help='which checkpoint to use')
     parser.add_argument('--vocab_path', default="/$TMPDIR/thesis/vocab/", type=str, help='which checkpoint to use')
     parser.add_argument('--plot_path', default="/$HOME/runs/", type=str, help='which checkpoint to use')
-
+    parser.add_argument('--change', action='store_true',help='change clothing from all to dresses (trained on all, evaluate on dresses)')
     args = parser.parse_args()
     main(args)
