@@ -127,7 +127,7 @@ class Word2vec(nn.Module):
         weight = torch.load("{}/word2vec.pt".format(vocab_path))
 
         # word embedding
-        self.embed = nn.Embedding.from_pretrained(weight)
+        self.embed = nn.Embedding.from_pretrained(weight, freeze=False)
         self.no_txtnorm = no_txtnorm
 
     def forward(self, x, lengths):
