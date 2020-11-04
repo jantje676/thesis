@@ -195,7 +195,7 @@ class PrecompDataset(data.Dataset):
         self.freq_score = freq_score
         self.freqs = freqs
 
-        if self.bert == True:
+        if self.bert:
             self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         else:
             self.tokenizer = nltk.tokenize
@@ -237,12 +237,47 @@ class PrecompDataset(data.Dataset):
         if self.cut:
             tokens = cut(tokens, self.n_cut)
         caption = []
-    
+
         caption.append(self.vocab('<start>'))
         caption.extend([self.vocab(token) for token in tokens])
         caption.append(self.vocab('<end>'))
         target = torch.Tensor(caption)
         return target
+
+    # filter dataset to only contain features with certain word for viz_attn_layers
+    def filter_word(self, word):
+        print("start filtering dataset for: {}".format(word))
+        print(self.images.shape)
+        filtered_captions = []
+        filtered_images = []
+        filtered_freq_score = []
+        filtered_freqs = []
+        position = []
+
+        for i in range(len(self.captions)):
+            if self.bert:
+                tokens = self.tokenizer.encode(self.captions[i], add_special_tokens=False)
+            else:
+                tokens = self.tokenizer.word_tokenize(
+                    str(self.captions[i]).lower())
+            if word in tokens:
+                filtered_captions.append(self.captions[i])
+                filtered_images.append(self.images[i])
+                filtered_freq_score.append(self.freq_score[i])
+                filtered_freqs.append(self.freqs[i])
+                indx = tokens.index(word)
+                # add +1, because special tokens for padding are added while training
+                position.append(indx + 1)
+
+        self.length = len(filtered_captions)
+        self.captions = filtered_captions
+        self.images = np.stack(filtered_images, axis=0)
+
+        self.freq_score = filtered_freq_score
+        self.freqs = filtered_freqs
+        print("dataset filtered, word: {} \t size: {}".format(word, self.length))
+        return position
+
 
 def collate_fn(data):
     """Build mini-batch tensors from a list of (image, caption) tuples.

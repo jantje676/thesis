@@ -43,7 +43,7 @@ def l2norm(X, dim, eps=1e-8):
 
 
 def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretrained_alex, rectangle, precomp_enc_type='basic',
-                 no_imgnorm=False, net="alex"):
+                 no_imgnorm=False, net="alex", div_transform=False):
     """A wrapper to image encoders. Chooses between an different encoders
     that uses precomputed image features.
     """
@@ -64,7 +64,7 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretr
     elif precomp_enc_type == "layers_attention":
         img_enc = LayerAttention(img_dim, embed_size, n_attention, no_imgnorm)
     elif precomp_enc_type == "cnn_layers":
-        img_enc = CNN_layers(n_detectors, embed_size, pretrained_alex, net)
+        img_enc = CNN_layers(n_detectors, embed_size, pretrained_alex, net, div_transform)
     else:
         raise ValueError("Unknown precomp_enc_type: {}".format(precomp_enc_type))
 
@@ -100,7 +100,7 @@ class Bert(nn.Module):
         max_length = x.shape[1]
 
         segments_ids = self.create_segment_ids(lengths, batch_size, max_length)
-        
+
         if torch.cuda.is_available():
             segments_ids = segments_ids.cuda()
 
@@ -366,6 +366,7 @@ def xattn_score_t2i(images, captions, cap_lens, freqs, opt):
             attn: (n_image, n_region, n_word)
         """
         weiContext, attn = func_attention(cap_i_expand, images, opt, smooth=opt.lambda_softmax)
+
         attention_store.append(attn)
         cap_i_expand = cap_i_expand.contiguous()
         weiContext = weiContext.contiguous()
@@ -550,7 +551,7 @@ class SCAN(object):
         self.img_enc = EncoderImage(opt.data_name, opt.img_dim, opt.embed_size, opt.n_attention,
                                     opt.n_detectors, opt.pretrained_alex, opt.rectangle,
                                     precomp_enc_type=opt.precomp_enc_type,
-                                    no_imgnorm=opt.no_imgnorm, net=opt.net)
+                                    no_imgnorm=opt.no_imgnorm, net=opt.net, div_transform=opt.div_transform)
 
         self.txt_enc = get_EncoderText(opt.vocab_size, opt.word_dim,
                                    opt.embed_size, opt.num_layers,
@@ -584,6 +585,9 @@ class SCAN(object):
             params += list(self.img_enc.parameters())
 
         self.params = params
+
+        # pytorch_total_params = sum(p.numel() for p in self.txt_enc.parameters() if p.requires_grad)
+        # print(pytorch_total_params)
 
         self.optimizer = torch.optim.Adam(params, lr=opt.learning_rate)
 

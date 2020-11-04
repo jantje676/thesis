@@ -50,7 +50,7 @@ def start_experiment(opt, seed):
 
     # Construct the model
     model = SCAN(opt)
-
+    
     # save hyperparameters in file
     save_hyperparameters(opt.logger_name, opt)
 

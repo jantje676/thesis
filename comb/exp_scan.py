@@ -112,6 +112,9 @@ if __name__ == '__main__':
                         help='hyperparameter balancing standard loss and diversity loss')
     parser.add_argument('--net', default="alex", type=str,
                         help='which network to use')
+    parser.add_argument('--div_transform', action='store_true',
+                        help="use selection of different transforms")
+
 
     # freq
     parser.add_argument('--epsilon', default=1.0, type=float,
