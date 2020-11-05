@@ -53,7 +53,7 @@ def write_attn(out_path, word_attn):
 def plot_attn(average_attn, out_path, word):
     n_layers = torch.tensor(average_attn.shape)[0].item()
     x = list(range(1, n_layers + 1))
-    plt.bar(x.cpu(), average_attn.cpu(), align='center', alpha=0.5)
+    plt.bar(x, average_attn.cpu(), align='center', alpha=0.5)
     plt.xlabel('Layer')
     plt.ylabel('Attention')
     plt.title(word)
