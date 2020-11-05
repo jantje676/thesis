@@ -58,23 +58,27 @@ def plot_attn(average_attn, out_path, word):
     plt.ylabel('Attention')
     plt.title(word)
     plt.savefig('{}/viz_{}'.format(out_path, word))
+    plt.close()
 
 def calculate_attn(dpath, vocab, opt, word, model):
     # load the features
-    dset = PrecompDataset(dpath, "test", vocab, opt.version, opt.filter,
-                            opt.n_filter, opt.cut, opt.n_cut, opt.txt_enc)
 
-    # filter dataset
-    positions = dset.filter_word(word)
+    data_loader_test, positions_test = retrieve_loader("test", opt, dpath, word, vocab)
+    data_loader_train, positions_train = retrieve_loader("train", opt, dpath, word, vocab)
 
-    # create dataloader
-    data_loader = torch.utils.data.DataLoader(dataset=dset,
-                                              batch_size=1,
-                                              shuffle=False,
-                                              pin_memory=True,
-                                              collate_fn=collate_fn)
     total_attn = []
+    total_attn += create_attn(data_loader_test, positions_test, opt, model)
+    total_attn += create_attn(data_loader_train, positions_train, opt, model)
+
+    total_attn = torch.stack(total_attn)
+    average_attn = torch.mean(total_attn, dim=0)
+
+    return average_attn
+
+def create_attn(data_loader, positions, opt, model):
     # collect all attention scores
+    total_attn = []
+
     with torch.no_grad():
 
         for i, (images, captions, lengths, ids, freq_score, freqs) in enumerate(data_loader):
@@ -87,11 +91,22 @@ def calculate_attn(dpath, vocab, opt, word, model):
                 sim, attn = xattn_score_t2i(img_emb, cap_emb, cap_len, freqs, opt)
 
             total_attn.append(attn[0][0,:,positions[i]])
+    return total_attn
 
-        total_attn = torch.stack(total_attn)
-        average_attn = torch.mean(total_attn, dim=0)
+def retrieve_loader(split, opt, dpath, word, vocab):
+    dset = PrecompDataset(dpath, split, vocab, opt.version, opt.filter,
+                            opt.n_filter, opt.cut, opt.n_cut, opt.txt_enc)
 
-    return average_attn
+    # filter dataset
+    positions = dset.filter_word(word)
+
+    # create dataloader
+    data_loader = torch.utils.data.DataLoader(dataset=dset,
+                                              batch_size=1,
+                                              shuffle=False,
+                                              pin_memory=True,
+                                              collate_fn=collate_fn)
+    return data_loader, positions
 
 def load_model(model_path, device):
     # load model and options
