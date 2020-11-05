@@ -26,10 +26,6 @@ def main(args):
     model, opt = load_model(model_path, device)
     model.val_start()
 
-    # add because basic is not present in model
-    d = vars(opt)
-    d['div_transform'] = False
-
 
     # load vocabulary used by the model
     vocab = deserialize_vocab("{}/{}/{}_vocab_{}.json".format(opt.vocab_path, opt.clothing, opt.data_name, opt.version))
@@ -101,6 +97,10 @@ def load_model(model_path, device):
     # load model and options
     checkpoint = torch.load(model_path, map_location=device)
     opt = checkpoint['opt']
+
+    # add because div_transform is not present in model
+    d = vars(opt)
+    d['div_transform'] = False
 
     # construct model
     model = SCAN(opt)
