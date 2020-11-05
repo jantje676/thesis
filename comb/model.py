@@ -519,24 +519,21 @@ class ContrastiveLoss(nn.Module):
             cost_s = cost_s.max(1)[0]
             cost_im = cost_im.max(0)[0]
 
-        # add extra loss function
+        # diversity loss
+        num = torch.bmm(im, im.permute(0,2,1))
+        norm = torch.norm(im, dim =2).unsqueeze(dim=2)
+        denom = torch.bmm(norm, norm.permute(0,2,1))
+        sim_im = (num / (denom).clamp(min=1e-08))
+        sim_im = 1 + sim_im
+        loss_div = torch.triu(sim_im, diagonal=1)
+        loss_div = loss_div.sum() * self.opt.theta
+
         if self.opt.diversity_loss:
-            num = torch.bmm(im, im.permute(0,2,1))
-            norm = torch.norm(im, dim =2).unsqueeze(dim=2)
-            denom = torch.bmm(norm, norm.permute(0,2,1))
-            sim_im = (num / (denom).clamp(min=1e-08))
-            sim_im = 1 + sim_im
-            loss_div = torch.triu(sim_im, diagonal=1)
-            loss_div = loss_div.sum() * self.opt.theta
             total_loss = standard_loss + loss_div
-            diversity_loss = loss_div.item()
         else:
-            diversity_loss = 0
             total_loss =  standard_loss
 
-
-
-        return total_loss, standard_loss.item(), diversity_loss
+        return total_loss, standard_loss.item(), loss_div.item()
 
 
 
