@@ -156,6 +156,11 @@ def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_pat
     checkpoint = torch.load(model_path)
     opt = checkpoint['opt']
     print(opt)
+
+    # add because div_transform is not present in model
+    d = vars(opt)
+    d['div_transform'] = False
+    
     if data_path is not None:
         opt.data_path = data_path
 
@@ -171,7 +176,7 @@ def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_pat
 
     if change:
         opt.clothing = "dresses"
-        
+
     print('Loading dataset')
     data_loader = get_test_loader(split, opt.data_name, vocab,
                                   opt.batch_size, opt.workers, opt)
