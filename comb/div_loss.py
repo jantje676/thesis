@@ -20,9 +20,13 @@ def euclidean_loss(theta, im, sigma):
     im_exp = im.repeat(1,1,7,1)
     im_trans = torch.transpose(im_exp, 1,2)
     diff = im_exp - im_trans
+
     norm = torch.norm(diff, dim=3)
+
     pow = ((norm **2) / sigma) * -1
+
     sim_im = torch.exp(pow)
+
     loss_div = torch.triu(sim_im, diagonal=1)
     loss_div = loss_div.sum() * theta
 

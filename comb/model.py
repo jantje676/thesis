@@ -522,7 +522,6 @@ class ContrastiveLoss(nn.Module):
 
 
         # calculate diversity
-        diversity = "euc"
         if self.opt.diversity_loss == "cos":
             loss_div = cosine_loss(self.opt.theta, im)
         elif self.opt.diversity_loss == "euc" or self.opt.diversity_loss == None:
