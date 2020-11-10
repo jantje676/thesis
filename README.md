@@ -9,7 +9,5 @@ A quick outline of the different folders:
 - data: data folder
 - laenen: implementation of laenen cross-modal paper
 - search: performing multi-modal search with trained cross-modal models (Old experiment)
-- simCLR: simCLR implementation (Old experiment)
-- simCLR_adap: simCLR implmentation (Old experiment)
 - vilbert_beta: vilbert model used as a baseline
 - visualize: scripts to visualize attention of SCAN-model
