@@ -106,14 +106,16 @@ if __name__ == '__main__':
                         help='(Used for add_cost) fraction of normal similarity used for sentences that have low frequency')
 
     # use for cnn-layers with diversity_loss
-    parser.add_argument('--diversity_loss', action='store_true',
-                        help="add extra loss component to force diversity of features")
+    parser.add_argument('--diversity_loss', default=None, type=str,
+                        help="add extra loss component to force diversity of features cos|euc")
     parser.add_argument('--theta', default=0.4, type=float,
                         help='hyperparameter balancing standard loss and diversity loss')
     parser.add_argument('--net', default="alex", type=str,
                         help='which network to use')
     parser.add_argument('--div_transform', action='store_true',
                         help="use selection of different transforms")
+    parser.add_argument('--sigma', default=1, type=float,
+                        help='hyperparameter for the euclidean_loss heat kernel')
 
 
     # freq

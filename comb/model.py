@@ -25,6 +25,7 @@ from stn import STN
 from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
 from transformers import BertModel
 from cnn_layers import CNN_layers
+from div_loss import cosine_loss, euclidean_loss
 
 def l1norm(X, dim, eps=1e-8):
     """L1-normalize columns of X
@@ -519,16 +520,16 @@ class ContrastiveLoss(nn.Module):
             cost_s = cost_s.max(1)[0]
             cost_im = cost_im.max(0)[0]
 
-        # diversity loss
-        num = torch.bmm(im, im.permute(0,2,1))
-        norm = torch.norm(im, dim =2).unsqueeze(dim=2)
-        denom = torch.bmm(norm, norm.permute(0,2,1))
-        sim_im = (num / (denom).clamp(min=1e-08))
-        sim_im = 1 + sim_im
-        loss_div = torch.triu(sim_im, diagonal=1)
-        loss_div = loss_div.sum() * self.opt.theta
 
-        if self.opt.diversity_loss:
+        # calculate diversity
+        diversity = "euc"
+        if self.opt.diversity_loss == "cos":
+            loss_div = cosine_loss(self.opt.theta, im)
+        elif self.opt.diversity_loss == "euc" or self.opt.diversity_loss == None:
+            loss_div = euclidean_loss(self.opt.theta, im, self.opt.sigma)
+
+
+        if self.opt.diversity_loss != None:
             total_loss = standard_loss + loss_div
         else:
             total_loss =  standard_loss
