@@ -107,7 +107,7 @@ if __name__ == '__main__':
 
     # use for cnn-layers with diversity_loss
     parser.add_argument('--diversity_loss', default=None, type=str,
-                        help="add extra loss component to force diversity of features cos|euc")
+                        help="add extra loss component to force diversity of features cos|euc|euc_heat")
     parser.add_argument('--theta', default=0.4, type=float,
                         help='hyperparameter balancing standard loss and diversity loss')
     parser.add_argument('--net', default="alex", type=str,

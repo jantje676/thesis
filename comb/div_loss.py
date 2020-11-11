@@ -15,19 +15,25 @@ def cosine_loss(theta, im):
     loss_div = loss_div.sum() * theta
     return loss_div
 
-def euclidean_loss(theta, im, sigma):
+def euclidean_heat_loss(theta, im, sigma):
     im = im.unsqueeze(dim=2)
     im_exp = im.repeat(1,1,7,1)
     im_trans = torch.transpose(im_exp, 1,2)
     diff = im_exp - im_trans
-
     norm = torch.norm(diff, dim=3)
-
     pow = ((norm **2) / sigma) * -1
-
     sim_im = torch.exp(pow)
-
     loss_div = torch.triu(sim_im, diagonal=1)
     loss_div = loss_div.sum() * theta
+    return loss_div
 
+def euclidean_loss(theta, im):
+    im = im.unsqueeze(dim=2)
+    im_exp = im.repeat(1,1,7,1)
+    im_trans = torch.transpose(im_exp, 1,2)
+    diff = im_exp - im_trans
+    norm = torch.norm(diff, dim=3)
+    sim_im = 1/(norm **2)
+    loss_div = torch.triu(sim_im, diagonal=1)
+    loss_div = loss_div.sum() * theta
     return loss_div
