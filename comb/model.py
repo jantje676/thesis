@@ -25,7 +25,7 @@ from stn import STN
 from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
 from transformers import BertModel
 from cnn_layers import CNN_layers
-from div_loss import cosine_loss, euclidean_loss, euclidean_heat_loss
+from div_loss import cosine_loss, euclidean_loss, euclidean_heat_loss, ssd, dpp
 
 def l1norm(X, dim, eps=1e-8):
     """L1-normalize columns of X
@@ -528,6 +528,10 @@ class ContrastiveLoss(nn.Module):
             loss_div = euclidean_heat_loss(self.opt.theta, im, self.opt.sigma)
         elif self.opt.diversity_loss == "euc":
             loss_div = euclidean_loss(self.opt.theta, im)
+        elif self.opt.diversity_loss == "ssd":
+            loss_div = ssd(self.opt.theta, im)
+        elif self.opt.diversity_loss == "dpp":
+            loss_div = dpp(self.opt.theta, im)
 
         if self.opt.diversity_loss != None:
             total_loss = standard_loss + loss_div

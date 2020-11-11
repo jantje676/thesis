@@ -37,3 +37,18 @@ def euclidean_loss(theta, im):
     loss_div = torch.triu(sim_im, diagonal=1)
     loss_div = loss_div.sum() * theta
     return loss_div
+
+def ssd(theta, im):
+
+    kernel = torch.bmm(im, torch.transpose(im, 1,2 ))
+    eigen = torch.symeig(kernel)
+    print(eigen)
+    exit()
+
+def dpp(theta, im):
+
+    kernel = torch.bmm(im, torch.transpose(im, 1,2 ))
+    det = kernel.det()
+    log_det = torch.log(det)
+    loss_div = log_det.sum() * theta
+    return loss_div
