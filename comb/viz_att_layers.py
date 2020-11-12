@@ -6,7 +6,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from vocab import Vocabulary, deserialize_vocab
 from model import SCAN, xattn_score_i2t, xattn_score_t2i
-from data_ken import PrecompDataset, collate_fn
+from data_ken import PrecompDataset, PrecompTrans, collate_fn
 from evaluation import encode_data
 
 """
@@ -94,7 +94,13 @@ def create_attn(data_loader, positions, opt, model):
     return total_attn
 
 def retrieve_loader(split, opt, dpath, word, vocab):
-    dset = PrecompDataset(dpath, split, vocab, opt.version, opt.filter,
+
+    if opt.precomp_enc_type == "trans" or opt.precomp_enc_type == "layers" or opt.precomp_enc_type == "layers_attention" or opt.precomp_enc_type == "cnn_layers":
+        dset = PrecompTrans(dpath, split, vocab, opt.version, opt.image_path,
+                            opt.rectangle, opt.data_name, opt.filter, opt.n_filter,
+                            opt.cut, opt.n_cut, opt.clothing, opt.txt_enc)
+    else:
+        dset = PrecompDataset(dpath, split, vocab, opt.version, opt.filter,
                             opt.n_filter, opt.cut, opt.n_cut, opt.txt_enc)
 
     # filter dataset
