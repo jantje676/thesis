@@ -38,17 +38,20 @@ def euclidean_loss(theta, im):
     loss_div = loss_div.sum() * theta
     return loss_div
 
+# theta should be low: 0.0000001
 def ssd(theta, im):
-
     kernel = torch.bmm(im, torch.transpose(im, 1,2 ))
-    eigen = torch.symeig(kernel)
-    print(eigen)
-    exit()
+    eigen = torch.symeig(kernel, eigenvectors=True)
+    eigen_values = eigen[0]
+    sim_im = (eigen_values - 1) ** 2
+    loss_div = sim_im.sum() * theta
+    return loss_div
 
+# features should be normalized otherwise they dont work
 def dpp(theta, im):
 
     kernel = torch.bmm(im, torch.transpose(im, 1,2 ))
     det = kernel.det()
-    log_det = torch.log(det)
+    log_det = 1/torch.log(det)
     loss_div = log_det.sum() * theta
     return loss_div
