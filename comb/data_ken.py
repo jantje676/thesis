@@ -158,6 +158,8 @@ class PrecompTrans(data.Dataset):
         for i in range(len(self.captions)):
             if self.bert:
                 tokens = self.tokenizer.encode(self.captions[i], add_special_tokens=False)
+                temp = self.tokenizer.encode(str(word), add_special_tokens=False)
+                word = temp[0]
             else:
                 tokens = self.tokenizer.word_tokenize(
                     str(self.captions[i]).lower())
@@ -291,6 +293,8 @@ class PrecompDataset(data.Dataset):
         for i in range(len(self.captions)):
             if self.bert:
                 tokens = self.tokenizer.encode(self.captions[i], add_special_tokens=False)
+                temp = self.tokenizer.encode(str(word), add_special_tokens=False)
+                word = temp[0]
             else:
                 tokens = self.tokenizer.word_tokenize(
                     str(self.captions[i]).lower())
@@ -306,6 +310,7 @@ class PrecompDataset(data.Dataset):
         self.length = len(filtered_captions)
         self.captions = filtered_captions
         self.images = np.stack(filtered_images, axis=0)
+
 
         self.freq_score = filtered_freq_score
         self.freqs = filtered_freqs

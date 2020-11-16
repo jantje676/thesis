@@ -43,7 +43,10 @@ def main(args):
         word_attn[word] = average_attn
 
     write_attn(out_path, word_attn)
+    plot_one(out_path, word_attn)
 
+def plot_one(out_path, word_attn):
+    return
 def write_attn(out_path, word_attn):
     file = open("{}/attention.txt".format(out_path), "w")
     for key in word_attn.keys():
@@ -133,7 +136,7 @@ def load_model(model_path, device):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='visualize attention distribution')
     parser.add_argument('--run_folder', default="runs", type=str, help='path to run folder')
-    parser.add_argument('--run', default="run18", type=str, help='which run')
+    parser.add_argument('--run', default="run19", type=str, help='which run')
     parser.add_argument('--out_folder', default="vizAttn", type=str, help='')
     parser.add_argument("--list_words", nargs="+", default=["black", "white", "black", "blue", "green", "red", "floral", "lace", "jersey", "silk", "midi", "sheath"])
 
