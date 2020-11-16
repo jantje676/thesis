@@ -155,11 +155,13 @@ class PrecompTrans(data.Dataset):
         filtered_freqs = []
         position = []
 
+        if self.bert:
+            temp = self.tokenizer.encode(str(word), add_special_tokens=False)
+            word = temp[0]
+
         for i in range(len(self.captions)):
             if self.bert:
                 tokens = self.tokenizer.encode(self.captions[i], add_special_tokens=False)
-                temp = self.tokenizer.encode(str(word), add_special_tokens=False)
-                word = temp[0]
             else:
                 tokens = self.tokenizer.word_tokenize(
                     str(self.captions[i]).lower())
@@ -290,11 +292,13 @@ class PrecompDataset(data.Dataset):
         filtered_freqs = []
         position = []
 
+        if self.bert:
+            temp = self.tokenizer.encode(str(word), add_special_tokens=False)
+            word = temp[0]
+
         for i in range(len(self.captions)):
             if self.bert:
                 tokens = self.tokenizer.encode(self.captions[i], add_special_tokens=False)
-                temp = self.tokenizer.encode(str(word), add_special_tokens=False)
-                word = temp[0]
             else:
                 tokens = self.tokenizer.word_tokenize(
                     str(self.captions[i]).lower())
