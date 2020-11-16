@@ -164,6 +164,7 @@ def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_pat
     d['sigma'] = 1
     d['theta'] = 0.4
     d['diversity_loss'] = None
+    d['txt_enc'] = 'basic'
 
     if data_path is not None:
         opt.data_path = data_path
