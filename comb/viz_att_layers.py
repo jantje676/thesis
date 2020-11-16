@@ -46,7 +46,7 @@ def main(args):
     plot_one(out_path, word_attn)
 
 def plot_one(out_path, word_attn):
-    words = ['black', 'green', 'red', 'white', 'jersey', 'medi', 'sheath', "lace"]
+    words = ['black', 'green', 'red', 'white', 'jersey', 'midi', 'sheath', "lace"]
 
     x = 2
     y = int(len(words)/x)
