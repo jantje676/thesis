@@ -46,6 +46,26 @@ def main(args):
     plot_one(out_path, word_attn)
 
 def plot_one(out_path, word_attn):
+    words = ['black', 'green', 'red', 'white', 'jersey', 'medi', 'sheath', "lace"]
+
+    x = 2
+    y = int(len(words)/x)
+    fig, axs = plt.subplots(x, y, figsize=(40,15))
+
+    for i in range(x):
+        for j in range(y):
+            word = words[(i*y) + j]
+            average_attn = word_attn[word]
+            n_layers = torch.tensor(average_attn.shape)[0].item()
+            x_axes = list(range(1, n_layers + 1))
+            axs[i, j].bar(x_axes, average_attn.cpu(), align='center', alpha=0.5)
+            axs[i, j].set_title(word)
+            axs[i, j].set_xlabel("layer")
+            axs[i, j].set_ylabel("attention")
+
+    plt.savefig('{}/viz_one'.format(out_path))
+    plt.close()
+
     return
 def write_attn(out_path, word_attn):
     file = open("{}/attention.txt".format(out_path), "w")
