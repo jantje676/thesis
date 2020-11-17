@@ -2,9 +2,14 @@ import argparse
 import torch
 import numpy as np
 from div_loss import cosine_loss, ssd, dpp, euclidean_heat_loss, euclidean_loss
-def main(args):
-    versions = ["layers_short", "layers_short", "layers_short"]
 
+"""
+Script to calculate the different implemented div_loss scores on the layers datasetsd
+"""
+def main(args):
+    versions = args.list_versions
+
+    print(versions)
     for version in versions:
         scores = div_scores(args.data_folder, version)
         print("************** {} ***************".format(version))
