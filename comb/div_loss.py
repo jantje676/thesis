@@ -15,9 +15,10 @@ def cosine_loss(theta, im):
     loss_div = loss_div.sum() * theta
     return loss_div
 
-def euclidean_heat_loss(theta, im, sigma):
+# sigma should be >10000
+def euclidean_heat_loss(theta, im, sigma, n_detectors):
     im = im.unsqueeze(dim=2)
-    im_exp = im.repeat(1,1,7,1)
+    im_exp = im.repeat(1,1,n_detectors,1)
     im_trans = torch.transpose(im_exp, 1,2)
     diff = im_exp - im_trans
     norm = torch.norm(diff, dim=3)
@@ -27,9 +28,9 @@ def euclidean_heat_loss(theta, im, sigma):
     loss_div = loss_div.sum() * theta
     return loss_div
 
-def euclidean_loss(theta, im):
+def euclidean_loss(theta, im, n_detectors):
     im = im.unsqueeze(dim=2)
-    im_exp = im.repeat(1,1,7,1)
+    im_exp = im.repeat(1,1,n_detectors,1)
     im_trans = torch.transpose(im_exp, 1,2)
     diff = im_exp - im_trans
     norm = torch.norm(diff, dim=3)

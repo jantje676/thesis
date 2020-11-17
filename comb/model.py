@@ -525,9 +525,9 @@ class ContrastiveLoss(nn.Module):
         if self.opt.diversity_loss == "cos":
             loss_div = cosine_loss(self.opt.theta, im)
         elif self.opt.diversity_loss == "euc_heat" or self.opt.diversity_loss == None:
-            loss_div = euclidean_heat_loss(self.opt.theta, im, self.opt.sigma)
+            loss_div = euclidean_heat_loss(self.opt.theta, im, self.opt.sigma, self.opt.n_detectors)
         elif self.opt.diversity_loss == "euc":
-            loss_div = euclidean_loss(self.opt.theta, im)
+            loss_div = euclidean_loss(self.opt.theta, im, self.opt.n_detectors)
         elif self.opt.diversity_loss == "ssd":
             loss_div = ssd(self.opt.theta, im)
         elif self.opt.diversity_loss == "dpp":
