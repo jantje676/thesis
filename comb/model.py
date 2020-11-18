@@ -331,6 +331,10 @@ def func_attention(query, context, opt, smooth, eps=1e-8):
     if opt.raw_feature_norm == "argmax":
         max_indx = torch.argmax(attnT, dim=1)
         temp = torch.zeros(attnT.shape, dtype=attnT.dtype)
+        print("temp")
+        print(temp.type())
+        print("max")
+        print(max_indx.type())
         attnT = temp.scatter_(dim=1, index=max_indx.unsqueeze(dim=1), value=1)
 
     print(attnT.type())
