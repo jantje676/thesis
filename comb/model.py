@@ -23,6 +23,7 @@ from collections import OrderedDict
 from utils import adap_margin
 from stn import STN
 from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
+from util.layers_alex2 import LayersModel2, EncoderImageAttention, LayerAttention
 from transformers import BertModel
 from cnn_layers import CNN_layers
 from div_loss import cosine_loss, euclidean_loss, euclidean_heat_loss, ssd, dpp
@@ -585,6 +586,7 @@ class SCAN(object):
         else:
             params = list(self.txt_enc.parameters())
             params += list(self.img_enc.parameters())
+
 
         self.params = params
 
