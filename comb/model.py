@@ -290,7 +290,7 @@ def func_attention(query, context, opt, smooth, eps=1e-8):
     # (batch, sourceL, d)(batch, d, queryL)
     # --> (batch, sourceL, queryL)
     attn = torch.bmm(context, queryT)
-    if opt.raw_feature_norm == "softmax":
+    if opt.raw_feature_norm == "softmax" or opt.raw_feature_norm == "argmax":
         # --> (batch*sourceL, queryL)
         attn = attn.view(batch_size*sourceL, queryL)
         attn = nn.Softmax()(attn)
@@ -326,6 +326,15 @@ def func_attention(query, context, opt, smooth, eps=1e-8):
     contextT = torch.transpose(context, 1, 2)
     # (batch x d x sourceL)(batch x sourceL x queryL)
     # --> (batch, d, queryL)
+
+    # TESTING can be removed later if argmax doesnt work
+    if opt.raw_feature_norm == "argmax":
+        max_indx = torch.argmax(attnT, dim=1)
+        attnT = torch.zeros(attnT.shape, dtype=attnT.dtype).scatter_(dim=1, index=max_indx.unsqueeze(dim=1), value=1)
+        if torch.cuda.is_available():
+            attnT = attnT.cuda()
+
+
     weightedContext = torch.bmm(contextT, attnT)
     # --> (batch, queryL, d)
     weightedContext = torch.transpose(weightedContext, 1, 2)
