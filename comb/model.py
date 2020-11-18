@@ -330,15 +330,11 @@ def func_attention(query, context, opt, smooth, eps=1e-8):
     # TESTING can be removed later if argmax doesnt work
     if opt.raw_feature_norm == "argmax":
         max_indx = torch.argmax(attnT, dim=1)
-        if torch.cuda.is_available():
-            max_indx = max_indx.cuda()
         temp = torch.zeros(attnT.shape, dtype=attnT.dtype)
-        print(temp.type())
-        print(max_indx.type())
         attnT = temp.scatter_(dim=1, index=max_indx.unsqueeze(dim=1), value=1)
 
-
-
+    print(attnT.type())
+    print(contextT.type())
     weightedContext = torch.bmm(contextT, attnT)
     # --> (batch, queryL, d)
     weightedContext = torch.transpose(weightedContext, 1, 2)
