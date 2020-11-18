@@ -332,7 +332,10 @@ def func_attention(query, context, opt, smooth, eps=1e-8):
         max_indx = torch.argmax(attnT, dim=1)
         if torch.cuda.is_available():
             max_indx = max_indx.cuda()
-        attnT = torch.zeros(attnT.shape, dtype=attnT.dtype).scatter_(dim=1, index=max_indx.unsqueeze(dim=1), value=1)
+        temp = torch.zeros(attnT.shape, dtype=attnT.dtype)
+        print(temp.type())
+        print(max_indx.type())
+        attnT = temp.scatter_(dim=1, index=max_indx.unsqueeze(dim=1), value=1)
 
 
 
