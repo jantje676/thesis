@@ -125,7 +125,7 @@ class PrecompTrans(data.Dataset):
         return self.length
 
     def bert_tokenize(self, caption):
-        tokenized_cap = self.tokenizer.encode(caption, add_special_tokens=True)
+        tokenized_cap = self.tokenizer.encode(caption, add_special_tokens=False)
         target = torch.Tensor(tokenized_cap)
         return target
 
@@ -156,7 +156,7 @@ class PrecompTrans(data.Dataset):
         position = []
 
         if self.bert:
-            temp = self.tokenizer.encode(str(word), add_special_tokens=False)
+            temp = self.tokenizer.encode(str(word), add_special_tokens=True)
             word = temp[0]
 
         for i in range(len(self.captions)):
@@ -354,7 +354,7 @@ def collate_fn(data):
 def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
                        shuffle=True, num_workers=2):
     """Returns torch.utils.data.DataLoader for custom coco dataset."""
-    if opt.precomp_enc_type == "trans" or opt.precomp_enc_type == "layers" or opt.precomp_enc_type == "layers_attention" or opt.precomp_enc_type == "cnn_layers":
+    if opt.precomp_enc_type == "trans" or opt.precomp_enc_type == "layers" or opt.precomp_enc_type == "layers_attention" or opt.precomp_enc_type == "cnn_layers" or opt.precomp_enc_type == "layers_attention_res" or opt.precomp_enc_type == "layers_attention_im":
         dset = PrecompTrans(data_path, data_split, vocab, opt.version, opt.image_path,
                             opt.rectangle, opt.data_name, opt.filter, opt.n_filter,
                             opt.cut, opt.n_cut, opt.clothing, opt.txt_enc)

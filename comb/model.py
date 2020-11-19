@@ -22,8 +22,11 @@ import numpy as np
 from collections import OrderedDict
 from utils import adap_margin
 from stn import STN
-from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
-from util.layers_alex2 import LayersModel2, EncoderImageAttention, LayerAttention
+# from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
+from util.layers_alex2 import LayersModel2, EncoderImageAttention2, LayerAttention2
+from util.layers_alex_res import LayersModel3, EncoderImageAttention3, LayerAttention3
+from util.layers_alex_im import LayersModel4, EncoderImageAttention4, LayerAttention4
+
 from transformers import BertModel
 from cnn_layers import CNN_layers
 from div_loss import cosine_loss, euclidean_loss, euclidean_heat_loss, ssd, dpp
@@ -64,7 +67,11 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretr
     elif precomp_enc_type == "layers":
         img_enc = LayersModel(img_dim, embed_size)
     elif precomp_enc_type == "layers_attention":
-        img_enc = LayerAttention(img_dim, embed_size, n_attention, no_imgnorm)
+        img_enc = LayerAttention2(img_dim, embed_size, n_attention, no_imgnorm)
+    elif precomp_enc_type == "layers_attention_res":
+        img_enc = LayerAttention3(img_dim, embed_size, n_attention, no_imgnorm)
+    elif precomp_enc_type == "layers_attention_im":
+        img_enc = LayerAttention4(img_dim, embed_size, n_attention, no_imgnorm)
     elif precomp_enc_type == "cnn_layers":
         img_enc = CNN_layers(n_detectors, embed_size, pretrained_alex, net, div_transform)
     else:
@@ -632,15 +639,18 @@ class SCAN(object):
         # Set mini-batch dataset
         images = Variable(images)
         captions = Variable(captions)
+
         if torch.cuda.is_available():
             images = images.cuda()
             captions = captions.cuda()
 
+        # cap_emb (tensor), cap_lens (list)
+        cap_emb, cap_lens = self.txt_enc(captions, lengths)
+
         # Forward
         img_emb = self.img_enc(images)
 
-        # cap_emb (tensor), cap_lens (list)
-        cap_emb, cap_lens = self.txt_enc(captions, lengths)
+
         return img_emb, cap_emb, cap_lens
 
     def forward_loss(self, epoch, img_emb, cap_emb, cap_len, freq_score, freqs, **kwargs):
