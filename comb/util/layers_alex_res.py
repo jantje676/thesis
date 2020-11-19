@@ -7,9 +7,9 @@ import torch.nn.functional as F
 from collections import OrderedDict
 
 
-class LayersModel2(nn.Module):
+class LayersModel3(nn.Module):
     def __init__(self, img_dim=4096, embed_size=1024, trained_dresses=False, checkpoint_path=None):
-        super(LayersModel2, self).__init__()
+        super(LayersModel3, self).__init__()
         net = models.alexnet(pretrained=True)
         if trained_dresses:
             print("Loading pretrained model on dresses")
@@ -33,7 +33,7 @@ class LayersModel2(nn.Module):
         self.k = net.classifier[1] #
         self.l = net.classifier[3]
         self.m = net.classifier[4] #
-        self.fc = nn.Linear(img_dim, embed_size)
+        self.fc = nn.Linear(img_dim, img_dim)
 
         self.init_weights()
 
@@ -114,9 +114,12 @@ class LayersModel2(nn.Module):
         x = self.m(x) #
         temp.append(x)
 
+        x = self.relu(x)
+        x = self.fc(x)
+
         features = torch.stack(temp, dim=0).permute(1,0,2)
 
-        return features
+        return features, x
 
     def forward(self, x):
         features = self.forward1(x)
@@ -141,7 +144,7 @@ class LayersModel2(nn.Module):
             if name in own_state:
                 new_state[name] = param
 
-        super(LayersModel2, self).load_state_dict(new_state)
+        super(LayersModel3, self).load_state_dict(new_state)
 
 def flat(x):
     batch = x.shape[0]
@@ -162,16 +165,16 @@ def flat(x):
 
 
 # class based on poly-paper
-class LayerAttention2(nn.Module):
+class LayerAttention3(nn.Module):
 
     def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False):
-        super(LayerAttention2, self).__init__()
-        self.layers = LayersModel2(img_dim, embed_size)
-        self.attention = EncoderImageAttention2(img_dim, embed_size, n_attention, no_imgnorm)
+        super(LayerAttention3, self).__init__()
+        self.layers = LayersModel3(img_dim, embed_size)
+        self.attention = EncoderImageAttention3(img_dim, embed_size, n_attention, no_imgnorm)
 
     def forward(self, images):
-        layer_features = self.layers.forward1(images)
-        features = self.attention(layer_features)
+        layer_features, global_features = self.layers.forward1(images)
+        features = self.attention(layer_features, global_features)
 
         return features
 
@@ -185,21 +188,22 @@ class LayerAttention2(nn.Module):
             if name in own_state:
                 new_state[name] = param
 
-        super(LayerAttention, self).load_state_dict(new_state)
+        super(LayerAttention3, self).load_state_dict(new_state)
 
 
 
 
-class EncoderImageAttention2(nn.Module):
+class EncoderImageAttention3(nn.Module):
 
     def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False):
-        super(EncoderImageAttention2, self).__init__()
+        super(EncoderImageAttention3, self).__init__()
         self.embed_size = embed_size
         self.no_imgnorm = no_imgnorm
+        self.n_attention = n_attention
         self.w1 = nn.Linear(img_dim, int(img_dim/2),bias=False)
         self.w2 = nn.Linear(int(img_dim/2), n_attention,  bias=False)
-        self.w3 = nn.Linear(img_dim, embed_size, bias=True)
-
+        self.w3 = nn.Linear(img_dim, img_dim, bias=True)
+        self.w4 = nn.Linear(img_dim, embed_size, bias=True)
         self.init_weights()
 
     def init_weights(self):
@@ -208,9 +212,10 @@ class EncoderImageAttention2(nn.Module):
         nn.init.xavier_uniform_(self.w1.weight)
         nn.init.xavier_uniform_(self.w2.weight)
         nn.init.xavier_uniform_(self.w3.weight)
+        nn.init.xavier_uniform_(self.w4.weight)
 
 
-    def forward(self, images):
+    def forward(self, images, global_features):
         """Extract image feature vectors."""
         # assuming that the precomputed features are already l2-normalized
         attention = self.w1(images)
@@ -219,12 +224,16 @@ class EncoderImageAttention2(nn.Module):
         attention = F.softmax(attention, dim=1)
         attention = attention.transpose(1,2)
 
-        features = torch.bmm(attention, images)
-        features = self.w3(features)
+        loc_feat = torch.bmm(attention, images)
+        loc_feat = self.w3(loc_feat)
 
-        # normalize in the joint embedding space
+        glob = global_features.unsqueeze(dim=1)
+        glob = glob.expand(-1, self.n_attention, -1)
+
+        features = glob + loc_feat
         features = l2norm(features, dim=-1)
 
+        features = self.w4(features)
         return features
 
     def load_state_dict(self, state_dict):
@@ -237,7 +246,7 @@ class EncoderImageAttention2(nn.Module):
             if name in own_state:
                 new_state[name] = param
 
-        super(EncoderImageAttention2, self).load_state_dict(new_state)
+        super(EncoderImageAttention3, self).load_state_dict(new_state)
 
 def l2norm(X, dim, eps=1e-8):
     """L2-normalize columns of X
