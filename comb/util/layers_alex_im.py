@@ -5,7 +5,7 @@ import numpy as np
 import torch.nn.init
 import torch.nn.functional as F
 from collections import OrderedDict
-
+import math
 
 class LayersModel4(nn.Module):
     def __init__(self, img_dim=4096, embed_size=1024, trained_dresses=False, checkpoint_path=None):
@@ -114,12 +114,9 @@ class LayersModel4(nn.Module):
         x = self.m(x) #
         temp.append(x)
 
-        x = self.relu(x)
-        x = self.fc(x)
-
         features = torch.stack(temp, dim=0).permute(1,0,2)
 
-        return features, x
+        return features
 
     def forward(self, x):
         features = self.forward1(x)
@@ -172,9 +169,27 @@ class LayerAttention4(nn.Module):
         self.layers = LayersModel4(img_dim, embed_size)
         self.attention = EncoderImageAttention4(img_dim, embed_size, n_attention, no_imgnorm)
 
+        # checkpoint_path = "../train_models/runAlex/train1/checkpoint/model_best.pth.tar"
+        checkpoint_path = "$HOME/runAlex/test1/checkpoint/model_best.pth.tar"
+
+        print("Loading pretrained model on dresses")
+        net = models.alexnet(pretrained=True)
+        checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+        weights = checkpoint["model"]
+        del weights['classifier.6.weight']
+        del weights['classifier.6.bias']
+        net.load_state_dict(checkpoint["model"], strict=False)
+        net.classifier = nn.Sequential(*[net.classifier[i] for i in range(5)])
+        self.glob_net = net
+
+        for param in self.glob_net.parameters():
+            param.requires_grad = False
+
     def forward(self, images):
-        layer_features, global_features = self.layers.forward1(images)
-        features = self.attention(layer_features, global_features)
+        layer_features = self.layers.forward1(images)
+        glob_features = self.glob_net(images)
+
+        features = self.attention(layer_features, glob_features)
 
         return features
 
@@ -198,12 +213,12 @@ class EncoderImageAttention4(nn.Module):
     def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False):
         super(EncoderImageAttention4, self).__init__()
         self.embed_size = embed_size
+        self.img_dim = img_dim
         self.no_imgnorm = no_imgnorm
         self.n_attention = n_attention
         self.w1 = nn.Linear(img_dim, int(img_dim/2),bias=False)
-        self.w2 = nn.Linear(int(img_dim/2), n_attention,  bias=False)
-        self.w3 = nn.Linear(img_dim, img_dim, bias=True)
-        self.w4 = nn.Linear(img_dim, embed_size, bias=True)
+        self.w2 = nn.Linear(img_dim, n_attention,  bias=False)
+        self.w3 = nn.Linear(img_dim, embed_size, bias=True)
         self.init_weights()
 
     def init_weights(self):
@@ -212,29 +227,26 @@ class EncoderImageAttention4(nn.Module):
         nn.init.xavier_uniform_(self.w1.weight)
         nn.init.xavier_uniform_(self.w2.weight)
         nn.init.xavier_uniform_(self.w3.weight)
-        nn.init.xavier_uniform_(self.w4.weight)
 
 
-    def forward(self, images, global_features):
+    def forward(self, images, glob_features):
         """Extract image feature vectors."""
         # assuming that the precomputed features are already l2-normalized
-        attention = self.w1(images)
-        attention = F.tanh(attention)
-        attention = self.w2(attention)
-        attention = F.softmax(attention, dim=1)
-        attention = attention.transpose(1,2)
+        keys = self.w1(images)
+        glob_features = glob_features.unsqueeze(dim=1).expand(-1,int(self.img_dim/2), -1 )
+        queries = self.w2(glob_features)
 
-        loc_feat = torch.bmm(attention, images)
-        loc_feat = self.w3(loc_feat)
+        temp_attn = torch.bmm(queries.transpose(1,2), keys.transpose(1,2))
+        temp_attn = temp_attn / math.sqrt(self.img_dim)
+        attention = F.softmax(temp_attn, dim=2)
+        feat = torch.bmm(attention, images)
 
-        glob = global_features.unsqueeze(dim=1)
-        glob = glob.expand(-1, self.n_attention, -1)
+        feat = l2norm(feat, dim=-1)
 
-        features = glob + loc_feat
-        features = l2norm(features, dim=-1)
+        feat = self.w3(feat)
+        feat = torch.sigmoid(feat)
 
-        features = self.w4(features)
-        return features
+        return feat
 
     def load_state_dict(self, state_dict):
         """Copies parameters. overwritting the default one to
