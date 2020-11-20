@@ -12,13 +12,13 @@ Spatial transformer module that can be used in the SCAN model to learn automatic
 """
 
 class STN(nn.Module):
-    def __init__(self, n_detectors, embed_size, pretrained_alex, rectangle):
+    def __init__(self, n_detectors, embed_size, pretrained_alex, rectangle, net):
         super(STN, self).__init__()
         self.n_detectors = n_detectors
         start_transformation = init_trans(n_detectors, rectangle)
 
         # conv nets
-        self.conv = nn.ModuleList(retrieve_convnets(self.n_detectors, embed_size, pretrained_alex))
+        self.conv = nn.ModuleList(retrieve_convnets(self.n_detectors, embed_size, pretrained_alex, net=net))
 
         # Spatial transformer localization-network
         self.localization = models.alexnet()
@@ -65,7 +65,7 @@ class STN(nn.Module):
         # transform the input
         batch_size = x.shape[0]
         x = self.stn(x)
-    
+
         # check_image(x, 0, self.n_detectors)
         # exit()
         stack = []
@@ -94,11 +94,16 @@ def retrieve_convnets(n_detectors, embed_size, pretrained_alex, net="alex"):
         if net == "alex":
 
             temp_alex = models.alexnet(pretrained=pretrained_alex)
-
             temp_alex.classifier = nn.Sequential(*[temp_alex.classifier[i] for i in range(5)],nn.ReLU(), nn.Linear(4096, embed_size))
             if torch.cuda.is_available():
                 temp_alex = temp_alex.cuda()
             conv.append(temp_alex)
+        elif net == "res":
+            temp_res = torch.hub.load('zhanghang1989/ResNeSt', 'resnest50', pretrained=True)
+            temp_res.fc = nn.Linear(2048, embed_size)
+            if torch.cuda.is_available():
+                temp_res = temp_res.cuda()
+            conv.append(temp_res)
 
     return conv
 
@@ -168,3 +173,10 @@ def check_image(x, indx, n_detectors):
         axarr[i].imshow(images[i])
 
     plt.show()
+
+class Identity(nn.Module):
+    def __init__(self):
+        super(Identity, self).__init__()
+
+    def forward(self, x):
+        return x
