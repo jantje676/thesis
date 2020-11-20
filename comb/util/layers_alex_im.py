@@ -170,7 +170,7 @@ class LayerAttention4(nn.Module):
         self.attention = EncoderImageAttention4(img_dim, embed_size, n_attention, no_imgnorm)
 
         # checkpoint_path = "../train_models/runAlex/train1/checkpoint/model_best.pth.tar"
-        checkpoint_path = "$HOME/runAlex/test1/checkpoint/model_best.pth.tar"
+        checkpoint_path = "/home/kgoei/runAlex/test1/checkpoint/model_best.pth.tar"
 
         print("Loading pretrained model on dresses")
         net = models.alexnet(pretrained=True)
