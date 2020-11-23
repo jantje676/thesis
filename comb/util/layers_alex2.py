@@ -185,7 +185,7 @@ class LayerAttention2(nn.Module):
             if name in own_state:
                 new_state[name] = param
 
-        super(LayerAttention, self).load_state_dict(new_state)
+        super(LayerAttention2, self).load_state_dict(new_state)
 
 
 
