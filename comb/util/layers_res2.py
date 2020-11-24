@@ -31,7 +31,7 @@ class LayersModelRes(nn.Module):
         self.r = net.layer4[2]
         self.s = net.avgpool
 
-    def forward(self, x):
+    def forward1(self, x):
         temp = []
 
         x = self.a(x)
@@ -109,7 +109,7 @@ class LayersModelRes(nn.Module):
         x = self.s(x)
 
         features = torch.stack(temp, dim=0).permute(1,0,2)
-        
+
         return features
 
     def flat(self,x):
@@ -127,89 +127,3 @@ class LayersModelRes(nn.Module):
         x = torch.cat((x, pad), dim=1)
 
         return x
-
-
-# class based on poly-paper
-class LayerAttentionRes(nn.Module):
-
-    def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False):
-        super(LayerAttentionRes, self).__init__()
-        self.layers = LayersModelRes(img_dim, embed_size)
-        self.attention = EncoderImageAttentionRes(img_dim, embed_size, n_attention, no_imgnorm)
-
-    def forward(self, images):
-        layer_features = self.layers.forward(images)
-        features = self.attention(layer_features)
-
-        return features
-
-    def load_state_dict(self, state_dict):
-        """Copies parameters. overwritting the default one to
-        accept state_dict from Full model
-        """
-        own_state = self.state_dict()
-        new_state = OrderedDict()
-        for name, param in state_dict.items():
-            if name in own_state:
-                new_state[name] = param
-
-        super(LayerAttentionRes, self).load_state_dict(new_state)
-
-
-
-
-class EncoderImageAttentionRes(nn.Module):
-
-    def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False):
-        super(EncoderImageAttentionRes, self).__init__()
-        self.embed_size = embed_size
-        self.no_imgnorm = no_imgnorm
-        self.w1 = nn.Linear(img_dim, int(img_dim/2),bias=False)
-        self.w2 = nn.Linear(int(img_dim/2), n_attention,  bias=False)
-        self.w3 = nn.Linear(img_dim, embed_size, bias=True)
-
-        self.init_weights()
-
-    def init_weights(self):
-        """Xavier initialization for the fully connected layer
-        """
-        nn.init.xavier_uniform_(self.w1.weight)
-        nn.init.xavier_uniform_(self.w2.weight)
-        nn.init.xavier_uniform_(self.w3.weight)
-
-
-    def forward(self, images):
-        """Extract image feature vectors."""
-        # assuming that the precomputed features are already l2-normalized
-        attention = self.w1(images)
-        attention = F.tanh(attention)
-        attention = self.w2(attention)
-        attention = F.softmax(attention, dim=1)
-        attention = attention.transpose(1,2)
-
-        features = torch.bmm(attention, images)
-        features = self.w3(features)
-
-        # normalize in the joint embedding space
-        features = l2norm(features, dim=-1)
-
-        return features
-
-    def load_state_dict(self, state_dict):
-        """Copies parameters. overwritting the default one to
-        accept state_dict from Full model
-        """
-        own_state = self.state_dict()
-        new_state = OrderedDict()
-        for name, param in state_dict.items():
-            if name in own_state:
-                new_state[name] = param
-
-        super(EncoderImageAttentionRes, self).load_state_dict(new_state)
-
-def l2norm(X, dim, eps=1e-8):
-    """L2-normalize columns of X
-    """
-    norm = torch.pow(X, 2).sum(dim=dim, keepdim=True).sqrt() + eps
-    X = torch.div(X, norm)
-    return X

@@ -23,11 +23,10 @@ from collections import OrderedDict
 from utils import adap_margin
 from stn import STN
 # from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
-from util.layers_alex2 import LayersModel2, EncoderImageAttention2, LayerAttention2
+# from util.layers_alex2 import LayersModel2, EncoderImageAttention2, LayerAttention2
+from util.LayersAttention import LayerAttention2
 from util.layers_alex_res import LayersModel3, EncoderImageAttention3, LayerAttention3
 from util.layers_alex_im import LayersModel4, EncoderImageAttention4, LayerAttention4
-from util.layers_res2 import LayersModelRes, EncoderImageAttentionRes, LayerAttentionRes
-
 from transformers import BertModel
 from cnn_layers import CNN_layers
 from div_loss import cosine_loss, euclidean_loss, euclidean_heat_loss, ssd, dpp
@@ -68,10 +67,7 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretr
     elif precomp_enc_type == "layers":
         img_enc = LayersModel(img_dim, embed_size)
     elif precomp_enc_type == "layers_attention":
-        if net == "alex":
-            img_enc = LayerAttention2(img_dim, embed_size, n_attention, no_imgnorm)
-        elif net == "res":
-            img_enc = LayerAttentionRes(img_dim, embed_size, n_attention, no_imgnorm)
+        img_enc = LayerAttention2(img_dim, embed_size, n_attention, no_imgnorm, net)
     elif precomp_enc_type == "layers_attention_res":
         img_enc = LayerAttention3(img_dim, embed_size, n_attention, no_imgnorm)
     elif precomp_enc_type == "layers_attention_im":
