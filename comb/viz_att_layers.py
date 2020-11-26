@@ -22,15 +22,18 @@ def main(args):
     if not os.path.isdir(out_path):
         os.makedirs(out_path)
 
+    print("LOADING MODEL")
     # load trained SCAN model
     model, opt = load_model(model_path, device)
     model.val_start()
 
 
+    print("RETRIEVE VOCAB")
     # load vocabulary used by the model
     vocab = deserialize_vocab("{}/{}/{}_vocab_{}.json".format(opt.vocab_path, opt.clothing, opt.data_name, opt.version))
     opt.vocab_size = len(vocab)
 
+    print("FILTER DATASETS")
     word_attn = {}
     for word in args.list_words:
         dpath = os.path.join(opt.data_path, opt.data_name, opt.clothing)
@@ -42,6 +45,7 @@ def main(args):
         plot_attn(average_attn, out_path, word)
         word_attn[word] = average_attn
 
+    print("PLOT ATTENTION")
     write_attn(out_path, word_attn)
     plot_one(out_path, word_attn)
 
@@ -156,7 +160,7 @@ def load_model(model_path, device):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='visualize attention distribution')
     parser.add_argument('--run_folder', default="runs", type=str, help='path to run folder')
-    parser.add_argument('--run', default="run19", type=str, help='which run')
+    parser.add_argument('--run', default="ftrans15", type=str, help='which run')
     parser.add_argument('--out_folder', default="vizAttn", type=str, help='')
     parser.add_argument("--list_words", nargs="+", default=["black", "white", "black", "blue", "green", "red", "floral", "lace", "jersey", "silk", "midi", "sheath"])
 
