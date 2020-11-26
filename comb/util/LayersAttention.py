@@ -18,12 +18,7 @@ class LayerAttention2(nn.Module):
         elif net == 'res':
             self.layers = LayersModelRes(img_dim, embed_size)
 
-        attn = "multi"
-
-        if attn == 'multi':
-            self.attention = MultiheadAttention(img_dim, embed_size, n_attention)
-        else:
-            self.attention = SelfAttention(img_dim, embed_size, n_attention, no_imgnorm)
+        self.attention = SelfAttention(img_dim, embed_size, n_attention, no_imgnorm)
 
     def forward(self, images):
         layer_features = self.layers.forward1(images)
