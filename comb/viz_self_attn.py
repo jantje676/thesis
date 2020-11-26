@@ -46,6 +46,7 @@ def main(args):
 
 def plot_one(out_path, attn, word):
     n_feat = attn.shape[0]
+    n_layers = attn.shape[1]
     x = n_feat
 
     fig, axs = plt.subplots(x,figsize=(40,40))
@@ -53,7 +54,7 @@ def plot_one(out_path, attn, word):
     for i in range(n_feat):
 
         average_attn = attn[i]
-        x_axes = list(range(1, 19 + 1))
+        x_axes = list(range(1, n_layers + 1))
         axs[i].bar(x_axes, average_attn.cpu(), align='center', alpha=0.5)
         axs[i].set_title("feature {}: {}".format(i+1, word))
         axs[i].set_xticks(x_axes)
@@ -132,7 +133,7 @@ def load_model(model_path, device):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='visualize attention distribution')
     parser.add_argument('--run_folder', default="runs", type=str, help='path to run folder')
-    parser.add_argument('--run', default="run18", type=str, help='which run')
+    parser.add_argument('--run', default="run19", type=str, help='which run')
     parser.add_argument('--out_folder', default="vizAttn", type=str, help='')
     parser.add_argument("--list_words", nargs="+", default=["black", "white", "black", "blue", "green", "red", "floral", "lace", "jersey", "silk", "midi", "sheath"])
 
