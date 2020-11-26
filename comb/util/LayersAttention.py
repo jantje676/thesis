@@ -26,6 +26,12 @@ class LayerAttention2(nn.Module):
 
         return features
 
+    def forward_attention(self, images):
+        layer_features = self.layers.forward1(images)
+        features, attention = self.attention.forward_attention(layer_features)
+
+        return features, attention
+
     def load_state_dict(self, state_dict):
         """Copies parameters. overwritting the default one to
         accept state_dict from Full model
@@ -62,7 +68,7 @@ class SelfAttention(nn.Module):
 
 
     def forward(self, images):
-        """Extract image feature vectors."""
+        """Self attention on features"""
         # assuming that the precomputed features are already l2-normalized
         attention = self.w1(images)
         attention = F.tanh(attention)
@@ -77,6 +83,24 @@ class SelfAttention(nn.Module):
         features = l2norm(features, dim=-1)
 
         return features
+
+
+    def forward_attention(self, images):
+        """Self attention on features, pass attention for evaluation"""
+        # assuming that the precomputed features are already l2-normalized
+        attention = self.w1(images)
+        attention = F.tanh(attention)
+        attention = self.w2(attention)
+        attention = F.softmax(attention, dim=1)
+        attention = attention.transpose(1,2)
+
+        features = torch.bmm(attention, images)
+        features = self.w3(features)
+
+        # normalize in the joint embedding space
+        features = l2norm(features, dim=-1)
+
+        return features, attention
 
     def load_state_dict(self, state_dict):
         """Copies parameters. overwritting the default one to

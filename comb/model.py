@@ -653,6 +653,26 @@ class SCAN(object):
 
         return img_emb, cap_emb, cap_lens
 
+    def forward_emb_attention(self, images, captions, lengths, volatile=False):
+        """Compute the image and caption embeddings
+        """
+        # Set mini-batch dataset
+        images = Variable(images)
+        captions = Variable(captions)
+
+        if torch.cuda.is_available():
+            images = images.cuda()
+            captions = captions.cuda()
+
+        # cap_emb (tensor), cap_lens (list)
+        cap_emb, cap_lens = self.txt_enc(captions, lengths)
+
+        # Forward
+        img_emb, attention = self.img_enc.forward_attention(images)
+
+
+        return img_emb, cap_emb, cap_lens, attention
+
     def forward_loss(self, epoch, img_emb, cap_emb, cap_len, freq_score, freqs, **kwargs):
         """Compute the loss given pairs of image and caption embeddings
         """
