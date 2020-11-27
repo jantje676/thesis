@@ -186,7 +186,7 @@ def get_model(args, device):
                                   std=[0.229, 0.224, 0.225])])
     elif args.network == "layers_attr":
         # choose model
-        net = LayersAttr()
+        net = LayersAttr(args.checkpoint)
         # set to evaluation
         net.eval()
 

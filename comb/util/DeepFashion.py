@@ -22,11 +22,11 @@ sys.path.append('/home/kgoei/thesis/comb/util')
 # class based on deepfashion
 class LayersAttr(nn.Module):
 
-    def __init__(self, feature_dim=2048, trained_dresses=False, checkpoint_path=None):
+    def __init__(self, checkpoint):
         super(LayersAttr, self).__init__()
         self.feature_dim = 2048
-        config = 'DeepFashion/global_predictor_resnet.py'
-        checkpoint = 'DeepFashion/checkpoint/epoch_40.pth'
+        config = '{}/DeepFashion/global_predictor_resnet.py'.format(checkpoint)
+        checkpoint = '{}/DeepFashion/checkpoint/epoch_40.pth'.format(checkpoint)
         net = basis_model(config, checkpoint)
 
         self.a = nn.Sequential(net.backbone.conv1, net.backbone.bn1, net.backbone.relu, net.backbone.maxpool)
