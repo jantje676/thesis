@@ -20,29 +20,13 @@ import sys
 sys.path.append('/home/kgoei/thesis/comb/util')
 
 # class based on deepfashion
-class LayersAttr(nn.Module):
+class LayersModelAttr(nn.Module):
 
-    def __init__(self, feature_dim=2048, trained_dresses=False, checkpoint_path=None):
+    def __init__(self):
         super(LayersAttr, self).__init__()
-        self.feature_dim = 2048
         config = 'DeepFashion/global_predictor_resnet.py'
         checkpoint = 'DeepFashion/checkpoint/epoch_40.pth'
         net = basis_model(config, checkpoint)
-
-        self.a = nn.Sequential(net.backbone.conv1, net.backbone.bn1, net.backbone.relu, net.backbone.maxpool)
-        self.b = net.backbone.layer1 #f1
-        self.c = net.backbone.layer2 #f2
-        self.d = net.backbone.layer3[0]
-        self.e = net.backbone.layer3[1] #f3
-        self.f = net.backbone.layer3[2]
-        self.g = net.backbone.layer3[3] #f4
-        self.h = net.backbone.layer3[4]
-        self.i = net.backbone.layer3[5] #f5
-        self.j = net.backbone.layer4[0] #f6
-        self.k = net.backbone.layer4[1]
-        self.l = net.backbone.layer4[2] #f7
-
-
         self.a = net.backbone.conv1
         self.b = nn.Sequential(net.backbone.bn1, net.backbone.relu, net.backbone.maxpool)
         self.c = net.backbone.layer1[0]
@@ -68,26 +52,41 @@ class LayersAttr(nn.Module):
         self.w = net.global_pool.global_layers[3]
         self.x = net.global_pool.global_layers[4]
 
-    def forward(self, x):
+    def forward1(self, x):
         temp = []
+
         x = self.a(x)
-        x = self.b(x) #f1
+        y = self.flat(x)
+        temp.append(y)
+
+        x = self.b(x)
         y = self.flat(x)
         temp.append(y)
 
         x = self.c(x)
         y = self.flat(x)
         temp.append(y)
+
         x = self.d(x)
+        y = self.flat(x)
+        temp.append(y)
+
         x = self.e(x)
         y = self.flat(x)
         temp.append(y)
+
         x = self.f(x)
+        y = self.flat(x)
+        temp.append(y)
+
         x = self.g(x)
         y = self.flat(x)
         temp.append(y)
 
         x = self.h(x)
+        y = self.flat(x)
+        temp.append(y)
+
         x = self.i(x)
         y = self.flat(x)
         temp.append(y)
@@ -95,29 +94,81 @@ class LayersAttr(nn.Module):
         x = self.j(x)
         y = self.flat(x)
         temp.append(y)
+
         x = self.k(x)
+        y = self.flat(x)
+        temp.append(y)
+
         x = self.l(x)
         y = self.flat(x)
         temp.append(y)
-        x = self.m(x)
 
+        x = self.m(x)
+        y = self.flat(x)
+        temp.append(y)
+
+        x = self.n(x)
+        y = self.flat(x)
+        temp.append(y)
+
+        x = self.o(x)
+        y = self.flat(x)
+        temp.append(y)
+
+        x = self.p(x)
+        y = self.flat(x)
+        temp.append(y)
+
+        x = self.q(x)
+        y = self.flat(x)
+        temp.append(y)
+
+        x = self.r(x)
+        y = self.flat(x)
+        temp.append(y)
+
+        x = self.s(x)
+
+        x = self.t(x)
+        y = self.flat(x)
+        temp.append(y)
+
+        x = self.u(x)
+        y = self.flat(x)
+        temp.append(y)
+
+        x = self.v(x)
+        y = self.flat(x)
+        temp.append(y)
+
+        x = self.w(x)
+        y = self.flat(x)
+        temp.append(y)
+
+        x = self.x(x)
+        y = self.flat(x)
+        temp.append(y)
         features = torch.stack(temp, dim=0).permute(1,0,2)
+        print(features.shape)
+        exit()
         return features
 
-    def flat(self, x):
+    def flat(self,x):
         batch = x.shape[0]
         n_channel = x.shape[1]
         dim = x.shape[2]
         pool = nn.AvgPool2d((dim, dim))
+        # pool = nn.MaxPool2d((dim, dim))
         x = pool(x)
-
         x = x.view(batch, -1)
-        n = self.feature_dim - n_channel
+        n = 2048 - n_channel
         pad = torch.zeros((batch, n))
         if torch.cuda.is_available():
             pad = pad.cuda()
         x = torch.cat((x, pad), dim=1)
+
         return x
+
 
 def basis_model(config, checkpoint):
     cfg = Config.fromfile(config)
