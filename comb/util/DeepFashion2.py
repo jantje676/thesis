@@ -10,6 +10,7 @@ from mmfashion.models import build_predictor
 from mmfashion.utils import get_img_tensor
 
 import torchvision.models as models
+import torchvision.transforms as transforms
 import torch.nn as nn
 import torch
 import numpy as np
@@ -18,14 +19,14 @@ import torch.nn.functional as F
 from collections import OrderedDict
 import sys
 sys.path.append('/home/kgoei/thesis/comb/util')
+import PIL
 
 # class based on deepfashion
 class LayersModelAttr(nn.Module):
-
     def __init__(self):
-        super(LayersAttr, self).__init__()
-        config = 'DeepFashion/global_predictor_resnet.py'
-        checkpoint = 'DeepFashion/checkpoint/epoch_40.pth'
+        super(LayersModelAttr, self).__init__()
+        config = '/home/kgoei/thesis/util/DeepFashion/global_predictor_resnet.py'
+        checkpoint = '/home/kgoei/thesis/util/DeepFashion/checkpoint/epoch_40.pth'
         net = basis_model(config, checkpoint)
         self.a = net.backbone.conv1
         self.b = nn.Sequential(net.backbone.bn1, net.backbone.relu, net.backbone.maxpool)
@@ -54,7 +55,7 @@ class LayersModelAttr(nn.Module):
 
     def forward1(self, x):
         temp = []
-
+        x = transforms.Resize((224, 224),interpolation=PIL.Image.NEAREST)(x)
         x = self.a(x)
         y = self.flat(x)
         temp.append(y)
@@ -127,8 +128,9 @@ class LayersModelAttr(nn.Module):
         y = self.flat(x)
         temp.append(y)
 
-        x = self.s(x)
 
+        x = self.s(x)
+        x = x.view(x.size(0), -1)
         x = self.t(x)
         y = self.flat(x)
         temp.append(y)
@@ -149,18 +151,17 @@ class LayersModelAttr(nn.Module):
         y = self.flat(x)
         temp.append(y)
         features = torch.stack(temp, dim=0).permute(1,0,2)
-        print(features.shape)
-        exit()
         return features
 
     def flat(self,x):
         batch = x.shape[0]
         n_channel = x.shape[1]
-        dim = x.shape[2]
-        pool = nn.AvgPool2d((dim, dim))
-        # pool = nn.MaxPool2d((dim, dim))
-        x = pool(x)
-        x = x.view(batch, -1)
+        if len(x.shape) > 2:
+            dim = x.shape[2]
+            pool = nn.AvgPool2d((dim, dim))
+            # pool = nn.MaxPool2d((dim, dim))
+            x = pool(x)
+            x = x.view(batch, -1)
         n = 2048 - n_channel
         pad = torch.zeros((batch, n))
         if torch.cuda.is_available():
