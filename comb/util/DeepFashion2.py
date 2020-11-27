@@ -25,8 +25,12 @@ import PIL
 class LayersModelAttr(nn.Module):
     def __init__(self):
         super(LayersModelAttr, self).__init__()
-        config = '/home/kgoei/thesis/util/DeepFashion/global_predictor_resnet.py'
-        checkpoint = '/home/kgoei/thesis/util/DeepFashion/checkpoint/epoch_40.pth'
+        config = '/home/kgoei/thesis/comb/util/DeepFashion/global_predictor_resnet.py'
+        checkpoint = '/home/kgoei/thesis/comb/util/DeepFashion/checkpoint/epoch_40.pth'
+
+        # config = 'util/DeepFashion/global_predictor_resnet.py'
+        # checkpoint = 'util/DeepFashion/checkpoint/epoch_40.pth'
+
         net = basis_model(config, checkpoint)
         self.a = net.backbone.conv1
         self.b = nn.Sequential(net.backbone.bn1, net.backbone.relu, net.backbone.maxpool)
