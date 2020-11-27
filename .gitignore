@@ -34,3 +34,4 @@ vilbert_beta/data/flickr30k/*
 vilbert_beta/apex/*
 vilbert_beta/fig/*
 vilbert_beta/save/*
+comb/util/DeepFashion
