@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from collections import OrderedDict
 from util.layers_alex2 import LayersModelAlex
 from util.layers_res2 import LayersModelRes
-
+from util.DeepFashion2 import LayersModelAttr
 # class based on poly-paper
 class LayerAttention2(nn.Module):
 
@@ -17,6 +17,8 @@ class LayerAttention2(nn.Module):
             self.layers = LayersModelAlex(img_dim, embed_size)
         elif net == 'res':
             self.layers = LayersModelRes(img_dim, embed_size)
+        elif net == 'attr':
+            self.layers = LayersModelAttr()
 
         self.attention = SelfAttention(img_dim, embed_size, n_attention, no_imgnorm)
 
