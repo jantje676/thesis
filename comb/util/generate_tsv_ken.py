@@ -13,6 +13,8 @@ from PIL import Image
 import torch.nn as nn
 import torch
 sys.path.append('../../')
+sys.path.append('/home/kgoei/thesis/comb/util')
+
 from segment_dresses import segment_dresses, segment_dresses_tile, segment_dresses_tile_nine
 # from simCLR.models.resnet_simclr import ResNetSimCLR
 from Layers_simCLR_pre import Layers_simCLR_pre
