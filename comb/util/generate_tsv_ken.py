@@ -18,6 +18,9 @@ from segment_dresses import segment_dresses, segment_dresses_tile, segment_dress
 from Layers_simCLR_pre import Layers_simCLR_pre
 from layers_model import LayersModel
 from Layers_resnest import Layers_resnest
+from layers_alex2 import LayersModelAlex
+from DeepFashion import LayersAttr
+
 
 FIELDNAMES = ['image_id', 'image_w','image_h','num_boxes', 'boxes', 'features']
 
@@ -76,11 +79,11 @@ def get_captions(args):
 def get_features(img, net, img_idx, transform, segments, bboxes, device, network ):
     W, H, C = img.shape
 
-    if network == "layers":
+    if network == "layers" or network == "layers2":
         img = Image.fromarray(img)
         img_transformed = transform(img).unsqueeze(0).to(device)
         features = net.forward1(img_transformed).to("cpu").squeeze()
-    elif network == "layers_resnest" or network == "layers_simCLR":
+    elif network == "layers_resnest" or network == "layers_simCLR" or "layers_attr":
         img = Image.fromarray(img)
         img_transformed = transform(img).unsqueeze(0).to(device)
         features = net.forward(img_transformed).to("cpu").squeeze()
@@ -138,6 +141,16 @@ def get_model(args, device):
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                   std=[0.229, 0.224, 0.225])])
+    elif args.network == "layers2":
+        net = LayersModel2(trained_dresses=args.trained_dresses, checkpoint_path=args.checkpoint)
+        net.eval()
+
+        transform = transforms.Compose([
+            transforms.Resize((300, 300)),
+            transforms.CenterCrop((256, 256)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                  std=[0.229, 0.224, 0.225])])
 
     elif args.network == "alex":
         # choose model
@@ -161,6 +174,17 @@ def get_model(args, device):
 
 
 
+        # set to evaluation
+        net.eval()
+
+        transform = transforms.Compose([
+            transforms.CenterCrop((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                  std=[0.229, 0.224, 0.225])])
+    elif args.network == "layers_attr":
+        # choose model
+        net = LayersAttr()
         # set to evaluation
         net.eval()
 
