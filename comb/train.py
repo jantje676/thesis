@@ -50,7 +50,7 @@ def start_experiment(opt, seed):
 
     # Construct the model
     model = SCAN(opt)
-    
+
     # save hyperparameters in file
     save_hyperparameters(opt.logger_name, opt)
 
@@ -175,14 +175,14 @@ def validate(opt, val_loader, model):
         print("calculate similarity time:", end-start)
 
         # caption retrieval (find the right text with every image)
-        (r1, r5, r10, medr, meanr) = i2t(img_embs, cap_embs, cap_lens, sims)
-        logging.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" %
-                     (r1, r5, r10, medr, meanr))
+        (r1, r5, r10, r20, r50, medr, meanr) = i2t(img_embs, cap_embs, cap_lens, sims)
+        logging.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f %.1f %.1f" %
+                     (r1, r5, r10, r20, r50, medr, meanr))
         # image retrieval (find the right image for every text)
-        (r1i, r5i, r10i, medri, meanr) = t2i(
+        (r1i, r5i, r10i, r20i, r50i, medri, meanr) = t2i(
             img_embs, cap_embs, cap_lens, sims)
-        logging.info("Text to image: %.1f, %.1f, %.1f, %.1f, %.1f" %
-                     (r1i, r5i, r10i, medri, meanr))
+        logging.info("Text to image: %.1f, %.1f, %.1f, %.1f, %.1f %.1f %.1f" %
+                     (r1i, r5i, r10i, r20i, r50i, medri, meanr))
         # sum of recalls to be used for early stopping
         currscore = r1 + r5 + r10 + r1i + r5i + r10i
 

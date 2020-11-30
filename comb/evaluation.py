@@ -204,9 +204,9 @@ def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_pat
     rsum = r[0] + r[1] + r[2] + ri[0] + ri[1] + ri[2]
     print("rsum: %.1f" % rsum)
     print("Average i2t Recall: %.1f" % ar)
-    print("Image to text: %.1f %.1f %.1f %.1f %.1f" % r)
+    print("Image to text: %.1f %.1f %.1f %.1f %.1f %.1f %.1f" % r)
     print("Average t2i Recall: %.1f" % ari)
-    print("Text to image: %.1f %.1f %.1f %.1f %.1f" % ri)
+    print("Text to image: %.1f %.1f %.1f %.1f %.1f %.1f %.1f" % ri)
 
     if opt.trans:
         save_dir = "plots_trans"
@@ -335,12 +335,14 @@ def i2t(images, captions, caplens, sims, npts=None, return_ranks=False):
     r1 = 100.0 * len(np.where(ranks < 1)[0]) / len(ranks)
     r5 = 100.0 * len(np.where(ranks < 5)[0]) / len(ranks)
     r10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
+    r20 = 100.0 * len(np.where(ranks < 20)[0]) / len(ranks)
+    r50 = 100.0 * len(np.where(ranks < 50)[0]) / len(ranks)
     medr = np.floor(np.median(ranks)) + 1
     meanr = ranks.mean() + 1
     if return_ranks:
-        return (r1, r5, r10, medr, meanr), (ranks, top1)
+        return (r1, r5, r10, r20, r50, medr, meanr), (ranks, top1)
     else:
-        return (r1, r5, r10, medr, meanr)
+        return (r1, r5, r10,r20, r50, medr, meanr)
 
 
 def t2i(images, captions, caplens, sims, npts=None, return_ranks=False):
@@ -368,9 +370,11 @@ def t2i(images, captions, caplens, sims, npts=None, return_ranks=False):
     r1 = 100.0 * len(np.where(ranks < 1)[0]) / len(ranks)
     r5 = 100.0 * len(np.where(ranks < 5)[0]) / len(ranks)
     r10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
+    r20 = 100.0 * len(np.where(ranks < 20)[0]) / len(ranks)
+    r50 = 100.0 * len(np.where(ranks < 50)[0]) / len(ranks)
     medr = np.floor(np.median(ranks)) + 1
     meanr = ranks.mean() + 1
     if return_ranks:
-        return (r1, r5, r10, medr, meanr), (ranks, top1)
+        return (r1, r5, r10, r20, r50, medr, meanr), (ranks, top1)
     else:
-        return (r1, r5, r10, medr, meanr)
+        return (r1, r5, r10, r20, r50, medr, meanr)
