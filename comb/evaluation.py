@@ -158,8 +158,8 @@ def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_pat
     print(opt)
 
     # add because div_transform is not present in model
-    d = vars(opt)
-    d['sigma'] = 1 
+    # d = vars(opt)
+    # d['sigma'] = 1
 
 
     if data_path is not None:

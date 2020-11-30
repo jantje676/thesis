@@ -537,7 +537,7 @@ class ContrastiveLoss(nn.Module):
             cost_s = cost_s.max(1)[0]
             cost_im = cost_im.max(0)[0]
 
-        self.opt.diversity_loss = None
+    
         # calculate diversity
         if self.opt.diversity_loss == "cos":
             loss_div = cosine_loss(self.opt.theta, im)
