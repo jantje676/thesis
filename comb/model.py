@@ -25,6 +25,7 @@ from stn import STN
 # from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
 # from util.layers_alex2 import LayersModel2, EncoderImageAttention2, LayerAttention2
 from util.LayersAttention import LayerAttention2
+from util.Layers_resnest import Layers_resnest
 from util.layers_alex_res import LayersModel3, EncoderImageAttention3, LayerAttention3
 from util.layers_alex_im import LayersModel4, EncoderImageAttention4, LayerAttention4
 from transformers import BertModel
@@ -65,7 +66,10 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretr
         img_enc = EncoderImageAttention(
             img_dim, embed_size, n_attention, no_imgnorm)
     elif precomp_enc_type == "layers":
-        img_enc = LayersModel(img_dim, embed_size)
+        if net == "alex":
+            img_enc = LayersModel(img_dim, embed_size)
+        elif net == "res":
+            img_enc = Layers_resnest(img_dim, embed_size)
     elif precomp_enc_type == "layers_attention":
         img_enc = LayerAttention2(img_dim, embed_size, n_attention, no_imgnorm, net)
     elif precomp_enc_type == "layers_attention_res":
@@ -537,7 +541,7 @@ class ContrastiveLoss(nn.Module):
             cost_s = cost_s.max(1)[0]
             cost_im = cost_im.max(0)[0]
 
-    
+
         # calculate diversity
         if self.opt.diversity_loss == "cos":
             loss_div = cosine_loss(self.opt.theta, im)
