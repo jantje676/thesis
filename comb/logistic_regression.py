@@ -41,7 +41,7 @@ def main(args):
     vocab = deserialize_vocab("{}/{}/{}_vocab_{}.json".format(opt.vocab_path, opt.clothing, opt.data_name, opt.version))
     opt.vocab_size = len(vocab)
 
-    args.list_words = [("black", "white"), ("black", "blue"),
+    args.list_words = [("black", "white"),("black", "blue"),
                         ("multicolor", "floral"), ("lace", "jersey"),
                         ("silk", "crepe"), ("maxi", "midi"),
                         ("sheath", "shift"),("sleeve", "sleeveless"),
@@ -82,6 +82,7 @@ def main(args):
 
         scores.append((best, best_std, best_seg, best_segs, worst, worst_std, worst_seg, worst_segs, l))
 
+    print(">>>>>>>RUN: {}".format(args.run))
     print_scores(scores, args.list_words)
 
 def perform_exp(model , features1, features2, test_percentage, min_l):
@@ -151,7 +152,7 @@ def create_train_test(features1, features2, test_percentage, min_l):
 
     print("Total data size is {}".format(min_l * 2))
     range1 = list(range(0, features1.shape[0]))
-    range2 = list(range(0, features1.shape[0]))
+    range2 = list(range(0, features2.shape[0]))
 
     # make both sets equal
     indx1 = random.sample(range1, min_l)
@@ -179,7 +180,6 @@ def create_train_test(features1, features2, test_percentage, min_l):
     return train, test, y_train, y_test, min_l
 
 def create_embs(data_loader, model):
-
     img_emb, cap_emb, cap_len, _ = encode_data(model, data_loader)
     return img_emb
 
