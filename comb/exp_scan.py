@@ -153,5 +153,9 @@ if __name__ == '__main__':
     parser.add_argument('--shard_size', default=128, type=int,
                         help='batch size for validating')
 
+    # temporary to test different attention settings
+    parser.add_argument('--tanh', action='store_true',
+                        help="use tanh instead of relu")
+
     opt = parser.parse_args()
     main(opt)
