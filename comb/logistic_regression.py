@@ -212,6 +212,7 @@ def load_model(model_path, device):
     # add because div_transform is not present in model
     d = vars(opt)
     d['div_transform'] = False
+    d["net"] = "alex"
 
     # construct model
     model = SCAN(opt)
