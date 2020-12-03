@@ -22,7 +22,7 @@ import numpy as np
 from collections import OrderedDict
 from utils import adap_margin
 from stn import STN
-# from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
+from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
 # from util.layers_alex2 import LayersModel2, EncoderImageAttention2, LayerAttention2
 from util.LayersAttention import LayerAttention2
 from util.Layers_resnest import Layers_resnest
