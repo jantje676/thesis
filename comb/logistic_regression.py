@@ -215,7 +215,9 @@ def load_model(model_path, device):
     d["net"] = "alex"
     d["txt_enc"] = "basic"
     d["diversity_loss"] = None
-    
+    d["theta"] = 0.4
+    d["sigma"] = 1
+
     # construct model
     model = SCAN(opt)
 
