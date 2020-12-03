@@ -149,6 +149,7 @@ def load_model(model_path, device):
     # add because div_transform is not present in model
     d = vars(opt)
     d['div_transform'] = False
+    d["net"] = "alex"
 
     # construct model
     model = SCAN(opt)
@@ -160,7 +161,7 @@ def load_model(model_path, device):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='visualize attention distribution')
     parser.add_argument('--run_folder', default="runs", type=str, help='path to run folder')
-    parser.add_argument('--run', default="ftrans15", type=str, help='which run')
+    parser.add_argument('--run', default="run18", type=str, help='which run')
     parser.add_argument('--out_folder', default="vizAttn", type=str, help='')
     parser.add_argument("--list_words", nargs="+", default=["black", "white", "black", "blue", "green", "red", "floral", "lace", "jersey", "silk", "midi", "sheath"])
 
