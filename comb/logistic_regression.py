@@ -213,7 +213,7 @@ def load_model(model_path, device):
     d = vars(opt)
     d['div_transform'] = False
     d["net"] = "alex"
-
+    d["txt_enc"] = "basic"
     # construct model
     model = SCAN(opt)
 
