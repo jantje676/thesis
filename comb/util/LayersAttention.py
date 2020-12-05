@@ -24,7 +24,7 @@ class LayerAttention2(nn.Module):
         elif net == "res_deep":
             self.layers = LayersModelResDeep()
         self.attention = SelfAttention(tanh, img_dim, embed_size, n_attention, no_imgnorm)
-    
+
     def forward(self, images):
         layer_features = self.layers.forward1(images)
         features = self.attention(layer_features)
@@ -63,8 +63,6 @@ class SelfAttention(nn.Module):
         self.w3 = nn.Linear(img_dim, embed_size, bias=True)
         self.relu = nn.ReLU()
         self.tanh = tanh
-        self.n_attention = n_attention
-        self.layerNorm = nn.LayerNorm(img_dim)
         self.init_weights()
 
     def init_weights(self):
