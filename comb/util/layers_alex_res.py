@@ -80,10 +80,7 @@ class SelfAttention(nn.Module):
         """Self attention on features"""
         # assuming that the precomputed features are already l2-normalized
         attention = self.w1(images)
-
-
         attention == self.relu(attention)
-
         attention = self.w2(attention)
         attention = F.softmax(attention, dim=1)
         attention = attention.transpose(1,2)
@@ -91,13 +88,13 @@ class SelfAttention(nn.Module):
         features = torch.bmm(attention, images)
         features = self.w3(features)
 
-        features = torch.sigmoid(features)
-
         glob = global_feature.unsqueeze(dim=1)
         glob = glob.expand(-1, self.n_attention, -1)
         features = self.layerNorm(glob + features)
         features = self.w4(features)
 
+        # normalize in the joint embedding space
+        features = l2norm(features, dim=-1)
         return features
 
 
