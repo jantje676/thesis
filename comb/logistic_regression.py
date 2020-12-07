@@ -210,13 +210,13 @@ def load_model(model_path, device):
     opt = checkpoint['opt']
 
     # add because div_transform is not present in model
-    d = vars(opt)
-    d['div_transform'] = False
-    d["net"] = "alex"
-    d["txt_enc"] = "basic"
-    d["diversity_loss"] = None
-    d["theta"] = 0.4
-    d["sigma"] = 1
+    # d = vars(opt)
+    # d['div_transform'] = False
+    # d["net"] = "alex"
+    # d["txt_enc"] = "basic"
+    # d["diversity_loss"] = None
+    # d["theta"] = 0.4
+    # d["sigma"] = 1
 
     # construct model
     model = SCAN(opt)
