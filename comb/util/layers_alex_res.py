@@ -20,7 +20,7 @@ from util.DeepFashion2 import LayersModelAttr
 # class based on poly-paper
 class LayerAttention3(nn.Module):
 
-    def __init__(self, tanh, img_dim, embed_size, n_attention, no_imgnorm=False, net='res'):
+    def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False, net='res'):
         super(LayerAttention3, self).__init__()
 
         if net == 'alex':
@@ -31,7 +31,7 @@ class LayerAttention3(nn.Module):
             self.layers = LayersModelAttr(img_dim, embed_size)
         elif net == "res_deep":
             self.layers = LayersModelResDeep()
-        self.attention = SelfAttention(tanh, img_dim, embed_size, n_attention, no_imgnorm)
+        self.attention = SelfAttention(img_dim, embed_size, n_attention, no_imgnorm)
 
 
     def forward(self, images):
@@ -55,7 +55,7 @@ class LayerAttention3(nn.Module):
 
 class SelfAttention(nn.Module):
 
-    def __init__(self, tanh, img_dim, embed_size, n_attention, no_imgnorm=False):
+    def __init__(self,img_dim, embed_size, n_attention, no_imgnorm=False):
         super(SelfAttention, self).__init__()
         self.embed_size = embed_size
         self.no_imgnorm = no_imgnorm
@@ -64,7 +64,6 @@ class SelfAttention(nn.Module):
         self.w3 = nn.Linear(img_dim, img_dim, bias=True)
         self.w4 = nn.Linear(img_dim, embed_size)
         self.relu = nn.ReLU()
-        self.tanh = tanh
         self.n_attention = n_attention
         self.layerNorm = nn.LayerNorm(img_dim)
         self.init_weights()
@@ -82,10 +81,8 @@ class SelfAttention(nn.Module):
         # assuming that the precomputed features are already l2-normalized
         attention = self.w1(images)
 
-        if self.tanh:
-            attention = F.tanh(attention)
-        else:
-            attention == self.relu(attention)
+
+        attention == self.relu(attention)
 
         attention = self.w2(attention)
         attention = F.softmax(attention, dim=1)
