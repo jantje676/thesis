@@ -48,7 +48,7 @@ def l2norm(X, dim, eps=1e-8):
     return X
 
 
-def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretrained_alex, rectangle, precomp_enc_type='basic',
+def EncoderImage(sigmoid, data_name, img_dim, embed_size, n_attention, n_detectors, pretrained_alex, rectangle, precomp_enc_type='basic',
                  no_imgnorm=False, net="alex", div_transform=False):
     """A wrapper to image encoders. Chooses between an different encoders
     that uses precomputed image features.
@@ -71,7 +71,7 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretr
         elif net == "res":
             img_enc = Layers_resnest(img_dim, embed_size)
     elif precomp_enc_type == "layers_attention":
-        img_enc = LayerAttention2(img_dim, embed_size, n_attention, no_imgnorm, net)
+        img_enc = LayerAttention2(sigmoid, img_dim, embed_size, n_attention, no_imgnorm, net)
     elif precomp_enc_type == "layers_attention_res":
         img_enc = LayerAttention3(img_dim, embed_size, n_attention, no_imgnorm)
     elif precomp_enc_type == "layers_attention_im":
@@ -571,7 +571,7 @@ class SCAN(object):
     def __init__(self, opt):
         # Build Models
         self.grad_clip = opt.grad_clip
-        self.img_enc = EncoderImage(opt.data_name, opt.img_dim, opt.embed_size, opt.n_attention,
+        self.img_enc = EncoderImage(opt.sigmoid, opt.data_name, opt.img_dim, opt.embed_size, opt.n_attention,
                                     opt.n_detectors, opt.pretrained_alex, opt.rectangle,
                                     precomp_enc_type=opt.precomp_enc_type,
                                     no_imgnorm=opt.no_imgnorm, net=opt.net, div_transform=opt.div_transform)
