@@ -86,6 +86,8 @@ if __name__ == '__main__':
                         help='version.')
     parser.add_argument('--txt_enc', default="basic", type=str,
                         help='use different text encoding basic|bert|word2vec')
+    parser.add_argument('--sigmoid', action='store_true',
+                        help='Use of sigmoid')
 
     # adaptive margin
     parser.add_argument('--adap_margin', action='store_true',
