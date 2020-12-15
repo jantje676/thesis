@@ -20,7 +20,7 @@ from util.DeepFashion2 import LayersModelAttr
 # class based on poly-paper
 class LayerAttention3(nn.Module):
 
-    def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False, net='res'):
+    def __init__(self, layernorm, img_dim, embed_size, n_attention, no_imgnorm=False, net='res'):
         super(LayerAttention3, self).__init__()
 
         if net == 'alex':
@@ -31,7 +31,7 @@ class LayerAttention3(nn.Module):
             self.layers = LayersModelAttr(img_dim, embed_size)
         elif net == "res_deep":
             self.layers = LayersModelResDeep()
-        self.attention = SelfAttention(img_dim, embed_size, n_attention, no_imgnorm)
+        self.attention = SelfAttention(layernorm, img_dim, embed_size, n_attention, no_imgnorm)
 
 
     def forward(self, images):
@@ -55,24 +55,25 @@ class LayerAttention3(nn.Module):
 
 class SelfAttention(nn.Module):
 
-    def __init__(self,img_dim, embed_size, n_attention, no_imgnorm=False):
+    def __init__(self,layernorm, img_dim, embed_size, n_attention, no_imgnorm=False):
         super(SelfAttention, self).__init__()
         self.embed_size = embed_size
         self.no_imgnorm = no_imgnorm
-        self.w1 = nn.Linear(img_dim, int(img_dim/2),bias=False)
-        self.w2 = nn.Linear(int(img_dim/2), n_attention,  bias=False)
+        self.w1 = nn.Linear(img_dim, n_attention, bias=False)
+        # self.w2 = nn.Linear(int(img_dim/2), n_attention,  bias=False)
         self.w3 = nn.Linear(img_dim, img_dim, bias=True)
         self.w4 = nn.Linear(img_dim, embed_size)
         self.relu = nn.ReLU()
         self.n_attention = n_attention
         self.layerNorm = nn.LayerNorm(img_dim)
+        self.layern = layernorm
         self.init_weights()
 
     def init_weights(self):
         """Xavier initialization for the fully connected layer
         """
         nn.init.xavier_uniform_(self.w1.weight)
-        nn.init.xavier_uniform_(self.w2.weight)
+        # nn.init.xavier_uniform_(self.w2.weight)
         nn.init.xavier_uniform_(self.w3.weight)
         nn.init.xavier_uniform_(self.w4.weight)
 
@@ -81,7 +82,7 @@ class SelfAttention(nn.Module):
         # assuming that the precomputed features are already l2-normalized
         attention = self.w1(images)
         attention == self.relu(attention)
-        attention = self.w2(attention)
+        # attention = self.w2(attention)
         attention = F.softmax(attention, dim=1)
         attention = attention.transpose(1,2)
 
@@ -90,7 +91,12 @@ class SelfAttention(nn.Module):
 
         glob = global_feature.unsqueeze(dim=1)
         glob = glob.expand(-1, self.n_attention, -1)
-        features = self.layerNorm(glob + features)
+
+        if self.layern:
+            features = self.layerNorm(glob + features)
+        else:
+            features = glob + features
+
         features = self.w4(features)
 
         # normalize in the joint embedding space

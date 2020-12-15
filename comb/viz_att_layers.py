@@ -147,7 +147,8 @@ def load_model(model_path, device):
     opt = checkpoint['opt']
 
     # add because div_transform is not present in model
-    # d = vars(opt)
+    d = vars(opt)
+    d["layernorm"] = False
     # d['div_transform'] = False
     # d["net"] = "alex"
     # d["txt_enc"] = "basic"

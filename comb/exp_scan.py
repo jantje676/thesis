@@ -86,8 +86,7 @@ if __name__ == '__main__':
                         help='version.')
     parser.add_argument('--txt_enc', default="basic", type=str,
                         help='use different text encoding basic|bert|word2vec')
-    parser.add_argument('--sigmoid', action='store_true',
-                        help='Use of sigmoid')
+
 
     # adaptive margin
     parser.add_argument('--adap_margin', action='store_true',
@@ -156,8 +155,8 @@ if __name__ == '__main__':
                         help='batch size for validating')
 
     # temporary to test different attention settings
-    parser.add_argument('--tanh', action='store_true',
-                        help="use tanh instead of relu")
+    parser.add_argument('--layernorm', action='store_true',
+                        help="use layernorm for global")
 
     opt = parser.parse_args()
     main(opt)
