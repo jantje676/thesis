@@ -34,10 +34,36 @@ def main(args):
     vocab = deserialize_vocab("{}/{}/{}_vocab_{}.json".format(opt.vocab_path, opt.clothing, opt.data_name, opt.version))
     opt.vocab_size = len(vocab)
 
-    print("FILTER DATASETS")
-    word_attn = {}
+    word_attn = attn_per_word(args.list_words, opt, vocab, model)
+
     word_cos = {}
-    for word in args.list_words:
+    for word_row in args.list_words:
+        dpath = os.path.join(opt.data_path, opt.data_name, opt.clothing)
+
+        loader_test, pos_test = retrieve_loader("test", opt, dpath, word_row, vocab)
+        loader_train, pos_train = retrieve_loader("train", opt, dpath, word_row, vocab)
+
+        average_attn = word_attn[word_row]
+        img_features = avg_features_img(average_attn, model, loader_train, loader_test)
+        n_image = img_features.shape[0]
+
+        temp_cos = {}
+        for word_col in word_attn.keys():
+            word_feature = avg_features_word(word_col, model, vocab)
+            word_features = word_feature.expand(n_image,-1)
+            cosine_scores = cosine_similarity(word_features, img_features)
+            temp_cos[word_col] = torch.mean(cosine_scores).item()
+
+        word_cos[word_row] = temp_cos
+
+
+    print("PLOT ATTENTION")
+    write_out(out_path, word_attn, "attention")
+    write_table(out_path, word_cos)
+
+def attn_per_word(list_words, opt, vocab, model):
+    word_attn = {}
+    for word in list_words:
         dpath = os.path.join(opt.data_path, opt.data_name, opt.clothing)
 
         loader_test, pos_test = retrieve_loader("test", opt, dpath, word, vocab)
@@ -48,21 +74,8 @@ def main(args):
         except:
             print("Word ({}) not found".format(word))
             continue
-
-        img_features = avg_features_img(average_attn, model, loader_train, loader_test)
-        word_feature = avg_features_word(word, model, vocab)
-
-        n_image = img_features.shape[0]
-        word_features = word_feature.expand(n_image,-1)
-
-        cosine_scores = cosine_similarity(word_features, img_features)
-        word_cos[word] = torch.mean(cosine_scores)
         word_attn[word] = average_attn
-
-    print("PLOT ATTENTION")
-    write_out(out_path, word_attn, "attention")
-    write_out(out_path, word_cos, "cosine")
-
+    return word_attn
 
 def avg_features_word(word, model, vocab):
     with torch.no_grad():
@@ -126,6 +139,24 @@ def write_out(out_path, dic, file_name):
     file = open("{}/{}.txt".format(out_path, file_name), "w")
     for key in dic.keys():
         file.write(str(key) + "\t" + str(dic[key]) + "\n")
+    file.close()
+
+
+def write_table(out_path, scores):
+    file = open("{}/cosine.txt".format(out_path), "w")
+    file.write("\t")
+
+    for key in scores.keys():
+        file.write(str(key) + "\t")
+    file.write("\n")
+
+
+    for key in scores.keys():
+        file.write(str(key) + "\t")
+        for row_key in scores[key].keys():
+            file.write("{:.3f} \t".format(scores[key][row_key]))
+        file.write("\n")
+
     file.close()
 
 
@@ -206,7 +237,7 @@ if __name__ == "__main__":
     parser.add_argument('--run_folder', default="runs", type=str, help='path to run folder')
     parser.add_argument('--run', default="run15", type=str, help='which run')
     parser.add_argument('--out_folder', default="vizAttn", type=str, help='')
-    parser.add_argument("--list_words", nargs="+", default=["black", "white", "green", "red", "lace", "jersey", "midi", "sheath", "floral", "silk"])
+    parser.add_argument("--list_words", nargs="+", default=["black", "blue", "white", "red", "sheath", "midi", "floral", "jersey", "lace", "silk"])
 
 
     args = parser.parse_args()
