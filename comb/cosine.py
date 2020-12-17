@@ -56,7 +56,7 @@ def main(args):
         word_features = word_feature.expand(n_image,-1)
 
         cosine_scores = cosine_similarity(word_features, img_features)
-        word_cos[word] = torch.sum(cosine_scores)
+        word_cos[word] = torch.mean(cosine_scores)
         word_attn[word] = average_attn
 
     print("PLOT ATTENTION")
@@ -206,7 +206,7 @@ if __name__ == "__main__":
     parser.add_argument('--run_folder', default="runs", type=str, help='path to run folder')
     parser.add_argument('--run', default="run15", type=str, help='which run')
     parser.add_argument('--out_folder', default="vizAttn", type=str, help='')
-    parser.add_argument("--list_words", nargs="+", default=["black"])
+    parser.add_argument("--list_words", nargs="+", default=["black", "white", "green", "red", "lace", "jersey", "midi", "sheath", "floral", "silk"])
 
 
     args = parser.parse_args()
