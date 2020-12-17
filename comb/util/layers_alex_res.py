@@ -20,7 +20,7 @@ from util.DeepFashion2 import LayersModelAttr
 # class based on poly-paper
 class LayerAttention3(nn.Module):
 
-    def __init__(self, layernorm, img_dim, embed_size, n_attention, no_imgnorm=False, net='res'):
+    def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False, net='res'):
         super(LayerAttention3, self).__init__()
 
         if net == 'alex':
@@ -31,7 +31,7 @@ class LayerAttention3(nn.Module):
             self.layers = LayersModelAttr(img_dim, embed_size)
         elif net == "res_deep":
             self.layers = LayersModelResDeep()
-        self.attention = SelfAttention(layernorm, img_dim, embed_size, n_attention, no_imgnorm)
+        self.attention = SelfAttention( img_dim, embed_size, n_attention, no_imgnorm)
 
 
     def forward(self, images):
@@ -55,7 +55,7 @@ class LayerAttention3(nn.Module):
 
 class SelfAttention(nn.Module):
 
-    def __init__(self,layernorm, img_dim, embed_size, n_attention, no_imgnorm=False):
+    def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False):
         super(SelfAttention, self).__init__()
         self.embed_size = embed_size
         self.no_imgnorm = no_imgnorm
@@ -66,7 +66,6 @@ class SelfAttention(nn.Module):
         self.relu = nn.ReLU()
         self.n_attention = n_attention
         self.layerNorm = nn.LayerNorm(img_dim)
-        self.layern = layernorm
         self.init_weights()
 
     def init_weights(self):
@@ -92,10 +91,9 @@ class SelfAttention(nn.Module):
         glob = global_feature.unsqueeze(dim=1)
         glob = glob.expand(-1, self.n_attention, -1)
 
-        if self.layern:
-            features = self.layerNorm(glob + features)
-        else:
-            features = glob + features
+
+        features = self.layerNorm(glob + features)
+
 
         features = self.w4(features)
 

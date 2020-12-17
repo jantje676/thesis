@@ -154,9 +154,7 @@ if __name__ == '__main__':
     parser.add_argument('--shard_size', default=128, type=int,
                         help='batch size for validating')
 
-    # temporary to test different attention settings
-    parser.add_argument('--layernorm', action='store_true',
-                        help="use layernorm for global")
+
 
     opt = parser.parse_args()
     main(opt)
