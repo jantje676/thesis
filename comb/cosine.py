@@ -74,6 +74,11 @@ def avg_features_word(word, model, vocab):
         word_vec = torch.Tensor(caption).unsqueeze(dim=0)
         word_vec = word_vec.long()
         length = torch.tensor([3])
+
+        if torch.cuda.is_available():
+            word_vec = word_vec.cuda()
+            length = length.cuda()
+
         cap_emb, cap_lens = model.txt_enc(word_vec, length)
         word_feature = cap_emb.squeeze()[1]
 
@@ -88,6 +93,10 @@ def avg_features_img(avg_attn, model, loader_train, loader_test):
     n_images = features.shape[0]
     avg_attn = avg_attn.to(torch.float64)
     avg_attn = avg_attn.unsqueeze(dim=0).expand(n_images, -1).unsqueeze(dim=1)
+
+    if torch.cuda.is_available():
+        features = features.cuda()
+        
 
     avg_features = torch.bmm(avg_attn, features)
     avg_features.squeeze(dim=1)
