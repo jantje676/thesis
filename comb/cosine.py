@@ -9,7 +9,8 @@ from vocab import Vocabulary, deserialize_vocab
 from model import SCAN, xattn_score_i2t, xattn_score_t2i, cosine_similarity
 from data_ken import PrecompDataset, PrecompTrans, collate_fn
 from evaluation import encode_data
-
+import pandas as pd
+import seaborn as sns
 """
 Script to calculate the cosine similarity between word and average feature representation from attention
 """
@@ -60,6 +61,8 @@ def main(args):
     print("PLOT ATTENTION")
     write_out(out_path, word_attn, "attention")
     write_table(out_path, word_cos)
+    write_fig(out_path, word_cos)
+
 
 def attn_per_word(list_words, opt, vocab, model):
     word_attn = {}
@@ -141,9 +144,17 @@ def write_out(out_path, dic, file_name):
         file.write(str(key) + "\t" + str(dic[key]) + "\n")
     file.close()
 
+def write_fig(out_path, scores):
+    df = pd.DataFrame(scores)
+    plot = sns.heatmap(df, annot=True, cmap="YlGnBu")
+    plot.set(xlabel='image_features', ylabel='text_features')
+
+    fig = plot.get_figure()
+    fig.savefig("{}/cosine_figure.png".format(out_path))
+
 
 def write_table(out_path, scores):
-    file = open("{}/cosine.txt".format(out_path), "w")
+    file = open("{}/cosine_table.txt".format(out_path), "w")
     file.write("\t")
 
     for key in scores.keys():
@@ -237,7 +248,7 @@ if __name__ == "__main__":
     parser.add_argument('--run_folder', default="runs", type=str, help='path to run folder')
     parser.add_argument('--run', default="run15", type=str, help='which run')
     parser.add_argument('--out_folder', default="vizAttn", type=str, help='')
-    parser.add_argument("--list_words", nargs="+", default=["black", "blue", "white", "red", "sheath", "midi", "floral", "jersey", "lace", "silk"])
+    parser.add_argument("--list_words", nargs="+", default=["black", "blue", "white", "red","multicolor","floral", "sheath", "midi", "maxi", "short", "knee-length", "crepe", "v-neck", "jersey", "lace", "silk", "cotton"])
 
 
     args = parser.parse_args()
