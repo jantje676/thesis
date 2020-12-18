@@ -61,7 +61,7 @@ def main(args):
     print("PLOT ATTENTION")
     write_out(out_path, word_attn, "attention")
     write_table(out_path, word_cos)
-    write_fig(out_path, word_cos)
+    write_fig(out_path, word_cos, args.run)
 
 
 def attn_per_word(list_words, opt, vocab, model):
@@ -144,10 +144,11 @@ def write_out(out_path, dic, file_name):
         file.write(str(key) + "\t" + str(dic[key]) + "\n")
     file.close()
 
-def write_fig(out_path, scores):
+def write_fig(out_path, scores, run):
     df = pd.DataFrame(scores)
-    plot = sns.heatmap(df, annot=True, cmap="YlGnBu")
-    plot.set(xlabel='image_features', ylabel='text_features')
+    plt.figure(figsize=(15,15))
+    plot = sns.heatmap(df, annot=True, cmap="YlGnBu", vmin=-1, vmax=1)
+    plot.set(xlabel='image_features', ylabel='text_features', title=run)
 
     fig = plot.get_figure()
     fig.savefig("{}/cosine_figure.png".format(out_path))
@@ -248,7 +249,8 @@ if __name__ == "__main__":
     parser.add_argument('--run_folder', default="runs", type=str, help='path to run folder')
     parser.add_argument('--run', default="run15", type=str, help='which run')
     parser.add_argument('--out_folder', default="vizAttn", type=str, help='')
-    parser.add_argument("--list_words", nargs="+", default=["black", "blue", "white", "red","multicolor","floral", "sheath", "midi", "maxi", "short", "knee-length", "crepe", "v-neck", "jersey", "lace", "silk", "cotton"])
+    # parser.add_argument("--list_words", nargs="+", default=["black", "blue", "white", "red","multicolor","floral", "sheath", "midi", "maxi", "short", "knee-length", "crepe", "v-neck", "jersey", "lace", "silk", "cotton"])
+    parser.add_argument("--list_words", nargs="+", default=["black", "printed"])
 
 
     args = parser.parse_args()
