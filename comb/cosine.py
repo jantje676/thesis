@@ -249,8 +249,7 @@ if __name__ == "__main__":
     parser.add_argument('--run_folder', default="runs", type=str, help='path to run folder')
     parser.add_argument('--run', default="run15", type=str, help='which run')
     parser.add_argument('--out_folder', default="vizAttn", type=str, help='')
-    # parser.add_argument("--list_words", nargs="+", default=["black", "blue", "white", "red","multicolor","floral", "sheath", "midi", "maxi", "short", "knee-length", "crepe", "v-neck", "jersey", "lace", "silk", "cotton"])
-    parser.add_argument("--list_words", nargs="+", default=["black", "printed"])
+    parser.add_argument("--list_words", nargs="+", default=["black", "blue", "white", "red","multicolor","floral", "sheath", "midi", "maxi", "short", "knee-length", "crepe", "v-neck", "jersey", "lace", "silk", "cotton"])
 
 
     args = parser.parse_args()
