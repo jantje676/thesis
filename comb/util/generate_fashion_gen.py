@@ -16,6 +16,8 @@ import torchvision.models as models
 from torchvision import transforms
 import nltk
 
+from layers_model import LayersModel
+from Layers_resnest import Layers_resnest
 
 
 def main(args):
@@ -26,6 +28,9 @@ def main(args):
     data_path_out = args.data_path_out
     only_text = args.only_text
     description = args.descriptions
+    network = args.network
+    checkpoint = args.checkpoint
+    trained_dresses = args.trained_dresses
 
     file_path = data_path + "/" +filename + "train.h5"
     f = h5py.File(file_path, 'r')
@@ -36,7 +41,7 @@ def main(args):
         field = "input_name"
 
     if not only_text:
-        data_ims_train = create_features(f["input_image"], early_stop)
+        data_ims_train = create_features(f["input_image"], early_stop, network, trained_dresses, checkpoint)
         save_images(data_ims_train, data_path_out, version, "train")
 
     data_captions_train = create_captions(f[field], early_stop, description)
@@ -48,7 +53,7 @@ def main(args):
 
     f = h5py.File(file_path, 'r')
     if not only_text:
-        data_ims_test = create_features(f["input_image"], early_stop)
+        data_ims_test = create_features(f["input_image"], early_stop, network, trained_dresses, checkpoint)
         save_images(data_ims_test, data_path_out, version, "test")
 
     data_captions_test = create_captions(f[field], early_stop, description)
@@ -84,20 +89,22 @@ def create_captions(captions, early_stop, description):
         caption = captions[i][0].decode("latin-1").lower()
 
         if description:
-            words = nltk.word_tokenize(caption)
+            seg_cap = caption.split(".")
+            words = nltk.word_tokenize(seg_cap[0])
             words = [word.lower() for word in words if word.isalpha()]
             caption = " ".join(words)
 
         cleaned_captions.append((count, caption))
+
         count += 1
         if early_stop == count and early_stop != None:
             break
     return cleaned_captions
 
-def create_features(images, early_stop):
+def create_features(images, early_stop, network, trained_dresses, checkpoint):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    net, transform = get_model()
+    net, transform = get_model(network, trained_dresses, checkpoint)
 
     net = net.to(device)
 
@@ -140,20 +147,43 @@ def stack_segments(segments, transform):
 
 
 
-def get_model():
-    net = models.alexnet(pretrained=True)
-    # take aways the last layers
-    net.classifier = nn.Sequential(*[net.classifier[i] for i in range(5)])
+def get_model(network, trained_dresses, checkpoint):
+    if network == "alex":
+        net = models.alexnet(pretrained=True)
+        # take aways the last layers
+        net.classifier = nn.Sequential(*[net.classifier[i] for i in range(5)])
 
-    # set to evaluation
-    net.eval()
+        # set to evaluation
+        net.eval()
 
-    transform = transforms.Compose([
-        transforms.Resize((300, 300)),
-        transforms.CenterCrop((256, 256)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                              std=[0.229, 0.224, 0.225])])
+        transform = transforms.Compose([
+            transforms.Resize((300, 300)),
+            transforms.CenterCrop((256, 256)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                  std=[0.229, 0.224, 0.225])])
+    elif network == "layers":
+        net = LayersModel(trained_dresses=trained_dresses, checkpoint_path=checkpoint)
+        net.eval()
+
+        transform = transforms.Compose([
+            transforms.Resize((300, 300)),
+            transforms.CenterCrop((256, 256)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                  std=[0.229, 0.224, 0.225])])
+    elif network == "layers_resnest":
+        # choose model
+        net = Layers_resnest(img_dim=2048, trained_dresses=trained_dresses, checkpoint_path=checkpoint)
+        # set to evaluation
+
+        net.eval()
+
+        transform = transforms.Compose([
+            transforms.CenterCrop((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                  std=[0.229, 0.224, 0.225])])
 
     return net, transform
 
@@ -199,5 +229,12 @@ if __name__ == '__main__':
                         help="only create new captions")
     parser.add_argument('--descriptions', action='store_true',
                         help="create captions from the input_descriptions field of the data")
+    parser.add_argument('--network',help='alex|layers|layers_resnest', default="alex", type=str)
+
+    # TO load pretrained dresses model
+    parser.add_argument('--trained_dresses', action='store_true', help="load models trained on dresses")
+    parser.add_argument('--checkpoint',help='path to saved model', default="../../train_models/runRes/train1/checkpoint/model_best.pth.tar", type=str)
+
+
     args = parser.parse_args()
     main(args)

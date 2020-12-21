@@ -86,7 +86,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', default="../../data/Fashion_gen/all", help='path to data folder.')
     parser.add_argument('--seed', default=17, type=int, help='seed')
     parser.add_argument('--dev_size', default=1000, type=int, help='size of dev set')
-    parser.add_argument('--test_size', default=100, type=int, help='size of test set')
+    parser.add_argument('--test_size', default=1000, type=int, help='size of test set')
     parser.add_argument('--only_text', action='store_true', help="only create new captions")
     args = parser.parse_args()
     main(args)
