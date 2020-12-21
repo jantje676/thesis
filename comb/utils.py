@@ -83,7 +83,6 @@ def calculatate_freq(captions, count):
         # add zero for <start> sign
         word_count = [0]
 
-
         caption = nltk.tokenize.word_tokenize(str(caption).lower())
         tot_freq = 0
         caption_l = len(caption)
@@ -94,6 +93,7 @@ def calculatate_freq(captions, count):
             except:
                 caption_l -= 1
                 word_count.append(0)
+    
         freq = tot_freq / caption_l
         freq_score.append(freq)
         word_count.append(0)
