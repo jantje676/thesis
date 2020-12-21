@@ -17,7 +17,6 @@ def main(args):
     seed = args.seed
     dev_size = args.dev_size
     test_size = args.test_size
-    only_text = args.only_text
     total = dev_size + test_size
     random.seed(seed)
 
@@ -32,12 +31,11 @@ def main(args):
 
 
     # read features
-    if only_text:
-        features = np.load("{}/data_ims_{}_devtest.npy".format(data_path, VERSION))
-        features_dev = np.stack([features[id] for id in rnd_dev], axis=0)
-        features_test = np.stack([features[id] for id in rnd_test], axis=0)
-        np.save( "{}/data_ims_{}_dev.npy".format(data_path, VERSION), features_dev)
-        np.save( "{}/data_ims_{}_test.npy".format(data_path, VERSION), features_test)
+    features = np.load("{}/data_ims_{}_devtest.npy".format(data_path, VERSION))
+    features_dev = np.stack([features[id] for id in rnd_dev], axis=0)
+    features_test = np.stack([features[id] for id in rnd_test], axis=0)
+    np.save( "{}/data_ims_{}_dev.npy".format(data_path, VERSION), features_dev)
+    np.save( "{}/data_ims_{}_test.npy".format(data_path, VERSION), features_test)
 
 
     with open("{}/data_captions_{}_dev.txt".format(data_path, VERSION), 'w', newline='') as file:
@@ -87,6 +85,5 @@ if __name__ == '__main__':
     parser.add_argument('--seed', default=17, type=int, help='seed')
     parser.add_argument('--dev_size', default=1000, type=int, help='size of dev set')
     parser.add_argument('--test_size', default=1000, type=int, help='size of test set')
-    parser.add_argument('--only_text', action='store_true', help="only create new captions")
     args = parser.parse_args()
     main(args)
