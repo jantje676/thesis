@@ -571,7 +571,7 @@ class SCAN(object):
     def __init__(self, opt):
         # Build Models
         self.grad_clip = opt.grad_clip
-        self.img_enc = EncoderImage( opt.data_name, opt.img_dim, opt.embed_size, opt.n_attention,
+        self.img_enc = EncoderImage(opt.data_name, opt.img_dim, opt.embed_size, opt.n_attention,
                                     opt.n_detectors, opt.pretrained_alex, opt.rectangle,
                                     precomp_enc_type=opt.precomp_enc_type,
                                     no_imgnorm=opt.no_imgnorm, net=opt.net, div_transform=opt.div_transform)

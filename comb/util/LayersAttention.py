@@ -12,7 +12,7 @@ from util.DeepFashion2 import LayersModelAttr
 # class based on poly-paper
 class LayerAttention2(nn.Module):
 
-    def __init__(self, sigmoid, img_dim, embed_size, n_attention, no_imgnorm=False, net='alex'):
+    def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False, net='alex'):
         super(LayerAttention2, self).__init__()
 
         if net == 'alex':
@@ -23,7 +23,7 @@ class LayerAttention2(nn.Module):
             self.layers = LayersModelAttr(img_dim, embed_size)
         elif net == "res_deep":
             self.layers = LayersModelResDeep()
-        self.attention = SelfAttention(sigmoid, img_dim, embed_size, n_attention, no_imgnorm)
+        self.attention = SelfAttention(img_dim, embed_size, n_attention, no_imgnorm)
 
     def forward(self, images):
         layer_features = self.layers.forward1(images)
@@ -54,7 +54,7 @@ class LayerAttention2(nn.Module):
 
 class SelfAttention(nn.Module):
 
-    def __init__(self, sigmoid, img_dim, embed_size, n_attention, no_imgnorm=False):
+    def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False):
         super(SelfAttention, self).__init__()
         self.embed_size = embed_size
         self.no_imgnorm = no_imgnorm
@@ -62,7 +62,6 @@ class SelfAttention(nn.Module):
         # self.w1 = nn.Linear(img_dim, int(img_dim/2),bias=False)
         # self.w2 = nn.Linear(int(img_dim/2), n_attention,  bias=False)
         self.w3 = nn.Linear(img_dim, embed_size, bias=True)
-        self.sigmoid = sigmoid
         self.sig = nn.Sigmoid()
 
         self.relu = nn.ReLU()
@@ -89,8 +88,7 @@ class SelfAttention(nn.Module):
 
         features = torch.bmm(attention, images)
         features = self.w3(features)
-        if self.sigmoid:
-            features = self.sig(features)
+
         # normalize in the joint embedding space
         features = l2norm(features, dim=-1)
 
