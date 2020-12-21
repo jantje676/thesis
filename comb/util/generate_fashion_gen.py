@@ -93,7 +93,11 @@ def create_captions(captions, early_stop, description):
             seg_cap = caption.split(".")
             words = nltk.word_tokenize(seg_cap[0])
             words = [word.lower() for word in words if word.isalpha()]
+            if len(words) == 0:
+                words = ["fashion"]
             caption = " ".join(words)
+
+
 
         cleaned_captions.append((count, caption))
 
