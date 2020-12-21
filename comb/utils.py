@@ -93,7 +93,8 @@ def calculatate_freq(captions, count):
             except:
                 caption_l -= 1
                 word_count.append(0)
-    
+        if caption_l == 0:
+            caption_l = 1
         freq = tot_freq / caption_l
         freq_score.append(freq)
         word_count.append(0)
