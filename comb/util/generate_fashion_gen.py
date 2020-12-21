@@ -18,6 +18,7 @@ import nltk
 
 from layers_model import LayersModel
 from Layers_resnest import Layers_resnest
+from segment_dresses import segment_dresses
 
 
 def main(args):
@@ -111,16 +112,18 @@ def create_features(images, early_stop, network, trained_dresses, checkpoint):
     features = []
     count = 0
     for image in images:
-
-        # create segments in a dictionary
-        segments, bboxes = segment_dresses_tile(image)
-
-        # stack segments to push through net
-        stacked_segments = stack_segments(segments, transform)
-
-        feature = get_features(stacked_segments, net, device)
-        features.append(feature)
-
+        if network == "layers" or network == "layers_resnest":
+            img = Image.fromarray(image)
+            img_transformed = transform(img).unsqueeze(0).to(device)
+            feature = net.forward1(img_transformed).to("cpu").squeeze().detach().numpy()
+            features.append(feature)
+        else:
+            # create segments in a dictionary
+            segments, bboxes = segment_dresses(image)
+            # stack segments to push through net
+            stacked_segments = stack_segments(segments, transform)
+            feature = get_features(stacked_segments, net, device)
+            features.append(feature)
         count += 1
 
         if count % 10 == 0:
@@ -195,22 +198,7 @@ def get_features(stacked_segments, net, device ):
     feature = feature.detach().numpy()
     return feature
 
-def segment_dresses_tile(img):
-    segments = {}
-    H, W, C = img.shape
-    # 1=x_1, 2=y_1, 3=x_2, 4 =y_2 linkerbovenhoek=(x_1, y_1) rechteronderhoek=(x_2, y_2)
-    bboxes = np.array([[0,0,W, floor(0.35*H)],[0,floor(0.35*H),W,H],[0,floor(0.35*H),W,floor(0.75*H)],
-                      [0,0,W,floor(0.2*H)],[0,0,floor(0.5*W),floor(0.5*H)],[floor(0.5*W),0,W,floor(0.5*H)]])
 
-    segments["top"] = img[: floor(0.33*H) , : floor(0.5*W) , :]
-    segments["full_skirt"] = img[: floor(0.33*H) ,  floor(0.5*W): , :]
-    segments["skirt_above_knee"] = img[floor(0.33*H): floor(0.66*H) , : floor(0.5*W) , :]
-    segments["neckline"] = img[floor(0.33*H): floor(0.66*H) , floor(0.5*W):  , :]
-    segments["left_sleeve"] = img[floor(0.66*H):  , : floor(0.5*W) , :]
-    segments["right_sleeve"] = img[floor(0.66*H): , floor(0.5*W):  , :]
-    segments["full"] = img
-
-    return segments, bboxes
 
 if __name__ == '__main__':
 
