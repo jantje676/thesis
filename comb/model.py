@@ -28,6 +28,7 @@ from util.LayersAttention import LayerAttention2
 from util.Layers_resnest import Layers_resnest
 from util.layers_alex_res import LayerAttention3
 from util.layers_alex_im import LayerAttention4, EncoderImageAttention4,  LayerAttention4
+from util.cnn_end2end import CNN_end2end
 from transformers import BertModel
 from cnn_layers import CNN_layers
 from div_loss import cosine_loss, euclidean_loss, euclidean_heat_loss, ssd, dpp
@@ -65,6 +66,8 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretr
     elif precomp_enc_type == "attention":
         img_enc = EncoderImageAttention(
             img_dim, embed_size, n_attention, no_imgnorm)
+    elif precomp_enc_type == "cnn":
+        img_enc = CNN_end2end(img_dim, embed_size)
     elif precomp_enc_type == "layers":
         if net == "alex":
             img_enc = LayersModel(img_dim, embed_size)

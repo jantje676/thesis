@@ -20,7 +20,7 @@ import csv
 from utils import count_words, calculatate_freq, filter_freq, cut
 import h5py
 from transformers import BertTokenizer
-
+from util.cnn_end2end import Data_segs
 
 
 class PrecompTrans(data.Dataset):
@@ -100,25 +100,10 @@ class PrecompTrans(data.Dataset):
         freq_score = self.freq_score[index]
         freqs = self.freqs[index]
 
-        # Convert caption (string) to word ids.
-        tokens = nltk.tokenize.word_tokenize(
-            str(caption).lower())
-        if self.filter:
-            tokens = filter_freq(tokens, self.count, self.n_filter)
-
-        if self.cut:
-            tokens = cut(tokens, self.n_cut)
-
-        caption = []
-        caption.append(vocab('<start>'))
-        caption.extend([vocab(token) for token in tokens])
-        caption.append(vocab('<end>'))
-        target = torch.Tensor(caption)
-
         if self.bert:
-            self.bert_tokenize(caption)
+            target = self.bert_tokenize(caption)
         else:
-            self.normal_tokenize(caption)
+            target = self.normal_tokenize(caption)
         return image, target, index, img_id, freq_score, freqs
 
     def __len__(self):
@@ -358,6 +343,8 @@ def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
         dset = PrecompTrans(data_path, data_split, vocab, opt.version, opt.image_path,
                             opt.rectangle, opt.data_name, opt.filter, opt.n_filter,
                             opt.cut, opt.n_cut, opt.clothing, opt.txt_enc)
+    elif opt.precomp_enc_type == "cnn":
+        dset = Data_segs(data_path, data_split, vocab, opt.version, opt.image_path, opt.data_name)
     else:
         dset = PrecompDataset(data_path, data_split, vocab, opt.version, opt.filter,
                                 opt.n_filter, opt.cut, opt.n_cut, opt.txt_enc)
