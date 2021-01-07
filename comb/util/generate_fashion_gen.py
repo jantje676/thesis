@@ -121,6 +121,15 @@ def create_features(images, early_stop, network, trained_dresses, checkpoint):
             img_transformed = transform(img).unsqueeze(0).to(device)
             feature = net.forward1(img_transformed).to("cpu").squeeze().detach().numpy()
             features.append(feature)
+        elif network == "vilbert":
+            segments, bboxes = segment_dresses(image)
+            stacked_segs = stack_segments(segments, transform)
+            stacked_segs = stacked_segs.to(device)
+            dict = net(stacked_segs)
+            hidden_features = dict["out"]
+            dim = hidden_features.shape[2]
+            pool = nn.AvgPool2d((dim, dim))
+            features = pool(hidden_features).to("cpu").squeeze().detach().numpy()
         else:
             # create segments in a dictionary
             segments, bboxes = segment_dresses(image)
@@ -171,6 +180,20 @@ def get_model(network, trained_dresses, checkpoint):
                                   std=[0.229, 0.224, 0.225])])
     elif network == "layers":
         net = LayersModel(trained_dresses=trained_dresses, checkpoint_path=checkpoint)
+        net.eval()
+
+        transform = transforms.Compose([
+            transforms.Resize((300, 300)),
+            transforms.CenterCrop((256, 256)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                  std=[0.229, 0.224, 0.225])])
+    elif network == "vilbert":
+        # choose model
+        net = torch.hub.load('pytorch/vision:v0.6.0', 'fcn_resnet101', pretrained=True)
+        net = net.backbone
+
+        # set to evaluation
         net.eval()
 
         transform = transforms.Compose([
