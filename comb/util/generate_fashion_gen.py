@@ -143,8 +143,7 @@ def create_features(images, early_stop, network, trained_dresses, checkpoint):
             break
 
     data_out = np.stack(features, axis=0)
-    print(data_out.shape)
-    exit()
+
     return data_out
 
 
