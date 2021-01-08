@@ -96,9 +96,6 @@ def create_captions(captions, early_stop, description):
             if len(words) == 0:
                 words = ["fashion"]
             caption = " ".join(words)
-
-
-
         cleaned_captions.append((count, caption))
 
         count += 1
@@ -129,7 +126,8 @@ def create_features(images, early_stop, network, trained_dresses, checkpoint):
             hidden_features = dict["out"]
             dim = hidden_features.shape[2]
             pool = nn.AvgPool2d((dim, dim))
-            features = pool(hidden_features).to("cpu").squeeze().detach().numpy()
+            feature = pool(hidden_features).to("cpu").squeeze().detach().numpy()
+            features.append(feature)
         else:
             # create segments in a dictionary
             segments, bboxes = segment_dresses(image)
@@ -145,6 +143,8 @@ def create_features(images, early_stop, network, trained_dresses, checkpoint):
             break
 
     data_out = np.stack(features, axis=0)
+    print(data_out.shape)
+    exit()
     return data_out
 
 
