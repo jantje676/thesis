@@ -56,3 +56,41 @@ def dpp(theta, im):
     log_det = 1/torch.log(det)
     loss_div = log_det.sum() * theta
     return loss_div
+
+def weight_loss(net, diversity_loss, theta, sigma):
+    w1 = []
+    w2 = []
+    w3 = []
+    w4 = []
+    w5 = []
+    w6 = []
+    w7 = []
+    w8 = []
+
+
+    for cnn in net.conv:
+        w1.append(torch.flatten(cnn.features[0].weight))
+        w2.append(torch.flatten(cnn.features[3].weight))
+        w3.append(torch.flatten(cnn.features[6].weight))
+        w4.append(torch.flatten(cnn.features[8].weight))
+        w5.append(torch.flatten(cnn.features[10].weight))
+        w6.append(torch.flatten(cnn.classifier[1].weight))
+        w7.append(torch.flatten(cnn.classifier[4].weight))
+        w8.append(torch.flatten(cnn.classifier[6].weight))
+
+    weights = [w1, w2, w3, w4, w5, w6, w7, w8]
+    loss = 0
+    for w in weights:
+        im = torch.stack(w, dim=0).unsqueeze(dim=0)
+        if diversity_loss == "cos":
+            loss += cosine_loss(theta, im)
+        elif diversity_loss == "euc_heat":
+            loss += euclidean_heat_loss(theta, im, sigma, 7)
+        elif diversity_loss == "euc":
+            loss += euclidean_loss(theta, im, 7)
+        elif self.opt.diversity_loss == "ssd":
+            loss += ssd(theta, im)
+        elif self.opt.diversity_loss == "dpp":
+            loss += dpp(theta, im)
+
+    return loss

@@ -23,6 +23,7 @@ from collections import OrderedDict
 from utils import adap_margin
 from stn import STN
 from util.layers_model import LayersModel, EncoderImageAttention, LayerAttention
+from util.layers_model_same import LayersModelSame
 # from util.layers_alex2 import LayersModel2, EncoderImageAttention2, LayerAttention2
 from util.LayersAttention import LayerAttention2
 from util.Layers_resnest import Layers_resnest
@@ -31,7 +32,7 @@ from util.layers_alex_im import LayerAttention4, EncoderImageAttention4,  LayerA
 from util.cnn_end2end import CNN_end2end
 from transformers import BertModel
 from cnn_layers import CNN_layers
-from div_loss import cosine_loss, euclidean_loss, euclidean_heat_loss, ssd, dpp
+from div_loss import cosine_loss, euclidean_loss, euclidean_heat_loss, ssd, dpp, weight_loss
 
 def l1norm(X, dim, eps=1e-8):
     """L1-normalize columns of X
@@ -73,6 +74,8 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretr
             img_enc = LayersModel(img_dim, embed_size)
         elif net == "res":
             img_enc = Layers_resnest(img_dim, embed_size)
+    elif precomp_enc_type == "layers_same":
+            img_enc = LayersModelSame(img_dim, embed_size)
     elif precomp_enc_type == "layers_attention":
         img_enc = LayerAttention2(img_dim, embed_size, n_attention, no_imgnorm, net)
     elif precomp_enc_type == "layers_attention_res":
@@ -574,6 +577,7 @@ class SCAN(object):
     def __init__(self, opt):
         # Build Models
         self.grad_clip = opt.grad_clip
+        self.opt = opt
         self.img_enc = EncoderImage(opt.data_name, opt.img_dim, opt.embed_size, opt.n_attention,
                                     opt.n_detectors, opt.pretrained_alex, opt.rectangle,
                                     precomp_enc_type=opt.precomp_enc_type,
@@ -684,6 +688,10 @@ class SCAN(object):
         """Compute the loss given pairs of image and caption embeddings
         """
         total_loss, standard_loss, loss_div = self.criterion(img_emb, cap_emb, cap_len, freq_score, freqs, epoch)
+
+        if self.opt.weight_loss != None:
+            loss = weight_loss(self.img_enc, self.opt.weight_loss, self.opt.theta, self.opt.sigma)
+            total_loss += loss
 
         self.logger.update('tot_Le', total_loss.item(), img_emb.size(0))
         self.logger.update('stand_Le', standard_loss, img_emb.size(0))
