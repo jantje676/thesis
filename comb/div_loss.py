@@ -88,9 +88,9 @@ def weight_loss(net, diversity_loss, theta, sigma):
             loss += euclidean_heat_loss(theta, im, sigma, 7)
         elif diversity_loss == "euc":
             loss += euclidean_loss(theta, im, 7)
-        elif self.opt.diversity_loss == "ssd":
+        elif diversity_loss == "ssd":
             loss += ssd(theta, im)
-        elif self.opt.diversity_loss == "dpp":
+        elif diversity_loss == "dpp":
             loss += dpp(theta, im)
 
     return loss
