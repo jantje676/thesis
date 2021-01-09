@@ -30,7 +30,7 @@ def main(args):
     n_hard = args.n_hard
 
     # read features
-    features = np.load( "{}/{}/data_ims_{}.npy".format(data_path, clothing, version))
+    features = np.load( "{}/{}/data_ims_{}_train.npy".format(data_path, clothing, version))
 
     # captions (id, caption)
     captions, img2id = read_captions(data_path, clothing, version)
