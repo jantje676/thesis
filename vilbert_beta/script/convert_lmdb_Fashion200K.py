@@ -133,7 +133,7 @@ def save_lmdb(data_path_out, captions, features):
 
 
 def read_captions(data_path, clothing, version):
-    caption_file = "{}/{}/data_captions_{}.txt".format(data_path, clothing, version)
+    caption_file = "{}/{}/data_captions_{}_train.txt".format(data_path, clothing, version)
     captions = []
     img2id = {}
     with open(caption_file, newline = '') as file:
