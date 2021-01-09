@@ -690,7 +690,7 @@ class SCAN(object):
         total_loss, standard_loss, loss_div = self.criterion(img_emb, cap_emb, cap_len, freq_score, freqs, epoch)
 
         if self.opt.weight_loss != None:
-            loss = weight_loss(self.img_enc, self.opt.weight_loss, self.opt.theta, self.opt.sigma)
+            loss = weight_loss(self.img_enc, self.opt.weight_loss, self.opt.theta, self.opt.sigma, self.opt.n_detectors)
             total_loss += loss
 
         self.logger.update('tot_Le', total_loss.item(), img_emb.size(0))

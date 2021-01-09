@@ -57,7 +57,7 @@ def dpp(theta, im):
     loss_div = log_det.sum() * theta
     return loss_div
 
-def weight_loss(net, diversity_loss, theta, sigma):
+def weight_loss(net, diversity_loss, theta, sigma, n_detectors):
     w1 = []
     w2 = []
     w3 = []
@@ -85,9 +85,9 @@ def weight_loss(net, diversity_loss, theta, sigma):
         if diversity_loss == "cos":
             loss += cosine_loss(theta, im)
         elif diversity_loss == "euc_heat":
-            loss += euclidean_heat_loss(theta, im, sigma, 7)
+            loss += euclidean_heat_loss(theta, im, sigma, n_detectors)
         elif diversity_loss == "euc":
-            loss += euclidean_loss(theta, im, 7)
+            loss += euclidean_loss(theta, im, n_detectors)
         elif diversity_loss == "ssd":
             loss += ssd(theta, im)
         elif diversity_loss == "dpp":
