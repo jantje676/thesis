@@ -55,7 +55,7 @@ def split_data(data_path_out, captions, nr_test, version):
 
 def write_jsonline(captions, indx, split, version, data_path_out):
     image_ids = []
-    with jsonlines.open('{}/Fashion200K_{}_{}.jsonline'.format(data_path_out, split, version), mode='w') as writer:
+    with jsonlines.open('{}/Gen_{}_{}.jsonline'.format(data_path_out, split, version), mode='w') as writer:
         for i in range(len(indx)):
             writer.write({"sentences": [captions[indx[i]][1]], "id": int(captions[indx[i]][0]), "img_path": captions[indx[i]][0]+ ".jpg"})
             image_ids.append(int(captions[indx[i]][0]))
@@ -97,7 +97,7 @@ def create_hard_negative(train_ids, features, data_path_out, img2id, n_hard):
 
 def save_lmdb(data_path_out, captions, features):
     id_list = []
-    save_path = os.path.join(data_path_out, 'Fashion200K.lmdb')
+    save_path = os.path.join(data_path_out, 'Gen.lmdb')
 
     count = 0
     env = lmdb.open(save_path, map_size=1099511627776)
