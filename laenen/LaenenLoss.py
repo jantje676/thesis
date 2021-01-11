@@ -32,23 +32,9 @@ class LaenenLoss(nn.Module):
         if cluster_loss:
             c_cluster = self.c_cluster(kmeans_features, kmeans_emb, sims, img_emb, cap_emb, cap_l, features)
             loss += self.gamma * c_cluster
-        print("frag: {:.2f}   glob: {:.2f}".format(c_frag_loss.item(), c_glob_loss.item()))
 
         return loss
 
-    def c_cluster(self, kmeans_features, kmeans_emb, sims, img_emb, cap_emb, cap_l, features):
-        batch_size = cap_emb.size(0)
-        max_l = cap_emb.size(1)
-        part1 = cluster1(features, kmeans_features)
-        part2 = cluster2(img_emb, kmeans_emb, sims, cap_emb)
-
-        part1 = part1.unsqueeze(1).expand(-1, batch_size, -1)
-        part1 = part1.unsqueeze(3).expand(-1, -1, -1,max_l )
-
-        loss = part1 * part2
-        loss = torch.sum(loss)
-
-        return loss
 
     def c_glob(self, sims, cap_l, n_frag, batch_size, n_caption):
         sims, _ = torch.max(sims, dim=2)
@@ -131,6 +117,64 @@ class LaenenLoss(nn.Module):
 
         return diag
 
+def get_thres(l, n):
+    thres = (l + n)
+    thres = float(1)/thres.to(dtype=torch.float)
+
+    if torch.cuda.is_available():
+        thres = thres.cuda()
+    return thres
+
+
+def sign(sims_i, i):
+    y =  torch.ones(sims_i.shape, requires_grad=True) * -1
+    temp_y = torch.sign(sims_i[i,:,:])
+
+    n_frag = sims_i.size(1)
+    n_word = sims_i.size(2)
+
+    # check if at least one in every row has positive sign
+    temp_sum = temp_y.sum(dim=0)
+
+    sign_check = temp_sum > (n_frag * -1)
+
+    if sign_check.sum() != n_word:
+        for j in range(len(sign_check)):
+            if sign_check[j] == False:
+                i_max = torch.argmax(sims_i[i,:,j])
+                temp_y[i_max, j] = 1
+
+    y[i,:,:] = temp_y
+
+    if torch.cuda.is_available():
+        y = y.cuda()
+
+    return y
+
+# init y matrix with ones when image and word fragment are from the same pair
+def init_y(sims_i, i):
+    y =  torch.ones(sims_i.shape, requires_grad=True) * -1
+    y[i, :, :] = 1
+
+    if torch.cuda.is_available():
+        y = y.cuda()
+    return y
+
+
+def c_cluster(self, kmeans_features, kmeans_emb, sims, img_emb, cap_emb, cap_l, features):
+    batch_size = cap_emb.size(0)
+    max_l = cap_emb.size(1)
+    part1 = cluster1(features, kmeans_features)
+    part2 = cluster2(img_emb, kmeans_emb, sims, cap_emb)
+
+    part1 = part1.unsqueeze(1).expand(-1, batch_size, -1)
+    part1 = part1.unsqueeze(3).expand(-1, -1, -1,max_l )
+
+    loss = part1 * part2
+    loss = torch.sum(loss)
+
+    return loss
+
 def cluster1(features, kmeans_features):
     dim = features.size(2)
     batch_size = features.size(0)
@@ -183,48 +227,6 @@ def cluster2(img_emb, kmeans_emb, sims, cap_emb):
     loss2 = torch.abs(sims - sims_center)
     return loss2
 
-def get_thres(l, n):
-    thres = (l + n)
-    thres = float(1)/thres.to(dtype=torch.float)
-
-    if torch.cuda.is_available():
-        thres = thres.cuda()
-    return thres
-
-
-def sign(sims_i, i):
-    y =  torch.ones(sims_i.shape, requires_grad=True) * -1
-    temp_y = torch.sign(sims_i[i,:,:])
-
-    n_frag = sims_i.size(1)
-    n_word = sims_i.size(2)
-
-    # check if at least one in every row has positive sign
-    temp_sum = temp_y.sum(dim=0)
-
-    sign_check = temp_sum > (n_frag * -1)
-
-    if sign_check.sum() != n_word:
-        for j in range(len(sign_check)):
-            if sign_check[j] == False:
-                i_max = torch.argmax(sims_i[i,:,j])
-                temp_y[i_max, j] = 1
-
-    y[i,:,:] = temp_y
-
-    if torch.cuda.is_available():
-        y = y.cuda()
-
-    return y
-
-# init y matrix with ones when image and word fragment are from the same pair
-def init_y(sims_i, i):
-    y =  torch.ones(sims_i.shape, requires_grad=True) * -1
-    y[i, :, :] = 1
-
-    if torch.cuda.is_available():
-        y = y.cuda()
-    return y
 
 def cosine_similarity(x1, x2, dim=1, eps=1e-8):
     """Returns cosine similarity between x1 and x2, computed along dim."""
