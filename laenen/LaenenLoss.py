@@ -32,6 +32,8 @@ class LaenenLoss(nn.Module):
         if cluster_loss:
             c_cluster = self.c_cluster(kmeans_features, kmeans_emb, sims, img_emb, cap_emb, cap_l, features)
             loss += self.gamma * c_cluster
+        print("frag: {:.2f}   glob: {:.2f}".format(c_frag_loss.item(), c_glob_loss.item()))
+
         return loss
 
     def c_cluster(self, kmeans_features, kmeans_emb, sims, img_emb, cap_emb, cap_l, features):
