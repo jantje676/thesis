@@ -20,6 +20,7 @@ import csv
 from utils import count_words, calculatate_freq, filter_freq, cut
 import h5py
 
+
 class CaptionDataset(data.Dataset):
     """
     Load captions
@@ -71,7 +72,6 @@ class PrecompDataset(data.Dataset):
     Load precomputed captions and image features
     Possible options: f30k_precomp, coco_precomp
     """
-
     def __init__(self, data_path, data_split, vocab, version):
         self.vocab = vocab
         loc = data_path + '/'
@@ -85,12 +85,7 @@ class PrecompDataset(data.Dataset):
         # Image features
         self.images = np.load("{}/data_ims_{}_{}.npy".format(data_path, version, data_split))
         self.length = len(self.captions)
-
-        # rkiros data has redundancy in images, we divide by 5, 10crop doesn't
-        if self.images.shape[0] != self.length:
-            self.im_div = 5
-        else:
-            self.im_div = 1
+        self.im_div = 1
 
     def __getitem__(self, index):
         # handle the image redundancy
@@ -99,19 +94,19 @@ class PrecompDataset(data.Dataset):
         caption = self.captions[index]
         vocab = self.vocab
 
-        # Convert caption (string) to word ids.
         tokens = nltk.tokenize.word_tokenize(
             str(caption).lower())
-
         caption = []
-        caption.append(vocab('<start>'))
-        caption.extend([vocab(token) for token in tokens])
-        caption.append(vocab('<end>'))
+        caption.append(self.vocab('<start>'))
+        caption.extend([self.vocab(token) for token in tokens])
+        caption.append(self.vocab('<end>'))
         target = torch.Tensor(caption)
         return image, target, index, img_id
 
     def __len__(self):
         return self.length
+
+
 
 
 def collate_fn(data):
@@ -174,19 +169,20 @@ def get_caption_loader(data_path, data_split, vocab, opt, batch_size=100,
 
 
 def get_loaders(data_name, vocab, batch_size, workers, opt):
+
     dpath = os.path.join(opt.data_path, data_name, opt.clothing)
-    first_loader = get_precomp_loader(dpath, 'train', vocab, opt,
+    train_loader = get_precomp_loader(dpath, 'train', vocab, opt,
                                       batch_size, False, workers)
 
     val_loader = get_precomp_loader(dpath, 'dev', vocab, opt,
                                     batch_size, False, workers)
 
-    second_loader = get_precomp_loader(dpath, 'train', vocab, opt,
-                                      batch_size, False, workers)
+    # second_loader = get_precomp_loader(dpath, 'train', vocab, opt,
+    #                                   batch_size, False, workers)
     # cap_loader = get_caption_loader(dpath, 'train', vocab, opt,
     #                                   batch_size, False, workers)
 
-    return first_loader, second_loader, val_loader
+    return train_loader, val_loader
 
 
 def get_test_loader(split_name, data_name, vocab, batch_size,

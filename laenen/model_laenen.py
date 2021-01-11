@@ -216,41 +216,42 @@ class SCAN(object):
         cap_emb, cap_lens = self.txt_enc(captions, lengths)
         return cap_emb, cap_lens
 
-    def forward_loss(self, epoch, img_emb_pair, cap_emb, cap_l, image_diag, cap_diag, same, kmeans_features, kmeans_emb, features, cluster_loss):
+    def forward_loss(self,epoch,img_emb, cap_emb, cap_l, kmeans_features, kmeans_emb, cluster_loss):
         """Compute the loss given pairs of image and caption embeddings
         """
-        loss = self.criterion(epoch, img_emb_pair, cap_emb, cap_l, image_diag, cap_diag, same, kmeans_features, kmeans_emb, features, cluster_loss)
-        self.logger.update('Le', loss.item(), img_emb_pair.size(0))
+        loss = self.criterion( epoch, img_emb, cap_emb, cap_l, kmeans_features, kmeans_emb, cluster_loss)
+        self.logger.update('Le', loss.item(), img_emb.size(0))
         return loss
 
 
-    def train_emb(self, epoch, first_data, second_data, same, cluster_loss, kmeans_features, kmeans_emb):
+    def train_emb(self, epoch, images, targets, lengths, ids, cluster_loss, kmeans_features=None, kmeans_emb=None):
         """One training step given images and captions.
         """
         self.Eiters += 1
         self.logger.update('Eit', self.Eiters)
         self.logger.update('lr', self.optimizer.param_groups[0]['lr'])
 
-        # unpack train data
-        im_first, cap_first, lengths_first, ids_first = first_data
-        # unpack pair data
-        im_second, cap_second, lengths_second, ids_second = second_data
+        # # unpack train data
+        # im_first, cap_first, lengths_first, ids_first = first_data
+        # # unpack pair data
+        # im_second, cap_second, lengths_second, ids_second = second_data
 
         # retrieve embeddings from pair data
-        img_emb_first, cap_emb_first, l_first = self.forward_emb(im_first, cap_first, lengths_first)
+        # img_emb_first, cap_emb_first, l_first = self.forward_emb(im_first, cap_first, lengths_first)
+        #
+        # img_emb_second, cap_emb_second, l_second = self.forward_emb(im_second, cap_second, lengths_second)
+        img_emb, cap_emb, l = self.forward_emb(images, targets, lengths)
 
-        img_emb_second, cap_emb_second, l_second = self.forward_emb(im_second, cap_second, lengths_second)
 
         # calculate the similairty score between the image and caption pair
-        image_diag = self.criterion.sim_pair(img_emb_first, cap_emb_first, l_first)
-
-        cap_diag = self.criterion.sim_pair(img_emb_second, cap_emb_second, l_second)
+        # image_diag = self.criterion.sim_pair(img_emb_first, cap_emb_first, l_first)
+        #
+        # cap_diag = self.criterion.sim_pair(img_emb_second, cap_emb_second, l_second)
 
         # measure accuracy and record loss
         self.optimizer.zero_grad()
-        loss = self.forward_loss(epoch, img_emb_first, cap_emb_second, l_second,
-                                image_diag, cap_diag, same, kmeans_features,
-                                kmeans_emb, im_first, cluster_loss)
+        loss = self.forward_loss(epoch,img_emb, cap_emb, l, kmeans_features,
+                                kmeans_emb, cluster_loss)
 
         # compute gradient and do SGD step
         loss.backward()

@@ -18,15 +18,15 @@ class LaenenLoss(nn.Module):
         self.n = n
         self.margin = margin
 
-    def forward(self, epoch, img_emb, cap_emb, cap_l, image_diag, cap_diag, same, kmeans_features, kmeans_emb, features, cluster_loss):
+    def forward(self, epoch, img_emb, cap_emb, cap_l, kmeans_features, kmeans_emb, cluster_loss):
         n_frag = img_emb.size(1)
         batch_size = img_emb.size(0)
         n_caption = cap_emb.size(0)
 
         sims = torch.einsum('bik,ljk->blij', img_emb, cap_emb)
 
-        c_frag_loss = self.c_frag(sims, cap_l, epoch, same, n_frag, batch_size, n_caption)
-        c_glob_loss = self.c_glob(sims, cap_l, image_diag, cap_diag, same, n_frag, batch_size, n_caption)
+        c_frag_loss = self.c_frag(sims, cap_l, epoch, n_frag, batch_size, n_caption)
+        c_glob_loss = self.c_glob(sims, cap_l, n_frag, batch_size, n_caption)
         loss = self.beta * c_glob_loss + c_frag_loss
 
         if cluster_loss:
@@ -48,7 +48,7 @@ class LaenenLoss(nn.Module):
 
         return loss
 
-    def c_glob(self, sims, cap_l, image_diag, cap_diag, same, n_frag, batch_size, n_caption):
+    def c_glob(self, sims, cap_l, n_frag, batch_size, n_caption):
         sims, _ = torch.max(sims, dim=2)
 
         sims = sims.sum(dim=2)
@@ -56,19 +56,16 @@ class LaenenLoss(nn.Module):
         thres_image = get_thres(cap_l, self.n).unsqueeze(0).expand(batch_size, -1)
 
         sims = sims * thres_image
+        diag = torch.diagonal(sims, 0)
 
-        image_diag = image_diag.unsqueeze(1).expand(-1, n_caption)
-        cap_diag = cap_diag.unsqueeze(0).expand(batch_size, -1)
+        image_diag = diag.unsqueeze(1).expand(-1, n_caption)
+        cap_diag = diag.unsqueeze(0).expand(batch_size, -1)
 
         score_image = sims - image_diag + self.margin
         score_cap = sims - cap_diag + self.margin
 
         score_image = self.relu(score_image)
         score_cap = self.relu(score_cap)
-
-        if same:
-            score_image.fill_diagonal_(0)
-            score_cap.fill_diagonal_(0)
 
         return score_cap.sum()+ score_image.sum()
 
@@ -86,7 +83,7 @@ class LaenenLoss(nn.Module):
 
         return sims
 
-    def c_frag(self, sims, cap_l, epoch, same, n_frag, batch_size, n_caption):
+    def c_frag(self, sims, cap_l, epoch, n_frag, batch_size, n_caption):
         loss = 0
 
         for i in range(n_caption):
@@ -97,10 +94,10 @@ class LaenenLoss(nn.Module):
 
             # first n epochs fix the constants y_ij
             if epoch < self.switch:
-                y_i = init_y(sims_i, same, i)
+                y_i = init_y(sims_i, i)
             # after let the model optimize y_ij with the heuristic sign
             else:
-                y_i = sign(sims_i, same, i)
+                y_i = sign(sims_i, i)
 
             sims_i = 1 - (y_i * sims_i)
             score = torch.sum(self.relu(sims_i))
@@ -159,7 +156,6 @@ def cluster1(features, kmeans_features):
     return loss1
 
 
-
 def cluster2(img_emb, kmeans_emb, sims, cap_emb):
     batch_size = img_emb.size(0)
     n_frag = img_emb.size(1)
@@ -188,37 +184,41 @@ def cluster2(img_emb, kmeans_emb, sims, cap_emb):
 def get_thres(l, n):
     thres = (l + n)
     thres = float(1)/thres.to(dtype=torch.float)
-    
+
     if torch.cuda.is_available():
         thres = thres.cuda()
     return thres
 
 
-def sign(sims_i, same, i):
-    y = torch.sign(sims_i)
+def sign(sims_i, i):
+    y =  torch.ones(sims_i.shape, requires_grad=True) * -1
+    temp_y = torch.sign(sims_i[i,:,:])
+
     n_frag = sims_i.size(1)
     n_word = sims_i.size(2)
 
-    if same:
-        temp_y = y[i, :, :]
-        # check if at least one in every row has positive sign
-        temp_sum = temp_y.sum(dim=0)
-        sign_check = temp_sum > (n_frag * -1)
-        if sign_check.sum() != n_word:
-            for j in range(len(sign_check)):
-                if sign_check[j] == False:
-                    i_max = torch.argmax(sims_i[i,:,j])
-                    y[i, i_max, j] = 1
+    # check if at least one in every row has positive sign
+    temp_sum = temp_y.sum(dim=0)
+
+    sign_check = temp_sum > (n_frag * -1)
+
+    if sign_check.sum() != n_word:
+        for j in range(len(sign_check)):
+            if sign_check[j] == False:
+                i_max = torch.argmax(sims_i[i,:,j])
+                temp_y[i_max, j] = 1
+
+    y[i,:,:] = temp_y
 
     if torch.cuda.is_available():
         y = y.cuda()
+
     return y
 
 # init y matrix with ones when image and word fragment are from the same pair
-def init_y(sims_i, same, i):
+def init_y(sims_i, i):
     y =  torch.ones(sims_i.shape, requires_grad=True) * -1
-    if same:
-        y[i, :, :] = 1
+    y[i, :, :] = 1
 
     if torch.cuda.is_available():
         y = y.cuda()

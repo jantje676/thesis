@@ -47,7 +47,7 @@ def start_experiment(opt, seed):
     opt.vocab_size = len(vocab)
 
     # Load data loaders
-    first_loader, second_loader, val_loader = data_ken.get_loaders(
+    train_loader, val_loader = data_ken.get_loaders(
         opt.data_name, vocab, opt.batch_size, opt.workers, opt)
 
     # Construct the model
@@ -81,7 +81,7 @@ def start_experiment(opt, seed):
         print(opt.model_name)
 
         # train for one epoch
-        train(opt, model, epoch, first_loader, second_loader, val_loader)
+        train(opt, model, epoch, train_loader, val_loader)
 
         # evaluate on validation set
         rsum = validate(opt, val_loader, model)
@@ -107,7 +107,7 @@ def start_experiment(opt, seed):
             }, is_best, last_epoch, filename='checkpoint_{}.pth.tar'.format(epoch), prefix=opt.model_name + '/')
     return best_rsum
 
-def train(opt, model, epoch, first_loader, second_loader, val_loader):
+def train(opt, model, epoch, train_loader, val_loader):
     # average meters to record the training statistics
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -119,60 +119,58 @@ def train(opt, model, epoch, first_loader, second_loader, val_loader):
     end = time.time()
 
     if opt.cluster_loss:
-        features = retrieve_features(first_loader)
+        features = retrieve_features(train_loader)
         kmeans_features = get_centers(features, opt.n_clusters)
 
     # https://stats.stackexchange.com/questions/299013/cosine-distance-as-similarity-measure-in-kmeans
     # normalizing and euclidian distance is linear correlated with cosine distance
 
-    for j, first_data in enumerate(first_loader):
+    for j, (images, targets, lengths, ids) in enumerate(train_loader):
 
         if opt.cluster_loss:
-            img_embs, _ , _ = encode_data(model, first_loader)
+            img_embs, _ , _ = encode_data(model, train_loader)
             kmeans_emb = get_centers(img_embs, opt.n_clusters)
 
-        for i, second_data in enumerate(second_loader):
-            # switch to train mode
-            model.train_start()
-            if j == i:
-                same = True
-            else:
-                same = False
+        # switch to train mode
+        model.train_start()
+        # if j == i:
+        #     same = True
+        # else:
+        #     same = False
 
-            # measure data loading time
-            data_time.update(time.time() - end)
+        # measure data loading time
+        data_time.update(time.time() - end)
 
-            # make sure train logger is used
-            model.logger = train_logger
+        # make sure train logger is used
+        model.logger = train_logger
 
-            # Update the model
-            model.train_emb(epoch, first_data, second_data, same, opt.cluster_loss, kmeans_features, kmeans_emb)
+        # Update the model
+        model.train_emb(epoch, images, targets, lengths, ids, opt.cluster_loss, kmeans_features, kmeans_emb)
 
-            # measure elapsed time
-            batch_time.update(time.time() - end)
-            end = time.time()
+        # measure elapsed time
+        batch_time.update(time.time() - end)
+        end = time.time()
 
-            # Print log info
-            if model.Eiters % opt.log_step == 0:
-                logging.info(
-                    'Epoch: [{0}][{1}/{2}]\t'
-                    '{e_log}\t'
-                    'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                    'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                    .format(
-                        epoch, i + (j * len(first_loader)), len(second_loader) * len(second_loader), batch_time=batch_time,
-                        data_time=data_time, e_log=str(model.logger)))
+        # Print log info
+        if model.Eiters % opt.log_step == 0:
+            logging.info(
+                'Epoch: [{0}][{1}/{2}]\t'
+                '{e_log}\t'
+                'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
+                .format(epoch, j,  len(train_loader), batch_time=batch_time,
+                    data_time=data_time, e_log=str(model.logger)))
 
-            # Record logs in tensorboard
-            tb_logger.log_value('epoch', epoch, step=model.Eiters)
-            tb_logger.log_value('step', i, step=model.Eiters)
-            tb_logger.log_value('batch_time', batch_time.val, step=model.Eiters)
-            tb_logger.log_value('data_time', data_time.val, step=model.Eiters)
-            model.logger.tb_log(tb_logger, step=model.Eiters)
+        # Record logs in tensorboard
+        tb_logger.log_value('epoch', epoch, step=model.Eiters)
+        tb_logger.log_value('step', j, step=model.Eiters)
+        tb_logger.log_value('batch_time', batch_time.val, step=model.Eiters)
+        tb_logger.log_value('data_time', data_time.val, step=model.Eiters)
+        model.logger.tb_log(tb_logger, step=model.Eiters)
 
-            # validate at every val_step
-            if model.Eiters % opt.val_step == 0:
-                validate(opt, val_loader, model)
+        # validate at every val_step
+        if model.Eiters % opt.val_step == 0:
+            validate(opt, val_loader, model)
 
 # see how well the model makes captions
 def validate(opt, val_loader, model):
