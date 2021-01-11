@@ -36,11 +36,14 @@ def main(args):
     captions, img2id = read_captions(data_path, clothing, version)
 
     save_lmdb(data_path_out, captions, features)
+    print("lmdb is saved")
 
     train_ids = split_data(data_path_out, captions, nr_test, version)
+    print("split ids finished")
 
     create_hard_negative(train_ids, features, data_path_out, img2id, n_hard)
-
+    print("finished creating hard negatives")
+    
 def split_data(data_path_out, captions, nr_test, version):
     unique_indices = list(range(0, len(captions)))
     random.shuffle(unique_indices)
