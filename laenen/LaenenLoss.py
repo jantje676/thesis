@@ -25,10 +25,10 @@ class LaenenLoss(nn.Module):
 
         sims = torch.einsum('bik,ljk->blij', img_emb, cap_emb)
 
-        # c_frag_loss = self.c_frag(sims, cap_l, epoch, n_frag, batch_size, n_caption)
+        c_frag_loss = self.c_frag(sims, cap_l, epoch, n_frag, batch_size, n_caption)
         c_glob_loss = self.c_glob(sims, cap_l, n_frag, batch_size, n_caption)
-        # loss = self.beta * c_glob_loss + c_frag_loss
-        loss = c_glob_loss
+        loss = self.beta * c_glob_loss + c_frag_loss
+
         if cluster_loss:
             c_cluster = self.c_cluster(kmeans_features, kmeans_emb, sims, img_emb, cap_emb, cap_l, features)
             loss += self.gamma * c_cluster
@@ -143,6 +143,7 @@ def sign(sims_i, i):
             if sign_check[j] == False:
                 i_max = torch.argmax(sims_i[i,:,j])
                 temp_y[i_max, j] = 1
+
 
     y[i,:,:] = temp_y
 
