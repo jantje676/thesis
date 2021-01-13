@@ -127,8 +127,8 @@ def get_thres(l, n):
 
 
 def sign(sims_i, i):
-    y =  torch.ones(sims_i.shape, requires_grad=True) * -1
-    temp_y = torch.sign(sims_i[i,:,:])
+    y = torch.sign(sims_i)
+    temp_y = y[i,:,:]
 
     n_frag = sims_i.size(1)
     n_word = sims_i.size(2)
