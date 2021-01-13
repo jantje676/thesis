@@ -154,13 +154,13 @@ def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
     return data_loader
 
 def get_caption_loader(data_path, data_split, vocab, opt, batch_size=100,
-                       shuffle=False, num_workers=2):
+                       shuffle=True, num_workers=2):
 
     dset = CaptionDataset(data_path, data_split, vocab, opt.version)
 
     data_loader = torch.utils.data.DataLoader(dataset=dset,
                                               batch_size=batch_size,
-                                              shuffle=False,
+                                              shuffle=True,
                                               pin_memory=True,
 
                                               collate_fn=collate_fn_caption)
@@ -172,10 +172,10 @@ def get_loaders(data_name, vocab, batch_size, workers, opt):
 
     dpath = os.path.join(opt.data_path, data_name, opt.clothing)
     train_loader = get_precomp_loader(dpath, 'train', vocab, opt,
-                                      batch_size, False, workers)
+                                      batch_size, True, workers)
 
     val_loader = get_precomp_loader(dpath, 'dev', vocab, opt,
-                                    batch_size, False, workers)
+                                    batch_size, True, workers)
 
     # second_loader = get_precomp_loader(dpath, 'train', vocab, opt,
     #                                   batch_size, False, workers)
