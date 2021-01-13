@@ -29,21 +29,27 @@ def main(args):
     nr_test = args.nr_test
     n_hard = args.n_hard
 
+    print("Start loading features")
     # read features
     features = np.load( "{}/{}/data_ims_{}_train.npy".format(data_path, clothing, version))
+    print("Finished loading features")
 
+    print("Start reading captions")
     # captions (id, caption)
     captions, img2id = read_captions(data_path, clothing, version)
+    print("Finished reading captions")
 
+    print("Start saving lmdb")
     save_lmdb(data_path_out, captions, features)
-    print("lmdb is saved")
+    print("Finisged saving lmdb")
 
+    print("Start splitting data")
     train_ids = split_data(data_path_out, captions, nr_test, version)
-    print("split ids finished")
+    print("Finished splitting data")
 
     create_hard_negative(train_ids, features, data_path_out, img2id, n_hard)
     print("finished creating hard negatives")
-    
+
 def split_data(data_path_out, captions, nr_test, version):
     unique_indices = list(range(0, len(captions)))
     random.shuffle(unique_indices)
