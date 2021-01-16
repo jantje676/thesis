@@ -24,11 +24,9 @@ class LayersAttr(nn.Module):
     def __init__(self, checkpoint):
         super(LayersAttr, self).__init__()
         self.feature_dim = 2048
-        # config = '{}/DeepFashion/global_predictor_resnet.py'.format(checkpoint)
-        # checkpoint = '{}/DeepFashion/checkpoint/epoch_40.pth'.format(checkpoint)
+        config = '{}/DeepFashion/global_predictor_resnet.py'.format(checkpoint)
+        checkpoint = '{}/DeepFashion/checkpoint/epoch_40.pth'.format(checkpoint)
 
-        config = 'DeepFashion/global_predictor_resnet.py'
-        checkpoint =  'DeepFashion/checkpoint/epoch_40.pth'
 
         net = basis_model(config, checkpoint)
 
@@ -102,7 +100,7 @@ class LayersAttr(nn.Module):
         x = self.l(x)
         y = self.flat(x)
         temp.append(y)
-    
+
 
         features = torch.stack(temp, dim=0).permute(1,0,2)
         return features
