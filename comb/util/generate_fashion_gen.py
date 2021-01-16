@@ -109,7 +109,7 @@ def create_captions(captions, early_stop, description):
 def create_features(images, early_stop, network, trained_dresses, checkpoint):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    net, transform = get_model(network, trained_dresses, checkpoint)
+    net, transform = get_model(network, trained_dresses, checkpoint, device)
 
     net = net.to(device)
 
@@ -170,7 +170,7 @@ def stack_segments(segments, transform):
 
 
 
-def get_model(network, trained_dresses, checkpoint):
+def get_model(network, trained_dresses, checkpoint, device):
     if network == "alex":
         net = models.alexnet(pretrained=True)
         # take aways the last layers
@@ -250,7 +250,13 @@ def get_features(stacked_segments, net, device ):
     feature = feature.detach().numpy()
     return feature
 
-
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 if __name__ == '__main__':
 
@@ -275,6 +281,11 @@ if __name__ == '__main__':
     parser.add_argument('--trained_dresses', action='store_true', help="load models trained on dresses")
     parser.add_argument('--checkpoint',help='path to saved model', default="../../train_models/runRes/train1/checkpoint/model_best.pth.tar", type=str)
 
+
+    parser.add_argument('--resnet',help='which resnet to use', default="resnet50", type=str)
+    parser.add_argument('--normalize',help='use normalize', default="True", type=str2bool)
+    parser.add_argument('--projection_dim',help='size of projection dim', default=64, type=int)
+    parser.add_argument('--checkpoint_simCLR_pre',help='location pretrained model', default="../../SimCLR_pre/checkpoint_100.tar", type=str)
 
     args = parser.parse_args()
     main(args)
