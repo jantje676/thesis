@@ -12,10 +12,13 @@ import csv
 import torch
 import torch.nn as nn
 import torchvision.models as models
-
+import sys
+sys.path.append('../../')
+sys.path.append('/home/kgoei/thesis/comb/util')
 from torchvision import transforms
 import nltk
-
+from DeepFashion import LayersAttr
+from Layers_simCLR_pre import Layers_simCLR_pre
 from layers_model import LayersModel
 from Layers_resnest import Layers_resnest
 from segment_dresses import segment_dresses
@@ -118,6 +121,11 @@ def create_features(images, early_stop, network, trained_dresses, checkpoint):
             img_transformed = transform(img).unsqueeze(0).to(device)
             feature = net.forward1(img_transformed).to("cpu").squeeze().detach().numpy()
             features.append(feature)
+        elif network == "layers_simCLR" or "layers_attr":
+            img = Image.fromarray(image)
+            img_transformed = transform(img).unsqueeze(0).to(device)
+            feature = net.forward(img_transformed).to("cpu").squeeze().detach().numpy()
+            features.append(feature)
         elif network == "vilbert":
             segments, bboxes = segment_dresses(image)
             stacked_segs = stack_segments(segments, transform)
@@ -187,6 +195,24 @@ def get_model(network, trained_dresses, checkpoint):
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                   std=[0.229, 0.224, 0.225])])
+    elif args.network == "layers_attr":
+        # choose model
+        net = LayersAttr(args.checkpoint)
+        # set to evaluation
+        net.eval()
+
+        transform = transforms.Compose([
+            transforms.CenterCrop((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                  std=[0.229, 0.224, 0.225])])
+    elif args.network == "layers_simCLR":
+        net = Layers_simCLR_pre(args, device, feature_dim=2048)
+        net.eval()
+
+        transform = transforms.Compose([
+            transforms.RandomResizedCrop(size=(224, 224)),
+            transforms.ToTensor()])
     elif network == "vilbert":
         # choose model
         net = torch.hub.load('pytorch/vision:v0.6.0', 'fcn_resnet101', pretrained=True)
