@@ -18,15 +18,18 @@ import torch.nn.functional as F
 from collections import OrderedDict
 import sys
 sys.path.append('/home/kgoei/thesis/comb/util')
-
+sys.path.append('../')
 # class based on deepfashion
 class LayersAttr(nn.Module):
-
     def __init__(self, checkpoint):
         super(LayersAttr, self).__init__()
         self.feature_dim = 2048
-        config = '{}/DeepFashion/global_predictor_resnet.py'.format(checkpoint)
-        checkpoint = '{}/DeepFashion/checkpoint/epoch_40.pth'.format(checkpoint)
+        # config = '{}/DeepFashion/global_predictor_resnet.py'.format(checkpoint)
+        # checkpoint = '{}/DeepFashion/checkpoint/epoch_40.pth'.format(checkpoint)
+
+        config = 'DeepFashion/global_predictor_resnet.py'
+        checkpoint =  'DeepFashion/checkpoint/epoch_40.pth'
+
         net = basis_model(config, checkpoint)
 
         self.a = nn.Sequential(net.backbone.conv1, net.backbone.bn1, net.backbone.relu, net.backbone.maxpool)
@@ -43,30 +46,30 @@ class LayersAttr(nn.Module):
         self.l = net.backbone.layer4[2] #f7
 
 
-        self.a = net.backbone.conv1
-        self.b = nn.Sequential(net.backbone.bn1, net.backbone.relu, net.backbone.maxpool)
-        self.c = net.backbone.layer1[0]
-        self.d = net.backbone.layer1[1]
-        self.e = net.backbone.layer1[2]
-        self.f = net.backbone.layer2[0]
-        self.g = net.backbone.layer2[1]
-        self.h = net.backbone.layer2[2]
-        self.i = net.backbone.layer2[3]
-        self.j = net.backbone.layer3[0]
-        self.k = net.backbone.layer3[1]
-        self.l = net.backbone.layer3[2]
-        self.m = net.backbone.layer3[3]
-        self.n = net.backbone.layer3[4]
-        self.o = net.backbone.layer3[5]
-        self.p = net.backbone.layer4[0]
-        self.q = net.backbone.layer4[1]
-        self.r = net.backbone.layer4[2]
-        self.s = net.global_pool.avgpool
-        self.t = net.global_pool.global_layers[0]
-        self.u = net.global_pool.global_layers[1]
-        self.v = net.global_pool.global_layers[2]
-        self.w = net.global_pool.global_layers[3]
-        self.x = net.global_pool.global_layers[4]
+        # self.a = net.backbone.conv1
+        # self.b = nn.Sequential(net.backbone.bn1, net.backbone.relu, net.backbone.maxpool)
+        # self.c = net.backbone.layer1[0]
+        # self.d = net.backbone.layer1[1]
+        # self.e = net.backbone.layer1[2]
+        # self.f = net.backbone.layer2[0]
+        # self.g = net.backbone.layer2[1]
+        # self.h = net.backbone.layer2[2]
+        # self.i = net.backbone.layer2[3]
+        # self.j = net.backbone.layer3[0]
+        # self.k = net.backbone.layer3[1]
+        # self.l = net.backbone.layer3[2]
+        # self.m = net.backbone.layer3[3]
+        # self.n = net.backbone.layer3[4]
+        # self.o = net.backbone.layer3[5]
+        # self.p = net.backbone.layer4[0]
+        # self.q = net.backbone.layer4[1]
+        # self.r = net.backbone.layer4[2]
+        # self.s = net.global_pool.avgpool
+        # self.t = net.global_pool.global_layers[0]
+        # self.u = net.global_pool.global_layers[1]
+        # self.v = net.global_pool.global_layers[2]
+        # self.w = net.global_pool.global_layers[3]
+        # self.x = net.global_pool.global_layers[4]
 
     def forward(self, x):
         temp = []
@@ -99,7 +102,7 @@ class LayersAttr(nn.Module):
         x = self.l(x)
         y = self.flat(x)
         temp.append(y)
-        x = self.m(x)
+    
 
         features = torch.stack(temp, dim=0).permute(1,0,2)
         return features
@@ -121,6 +124,7 @@ class LayersAttr(nn.Module):
 
 def basis_model(config, checkpoint):
     cfg = Config.fromfile(config)
+
     model = build_predictor(cfg.model)
     load_checkpoint(model, checkpoint, map_location='cpu')
     return model
