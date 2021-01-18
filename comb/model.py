@@ -431,6 +431,38 @@ def xattn_score_t2i(images, captions, cap_lens, freqs, opt):
     return similarities, attention_store
 
 
+def xattn_score_t2i_cosine(images, captions, cap_lens, freqs, opt):
+    """
+    Images: (n_image, n_regions, d) matrix of images
+    Captions: (n_caption, max_n_word, d) matrix of captions
+    CapLens: (n_caption) array of caption lengths
+    """
+    similarities = []
+    n_image = images.size(0)
+    n_caption = captions.size(0)
+    attention_store = []
+    for i in range(n_caption):
+        # Get the i-th text description
+        n_word = cap_lens[i]
+        freq = freqs[i]
+        cap_i = captions[i, :n_word, :].unsqueeze(0).contiguous()
+        # --> (n_image, n_word, d)
+
+        cap_i_expand = cap_i.repeat(n_image, 1, 1)
+        """
+            word(query): (n_image, n_word, d)
+            image(context): (n_image, n_regions, d)
+            weiContext: (n_image, n_word, d)
+            attn: (n_image, n_region, n_word)
+        """
+        weiContext, attn = func_attention(cap_i_expand, images, opt, smooth=opt.lambda_softmax)
+
+        attention_store.append(attn)
+        cap_i_expand = cap_i_expand.contiguous()
+        weiContext = weiContext.contiguous()
+
+    return weiContext
+
 def xattn_score_i2t(images, captions, cap_lens, freqs, opt):
     """
     Images: (batch_size, n_regions, d) matrix of images
@@ -689,9 +721,9 @@ class SCAN(object):
         """
         total_loss, standard_loss, loss_div = self.criterion(img_emb, cap_emb, cap_len, freq_score, freqs, epoch)
 
-        if self.opt.weight_loss != None:
-            loss = weight_loss(self.img_enc, self.opt.weight_loss, self.opt.theta, self.opt.sigma, self.opt.n_detectors)
-            total_loss += loss
+        # if self.opt.weight_loss != None:
+        #     loss = weight_loss(self.img_enc, self.opt.weight_loss, self.opt.theta, self.opt.sigma, self.opt.n_detectors)
+        #     total_loss += loss
 
         self.logger.update('tot_Le', total_loss.item(), img_emb.size(0))
         self.logger.update('stand_Le', standard_loss, img_emb.size(0))
