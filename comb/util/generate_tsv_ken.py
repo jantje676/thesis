@@ -81,11 +81,11 @@ def get_captions(args):
 def get_features(img, net, img_idx, transform, segments, bboxes, device, network ):
     W, H, C = img.shape
 
-    if network == "layers" or network == "layers2" or "layers_resnest":
+    if network == "layers" or network == "layers2" or network == "layers_resnest":
         img = Image.fromarray(img)
         img_transformed = transform(img).unsqueeze(0).to(device)
         features = net.forward1(img_transformed).to("cpu").squeeze()
-    elif network == "layers_simCLR" or "layers_attr":
+    elif network == "layers_simCLR" or network == "layers_attr":
         img = Image.fromarray(img)
         img_transformed = transform(img).unsqueeze(0).to(device)
         features = net.forward(img_transformed).to("cpu").squeeze()
@@ -174,6 +174,7 @@ def get_model(args, device):
         # choose model
         net = Layers_resnest(img_dim=2048, trained_dresses=args.trained_dresses, checkpoint_path=args.checkpoint)
         # set to evaluation
+
         net.eval()
 
         transform = transforms.Compose([
