@@ -72,13 +72,13 @@ def attn_per_word(list_words, opt, vocab, model):
         loader_test, pos_test = retrieve_loader("test", opt, dpath, word, vocab)
         loader_train, pos_train = retrieve_loader("train", opt, dpath, word, vocab)
 
-        # try:
-        #     average_attn = calculate_attn(loader_train, pos_train, loader_test, pos_test, opt, model)
-        # except:
-        #     print("Word ({}) not found".format(word))
-        #     continue
+        try:
+            average_attn = calculate_attn(loader_train, pos_train, loader_test, pos_test, opt, model)
+        except:
+            print("Word ({}) not found".format(word))
+            continue
 
-        average_attn = calculate_attn(loader_train, pos_train, loader_test, pos_test, opt, model)
+        # average_attn = calculate_attn(loader_train, pos_train, loader_test, pos_test, opt, model)
         word_attn[word] = average_attn
     return word_attn
 
