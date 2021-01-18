@@ -58,9 +58,8 @@ class SelfAttention(nn.Module):
         super(SelfAttention, self).__init__()
         self.embed_size = embed_size
         self.no_imgnorm = no_imgnorm
-        self.w1 = nn.Linear(img_dim, n_attention, bias=False)
-        # self.w1 = nn.Linear(img_dim, int(img_dim/2),bias=False)
-        # self.w2 = nn.Linear(int(img_dim/2), n_attention,  bias=False)
+        self.w1 = nn.Linear(img_dim, int(img_dim/2),bias=False)
+        self.w2 = nn.Linear(int(img_dim/2), n_attention,  bias=False)
         self.w3 = nn.Linear(img_dim, embed_size, bias=True)
         self.sig = nn.Sigmoid()
 
