@@ -114,7 +114,7 @@ def plot_image(top_i, img_idx, captions,opt, run, n):
     plt.close(fig)
 
 
-    file = open("{}/image_retrieval_{}.txt".format(output_folder, str(indices[0]), "w"))
+    file = open("{}/image_retrieval_{}.txt".format(output_folder, str(indices[0])), "w")
 
     for i, caps in enumerate(query_caps):
         indx = indices[i]
@@ -165,7 +165,7 @@ def plot_text(top_t, img_idx, captions,opt, run):
     plt.close(fig)
 
 
-    file = open("{}/text_retrieval_{}.txt".format(output_folder, str(indices[0]), "w"))
+    file = open("{}/text_retrieval_{}.txt".format(output_folder, str(indices[0])), "w")
 
     for i, caps in enumerate(cap_for_image):
         file.write("IMAGE {} \n".format(i))
