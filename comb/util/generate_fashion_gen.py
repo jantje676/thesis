@@ -21,7 +21,7 @@ from DeepFashion import LayersAttr
 from Layers_simCLR_pre import Layers_simCLR_pre
 from layers_model import LayersModel
 from Layers_resnest import Layers_resnest
-from segment_dresses import segment_dresses
+from segment_dresses import segment_dresses, segment_dresses_tile
 
 
 def main(args):
@@ -35,6 +35,7 @@ def main(args):
     network = args.network
     checkpoint = args.checkpoint
     trained_dresses = args.trained_dresses
+    tile = args.tile
 
     file_path = data_path + "/" +filename + "train.h5"
     f = h5py.File(file_path, 'r')
@@ -45,7 +46,7 @@ def main(args):
         field = "input_name"
 
     if not only_text:
-        data_ims_train = create_features(f["input_image"], early_stop, network, trained_dresses, checkpoint)
+        data_ims_train = create_features(f["input_image"], early_stop, network, trained_dresses, checkpoint, tile)
         save_images(data_ims_train, data_path_out, version, "train")
 
     data_captions_train = create_captions(f[field], early_stop, description)
@@ -57,7 +58,7 @@ def main(args):
 
     f = h5py.File(file_path, 'r')
     if not only_text:
-        data_ims_test = create_features(f["input_image"], early_stop, network, trained_dresses, checkpoint)
+        data_ims_test = create_features(f["input_image"], early_stop, network, trained_dresses, checkpoint, tile)
         save_images(data_ims_test, data_path_out, version, "test")
 
     data_captions_test = create_captions(f[field], early_stop, description)
@@ -106,7 +107,7 @@ def create_captions(captions, early_stop, description):
             break
     return cleaned_captions
 
-def create_features(images, early_stop, network, trained_dresses, checkpoint):
+def create_features(images, early_stop, network, trained_dresses, checkpoint, tile):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     net, transform = get_model(network, trained_dresses, checkpoint, device)
@@ -138,7 +139,10 @@ def create_features(images, early_stop, network, trained_dresses, checkpoint):
             features.append(feature)
         else:
             # create segments in a dictionary
-            segments, bboxes = segment_dresses(image)
+            if tile:
+                segments, bboxes = segment_dresses_tile(image)
+            else:
+                segments, bboxes = segment_dresses(image)
             # stack segments to push through net
             stacked_segments = stack_segments(segments, transform)
             feature = get_features(stacked_segments, net, device)
@@ -276,6 +280,7 @@ if __name__ == '__main__':
     parser.add_argument('--descriptions', action='store_true',
                         help="create captions from the input_descriptions field of the data")
     parser.add_argument('--network',help='alex|layers|layers_resnest', default="alex", type=str)
+    parser.add_argument('--tile', action='store_true', help="segment image in tiles instead of laenen")
 
     # TO load pretrained dresses model
     parser.add_argument('--trained_dresses', action='store_true', help="load models trained on dresses")
