@@ -116,13 +116,15 @@ def create_features(images, early_stop, network, trained_dresses, checkpoint, ti
 
     features = []
     count = 0
+
+
     for image in images:
         if network == "layers" or network == "layers_resnest":
             img = Image.fromarray(image)
             img_transformed = transform(img).unsqueeze(0).to(device)
             feature = net.forward1(img_transformed).to("cpu").squeeze().detach().numpy()
             features.append(feature)
-        elif network == "layers_simCLR" or "layers_attr":
+        elif network == "layers_simCLR" or  network == "layers_attr":
             img = Image.fromarray(image)
             img_transformed = transform(img).unsqueeze(0).to(device)
             feature = net.forward(img_transformed).to("cpu").squeeze().detach().numpy()
