@@ -78,7 +78,7 @@ def find_sims(model_path,run, n, data_path=None, split='dev', fold5=False, vocab
 
 
 def plot_image(top_i, img_idx, captions,opt, run, n):
-    indices = [0,1,2]
+    indices = [4,17,26]
     dpath = os.path.join(opt.data_path, opt.data_name, opt.clothing)
 
     query_caps = []
@@ -110,11 +110,11 @@ def plot_image(top_i, img_idx, captions,opt, run, n):
     output_folder = "plots_scan/{}".format(run)
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-    plt.savefig('{}/image_retrieval.png'.format(output_folder))
+    plt.savefig('{}/image_retrieval_{}.png'.format(output_folder, str(indices[0])))
     plt.close(fig)
 
 
-    file = open("{}/image_retrieval.txt".format(output_folder), "w")
+    file = open("{}/image_retrieval_{}.txt".format(output_folder, str(indices[0]), "w"))
 
     for i, caps in enumerate(query_caps):
         indx = indices[i]
@@ -128,7 +128,7 @@ def plot_image(top_i, img_idx, captions,opt, run, n):
 
 
 def plot_text(top_t, img_idx, captions,opt, run):
-    indices = [0,1,2]
+    indices = [4,17,26]
 
     dpath = os.path.join(opt.data_path, opt.data_name, opt.clothing)
 
@@ -161,11 +161,11 @@ def plot_text(top_t, img_idx, captions,opt, run):
     output_folder = "plots_scan/{}".format(run)
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-    plt.savefig('{}/text_retrieval.png'.format(output_folder))
+    plt.savefig('{}/text_retrieval_{}.png'.format(output_folder,str(indices[0])))
     plt.close(fig)
 
 
-    file = open("{}/text_retrieval.txt".format(output_folder), "w")
+    file = open("{}/text_retrieval_{}.txt".format(output_folder, str(indices[0]), "w"))
 
     for i, caps in enumerate(cap_for_image):
         file.write("IMAGE {} \n".format(i))
