@@ -28,6 +28,7 @@ def main(args):
     data_path_out = args.data_path_out
     nr_test = args.nr_test
     n_hard = args.n_hard
+    n_negative = args.n_negative
 
     print("Start loading features")
     # read features
@@ -47,7 +48,7 @@ def main(args):
     train_ids = split_data(data_path_out, captions, nr_test, version)
     print("Finished splitting data")
 
-    create_hard_negative(train_ids, features, data_path_out, img2id, n_hard)
+    create_hard_negative(train_ids, features, data_path_out, img2id, n_hard, n_negative)
     print("finished creating hard negatives")
 
 def split_data(data_path_out, captions, nr_test, version):
@@ -70,7 +71,7 @@ def write_jsonline(captions, indx, split, version, data_path_out):
             image_ids.append(int(captions[indx[i]][0]))
     return image_ids
 
-def create_hard_negative(train_ids, features, data_path_out, img2id, n_hard):
+def create_hard_negative(train_ids, features, data_path_out, img2id, n_hard, n_negative):
     # only take the features used in train set
     features_train = np.stack([features[img2id[id]] for id in train_ids], axis=0)
 
@@ -78,10 +79,13 @@ def create_hard_negative(train_ids, features, data_path_out, img2id, n_hard):
     features_train = torch.from_numpy(features_train[:, 6, :])
 
     hard_negative = []
-    n_features = features_train.shape[0]
 
+    # select number of features to find hardest negative
+    n_features = n_negative
+
+    n_max = features_train.shape[0]
     # check n_features en train_ids
-    if len(train_ids) != n_features:
+    if len(train_ids) != n_max:
         print("not equal")
         exit()
 
@@ -90,11 +94,20 @@ def create_hard_negative(train_ids, features, data_path_out, img2id, n_hard):
     for i in range (len(train_ids)):
         # take full image
         feature = features_train[i]
+
+        # remove current image from list
+        ids = list(range(0,n_max))
+        ids.remove(i)
+        random_ids = random.sample(ids,n_features)
+
+        features_random = torch.stack([features_train[id] for id in random_ids], axis=0)
         feature_expand = feature.expand((n_features, -1))
-        sims = cos(feature_expand, features_train)
-        sims[i] = np.NINF
-        results = torch.topk(sims, n_hard)
-        hard_negative.append(results[1].tolist())
+        sims = cos(feature_expand, features_random)
+
+        results = torch.topk(sims, n_hard)[1].tolist()
+        final_results = [random_ids[r] for r in results ]
+
+        hard_negative.append(final_results)
         if i % 100 == 0:
             print(i)
 
@@ -162,6 +175,7 @@ if __name__ == '__main__':
     parser.add_argument('--clothing', default="dresses", type=str, help='clothing item')
     parser.add_argument('--nr_test', default=3, type=int, help='size of test set')
     parser.add_argument('--n_hard', default=4, type=int, help='size of test set')
+    parser.add_argument('--n_negative', default=10, type=int, help='size of n negative')
 
     args = parser.parse_args()
     main(args)
