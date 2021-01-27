@@ -149,6 +149,7 @@ def create_features(images, early_stop, network, trained_dresses, checkpoint, ti
             stacked_segments = stack_segments(segments, transform)
             feature = get_features(stacked_segments, net, device)
             features.append(feature)
+
         count += 1
 
         if count % 10 == 0:
