@@ -172,6 +172,9 @@ def get_data(file):
     with open(file) as infile:
         for line in infile:
             temp = line.split("\t")
+            print(temp[5])
+            print(temp[6])
+            print(temp[7])
             id = int(temp[7])
             # id = count
             # count += 1
