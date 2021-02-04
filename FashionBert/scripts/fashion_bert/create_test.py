@@ -172,12 +172,9 @@ def get_data(file):
     with open(file) as infile:
         for line in infile:
             temp = line.split("\t")
-            print(temp[5])
-            print(temp[6])
-            print(temp[7])
-            id = int(temp[7])
-            # id = count
-            # count += 1
+            # id = int(temp[7])
+            id = count
+            count += 1
             ids.append(id)
             data_im[id] = temp[0]
             data_text[id] = (temp[2], temp[6])
