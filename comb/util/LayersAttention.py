@@ -81,7 +81,7 @@ class SelfAttention(nn.Module):
 
         attention == self.relu(attention)
 
-        # attention = self.w2(attention)
+        attention = self.w2(attention)
         attention = F.softmax(attention, dim=1)
         attention = attention.transpose(1,2)
 
