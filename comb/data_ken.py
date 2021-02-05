@@ -353,7 +353,8 @@ def get_precomp_loader(data_path, data_split, vocab, opt, batch_size=100,
                                               batch_size=batch_size,
                                               shuffle=shuffle,
                                               pin_memory=True,
-                                              collate_fn=collate_fn)
+                                              collate_fn=collate_fn,
+                                              drop_last=True)
     return data_loader
 
 

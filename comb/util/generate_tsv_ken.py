@@ -20,6 +20,7 @@ from segment_dresses import segment_dresses, segment_dresses_tile, segment_dress
 from Layers_simCLR_pre import Layers_simCLR_pre
 from layers_model import LayersModel
 from Layers_resnest import Layers_resnest
+from layers_res4 import LayersScanResDeep
 from layers_alex2 import LayersModelAlex
 from DeepFashion import LayersAttr
 
@@ -81,7 +82,7 @@ def get_captions(args):
 def get_features(img, net, img_idx, transform, segments, bboxes, device, network ):
     W, H, C = img.shape
 
-    if network == "layers" or network == "layers2" or network == "layers_resnest":
+    if network == "layers" or network == "layers2" or network == "layers_resnest" or network == "layers_resnest_deep":
         img = Image.fromarray(img)
         img_transformed = transform(img).unsqueeze(0).to(device)
         features = net.forward1(img_transformed).to("cpu").squeeze()
@@ -173,6 +174,18 @@ def get_model(args, device):
     elif args.network == "layers_resnest":
         # choose model
         net = Layers_resnest(img_dim=2048, trained_dresses=args.trained_dresses, checkpoint_path=args.checkpoint)
+        # set to evaluation
+
+        net.eval()
+
+        transform = transforms.Compose([
+            transforms.CenterCrop((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                  std=[0.229, 0.224, 0.225])])
+    elif args.network == "layers_resnest_deep":
+        # choose model
+        net = LayersScanResDeep()
         # set to evaluation
 
         net.eval()

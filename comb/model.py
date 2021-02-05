@@ -29,6 +29,7 @@ from util.LayersAttention import LayerAttention2
 from util.Layers_resnest import Layers_resnest
 from util.layers_alex_res import LayerAttention3
 from util.layers_alex_im import LayerAttention4, EncoderImageAttention4,  LayerAttention4
+from util.layers_res4 import LayersScanResDeep
 from util.cnn_end2end import CNN_end2end
 from transformers import BertModel
 from cnn_layers import CNN_layers
@@ -74,6 +75,8 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretr
             img_enc = LayersModel(img_dim, embed_size)
         elif net == "res":
             img_enc = Layers_resnest(img_dim, embed_size)
+        elif net == "res_deep":
+            img_enc = LayersScanResDeep()
     elif precomp_enc_type == "layers_same":
             img_enc = LayersModelSame(img_dim, embed_size)
     elif precomp_enc_type == "layers_attention":
@@ -649,8 +652,10 @@ class SCAN(object):
 
         self.params = params
 
-        # pytorch_total_params = sum(p.numel() for p in self.txt_enc.parameters() if p.requires_grad)
-        # print(pytorch_total_params)
+        # pytorch_txt = sum(p.numel() for p in self.txt_enc.parameters() if p.requires_grad)
+        # pytorch_img = sum(p.numel() for p in self.img_enc.parameters() if p.requires_grad)
+        # pytorch_total_params = pytorch_img + pytorch_txt
+
 
         self.optimizer = torch.optim.Adam(params, lr=opt.learning_rate)
 

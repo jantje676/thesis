@@ -20,6 +20,7 @@ import nltk
 from DeepFashion import LayersAttr
 from Layers_simCLR_pre import Layers_simCLR_pre
 from layers_model import LayersModel
+from layers_res4 import LayersScanResDeep
 from Layers_resnest import Layers_resnest
 from segment_dresses import segment_dresses, segment_dresses_tile
 
@@ -119,7 +120,7 @@ def create_features(images, early_stop, network, trained_dresses, checkpoint, ti
 
 
     for image in images:
-        if network == "layers" or network == "layers_resnest":
+        if network == "layers" or network == "layers_resnest" or network == "layers_resnest_deep":
             img = Image.fromarray(image)
             img_transformed = transform(img).unsqueeze(0).to(device)
             feature = net.forward1(img_transformed).to("cpu").squeeze().detach().numpy()
@@ -237,6 +238,18 @@ def get_model(network, trained_dresses, checkpoint, device):
     elif network == "layers_resnest":
         # choose model
         net = Layers_resnest(img_dim=2048, trained_dresses=trained_dresses, checkpoint_path=checkpoint)
+        # set to evaluation
+
+        net.eval()
+
+        transform = transforms.Compose([
+            transforms.CenterCrop((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                  std=[0.229, 0.224, 0.225])])
+    elif network == "layers_resnest_deep":
+        # choose model
+        net = LayersScanResDeep()
         # set to evaluation
 
         net.eval()
