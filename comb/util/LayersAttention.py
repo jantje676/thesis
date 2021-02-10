@@ -82,10 +82,14 @@ class SelfAttention(nn.Module):
         attention == self.relu(attention)
 
         attention = self.w2(attention)
-        attention = F.softmax(attention, dim=1)
-        attention = attention.transpose(1,2)
+        # attention = F.softmax(attention, dim=1)
+        # attention = attention.transpose(1,2)
+
+        attention = attention.argmax(dim=1)
+        attention = F.one_hot(attention, num_classes=images.shape[1]).float()
 
         features = torch.bmm(attention, images)
+    
         features = self.w3(features)
 
         # normalize in the joint embedding space
