@@ -1,4 +1,4 @@
-import torchvision.models as models
+it import torchvision.models as models
 import torch.nn as nn
 import torch
 import numpy as np
@@ -6,6 +6,7 @@ import torch.nn.init
 import torch.nn.functional as F
 from collections import OrderedDict
 
+""" Resnest layers for layers-attention-SCAN"""
 class LayersModelRes(nn.Module):
     def __init__(self, feature_dim=2048, trained_dresses=False, checkpoint_path=None):
         super(LayersModelRes, self).__init__()

@@ -9,7 +9,10 @@ from util.layers_alex2 import LayersModelAlex
 from util.layers_res2 import LayersModelRes
 from util.layers_res3 import LayersModelResDeep
 from util.DeepFashion2 import LayersModelAttr
-# class based on poly-paper
+
+
+"""Attention module inspired by Song, but tweaked for this case"""
+
 class LayerAttention2(nn.Module):
 
     def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False, net='alex'):
@@ -89,7 +92,7 @@ class SelfAttention(nn.Module):
         attention = F.one_hot(attention, num_classes=images.shape[1]).float()
 
         features = torch.bmm(attention, images)
-    
+
         features = self.w3(features)
 
         # normalize in the joint embedding space

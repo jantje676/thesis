@@ -1,4 +1,4 @@
-# -----------------------------------------------------------
+ # -----------------------------------------------------------
 # Stacked Cross Attention Network implementation based on
 # https://arxiv.org/abs/1803.08024.
 # "Stacked Cross Attention for Image-Text Matching"
@@ -158,9 +158,8 @@ def evalrank(model_path,run, data_path=None, split='dev', fold5=False, vocab_pat
     print(opt)
 
     # add because div_transform is not present in model
-    d = vars(opt)
-    d['tanh'] = True
-
+    # d = vars(opt)
+    # d['tanh'] = True
 
     if data_path is not None:
         opt.data_path = data_path

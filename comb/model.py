@@ -57,19 +57,25 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretr
     that uses precomputed image features.
     """
 
+    # TEST: use spatial transformers
     if precomp_enc_type == "trans":
         img_enc = STN(n_detectors, embed_size, pretrained_alex, rectangle, net)
+    # basic SCAN image encoder
     elif precomp_enc_type == 'basic':
         img_enc = EncoderImagePrecomp(
             img_dim, embed_size, no_imgnorm)
+    # basic SCAN image encoder with weight normalization
     elif precomp_enc_type == 'weight_norm':
         img_enc = EncoderImageWeightNormPrecomp(
             img_dim, embed_size, no_imgnorm)
+    # TEST: use of attention module
     elif precomp_enc_type == "attention":
         img_enc = EncoderImageAttention(
             img_dim, embed_size, n_attention, no_imgnorm)
+    # TEST: train one CNN end2end with spatial segmentations
     elif precomp_enc_type == "cnn":
         img_enc = CNN_end2end(img_dim, embed_size)
+    # use of Layers-SCAN with different models
     elif precomp_enc_type == "layers":
         if net == "alex":
             img_enc = LayersModel(img_dim, embed_size)
@@ -77,14 +83,19 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretr
             img_enc = Layers_resnest(img_dim, embed_size)
         elif net == "res_deep":
             img_enc = LayersScanResDeep()
+    # TEST: use layers model without padding but create equal dimension with fc-layer
     elif precomp_enc_type == "layers_same":
             img_enc = LayersModelSame(img_dim, embed_size)
+    # attention module Layers-attention-SCAN
     elif precomp_enc_type == "layers_attention":
         img_enc = LayerAttention2(img_dim, embed_size, n_attention, no_imgnorm, net)
+    # TEST: attention module Layers-attention-SCAN with residual image
     elif precomp_enc_type == "layers_attention_res":
         img_enc = LayerAttention3( img_dim, embed_size, n_attention, no_imgnorm)
+    # TEST: with fusing Layers-attention-SCAN with prediction of clothing item
     elif precomp_enc_type == "layers_attention_im":
         img_enc = LayerAttention4(img_dim, embed_size, n_attention, no_imgnorm=False, net='alex')
+    # use n CNNs in parrarel with diversity loss
     elif precomp_enc_type == "cnn_layers":
         img_enc = CNN_layers(n_detectors, embed_size, pretrained_alex, net, div_transform)
     else:
@@ -94,13 +105,18 @@ def EncoderImage(data_name, img_dim, embed_size, n_attention, n_detectors, pretr
 
 
 def get_EncoderText(vocab_size, word_dim, embed_size, num_layers, bi_gru, no_txtnorm, txt_enc, vocab_path):
+    """A wrapper to text encoders. Chooses between an different encoders
+    """
+    # use basic GRU for text encoding
     if txt_enc == "basic":
         text_encoder = EncoderText(vocab_size, word_dim,
                                    embed_size, num_layers,
                                    use_bi_gru=bi_gru,
                                    no_txtnorm=no_txtnorm)
+    # use precomputed word2vec embeddings
     elif txt_enc == "word2vec":
         text_encoder = Word2vec(vocab_path, no_txtnorm=no_txtnorm)
+    # use bert model as text encoder
     elif txt_enc == "bert":
         text_encoder = Bert(no_txtnorm=no_txtnorm)
 
@@ -108,7 +124,6 @@ def get_EncoderText(vocab_size, word_dim, embed_size, num_layers, bi_gru, no_txt
 
 
 class Bert(nn.Module):
-
     def __init__(self,no_txtnorm=False ):
         super(Bert, self).__init__()
         self.model = BertModel.from_pretrained('bert-base-uncased',
@@ -147,7 +162,6 @@ class Bert(nn.Module):
         return segment_ids
 
 class Word2vec(nn.Module):
-
     def __init__(self, vocab_path, no_txtnorm=False ):
         super(Word2vec, self).__init__()
         weight = torch.load("{}/word2vec.pt".format(vocab_path))
@@ -176,7 +190,6 @@ class Word2vec(nn.Module):
 
 
 class EncoderImagePrecomp(nn.Module):
-
     def __init__(self, img_dim, embed_size, no_imgnorm=False):
         super(EncoderImagePrecomp, self).__init__()
         self.embed_size = embed_size

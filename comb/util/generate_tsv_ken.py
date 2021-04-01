@@ -24,7 +24,7 @@ from layers_res4 import LayersScanResDeep
 from layers_alex2 import LayersModelAlex
 from DeepFashion import LayersAttr
 
-
+"""script to genereate features for Fashion200K dataset"""
 FIELDNAMES = ['image_id', 'image_w','image_h','num_boxes', 'boxes', 'features']
 
 class padd(object):
@@ -345,7 +345,6 @@ def parse_args():
     parser.add_argument('--data_out',help='location of data out', default="../../data/Fashion200K/dresses", type=str)
     parser.add_argument('--tile', action='store_true', help="use basic tile segmentation")
     parser.add_argument('--multi', action='store_true', help="use to create features for multi-modal evaluation")
-    parser.add_argument('--clothing',help='clothing item', default="dresses", type=str)
     parser.add_argument("--list_clothing", nargs="+", default=["dresses"])
 
     # TO load pretrained dresses model

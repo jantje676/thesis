@@ -6,12 +6,12 @@ import torch.nn.init
 import torch.nn.functional as F
 from collections import OrderedDict
 
+""" Deep Res for Layers-Attention-SCAN"""
 class LayersModelResDeep(nn.Module):
     def __init__(self, feature_dim=2048, trained_dresses=False, checkpoint_path=None):
         super(LayersModelResDeep, self).__init__()
         self.feature_dim = feature_dim
         net = torch.hub.load('zhanghang1989/ResNeSt', 'resnest101', pretrained=True)
-
         self.a = net.conv1
         self.b = nn.Sequential(net.bn1, net.relu, net.maxpool)
         self.c = net.layer1[0]
@@ -193,7 +193,6 @@ class LayersModelResDeep(nn.Module):
         temp.append(y)
 
         features = torch.stack(temp, dim=0).permute(1,0,2)
-
         return features
 
     def flat(self,x):

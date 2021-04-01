@@ -6,7 +6,7 @@ import torch.nn.init
 import torch.nn.functional as F
 from collections import OrderedDict
 
-
+"""Layers model in which output layers are tranformed to same dimension with a weight matrix instead of padding"""
 class LayersModelSame(nn.Module):
     def __init__(self, img_dim=4096, embed_size=1024, trained_dresses=False, checkpoint_path=None):
         super(LayersModelSame, self).__init__()

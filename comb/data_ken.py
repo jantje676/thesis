@@ -26,7 +26,7 @@ from util.cnn_end2end import Data_segs
 class PrecompTrans(data.Dataset):
     """
     Load precomputed captions and image features
-    Possible options: f30k_precomp, coco_precomp
+    Possible options: Fashion200K and Fashion-Gen
     """
 
     def __init__(self, data_path, data_split, vocab, version, image_path, rectangle, data_name, filter, n_filter, cut, n_cut, clothing, txt_enc):
@@ -189,7 +189,6 @@ def get_h5_images(data_name, data_split, data_path):
 class PrecompDataset(data.Dataset):
     """
     Load precomputed captions and image features
-    Possible options: f30k_precomp, coco_precomp
     """
 
     def __init__(self, data_path, data_split, vocab, version, filter, n_filter, cut, n_cut, txt_enc):

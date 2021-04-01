@@ -6,7 +6,7 @@ import torch.nn.init
 import torch.nn.functional as F
 from collections import OrderedDict
 
-
+"""ALex layers model for Layers-SCAN"""
 class LayersModel(nn.Module):
     def __init__(self, img_dim=4096, embed_size=1024, trained_dresses=False, checkpoint_path=None):
         super(LayersModel, self).__init__()

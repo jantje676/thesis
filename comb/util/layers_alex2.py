@@ -11,6 +11,7 @@ class LayersModelAlex(nn.Module):
     def __init__(self, img_dim=4096, embed_size=1024, trained_dresses=False, checkpoint_path=None):
         super(LayersModelAlex, self).__init__()
         net = models.alexnet(pretrained=True)
+        
         if trained_dresses:
             print("Loading pretrained model on dresses")
             checkpoint = torch.load(checkpoint_path)

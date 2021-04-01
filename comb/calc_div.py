@@ -35,11 +35,17 @@ def div_scores(data_folder, version):
         print(i, end="\r", flush=True)
         feat = features[i].unsqueeze(dim=0)
 
-        score_cos += cosine_loss(1, feat)
-        score_euc_heat += euclidean_heat_loss(1, feat, 10000, n_detectors)
-        score_euc += euclidean_loss(1, feat, n_detectors)
-        score_ssd += ssd(1, feat)
-        score_dpp += dpp(1,feat)
+        # score_cos += cosine_loss(1, feat)
+        # score_euc_heat += euclidean_heat_loss(1, feat, 10000, n_detectors)
+        s = euclidean_loss(1, feat, n_detectors)
+        if s > 100:
+            continue
+        score_euc += s
+
+
+        print(score_euc)
+        # score_ssd += ssd(1, feat)
+        # score_dpp += dpp(1,feat)
 
     score_cos = score_cos/length
     score_euc_heat = score_euc_heat/length
@@ -51,7 +57,9 @@ def div_scores(data_folder, version):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='visualize attention distribution')
     parser.add_argument('--data_folder', default="../data/Fashion200K/dresses", type=str, help='which features to use')
-    parser.add_argument("--list_versions", nargs="+", default=["layers_alex", "layers_res", "layers_sim"])
+    parser.add_argument("--list_versions", nargs="+", default=["laenen_1k"])
+
+    # parser.add_argument("--list_versions", nargs="+", default=["layers_alex", "layers_res", "layers_sim"])
 
 
     args = parser.parse_args()

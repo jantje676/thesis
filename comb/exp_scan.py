@@ -118,14 +118,12 @@ if __name__ == '__main__':
     parser.add_argument('--sigma', default=1, type=float,
                         help='hyperparameter for the euclidean_loss heat kernel')
 
-    parser.add_argument('--weight_loss', default=None, type=str,
-                        help="add extra loss component to force diversity of features cos|euc|euc_heat|ssd")
-
 
     # freq
     parser.add_argument('--epsilon', default=1.0, type=float,
                         help='(Used for agg_func=freq) regulaizer for emphasis on non-frequent words')
 
+    # multiple runs
     parser.add_argument('--nr_runs', default=1, type=int,
                         help='Number of experiments.')
     parser.add_argument('--seed1', default=17, type=int,

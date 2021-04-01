@@ -24,7 +24,7 @@ from layers_res4 import LayersScanResDeep
 from Layers_resnest import Layers_resnest
 from segment_dresses import segment_dresses, segment_dresses_tile
 
-
+"""Script to create features for Fashion-Gen dataset"""
 def main(args):
     filename = args.filename
     early_stop = args.early_stop

@@ -17,7 +17,7 @@ from util.layers_res2 import LayersModelRes
 from util.layers_res3 import LayersModelResDeep
 from util.DeepFashion2 import LayersModelAttr
 
-# class based on poly-paper
+"""Attention module with the use of layernorm and the adding of the global image as described in the paper by Song"""
 class LayerAttention3(nn.Module):
 
     def __init__(self, img_dim, embed_size, n_attention, no_imgnorm=False, net='res'):
