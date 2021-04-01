@@ -9,6 +9,10 @@ import csv
 import numpy as np
 from random import Random
 
+"""
+Script to perform hyperparameter tuning for the SCAN model
+"""
+
 def main(opt):
     nr_runs = opt.nr_runs
     seeds = 17

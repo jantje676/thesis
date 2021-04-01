@@ -7,14 +7,14 @@ import torch.nn.functional as F
 from collections import OrderedDict
 
 
-
+"""ResNeSt-50 layers model for Layers-SCAN"""
 class Layers_resnest(nn.Module):
     def __init__(self, img_dim=2048, embed_size=1024, trained_dresses=False, checkpoint_path=None):
         super(Layers_resnest, self).__init__()
         self.img_dim = img_dim
         net = torch.hub.load('zhanghang1989/ResNeSt', 'resnest50', pretrained=True)
+
         if trained_dresses:
-            print("Loading pretrained model on dresses")
             checkpoint = torch.load(checkpoint_path)
             weights = checkpoint["model"]
             del weights['fc.weight']
