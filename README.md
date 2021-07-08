@@ -19,6 +19,6 @@ We performed this work in a conda environment. In the repository you can find a 
 python comb/exp_scan.py --vocab_path PATH --data_path PATH
 
 # Data
-The data folders for the Fashion200K and Fashion-Gen dataset should be placed inside the data folder. Afterwards run the following scripts to create features:
+The data folders for the Fashion200K and Fashion-Gen dataset should be placed inside the data folder. Afterwards run the following scripts to create features:  
 Fashion200K: comb/util/generate_tsv_ken.py  
 Fashion-Gen: comb/util/generate_fashion_gen.py
