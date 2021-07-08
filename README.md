@@ -12,7 +12,7 @@ A quick outline of the different folders:
 - visualize: scripts to visualize attention of SCAN-model
 
 
-# Requierements
+# Requirements
 We performed this work in a conda environment. In the repository you can find a txt-file (requirements.txt) with all the packages. In this way the environment can be replicated. 
 
 # How to Run
